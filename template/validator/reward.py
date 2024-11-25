@@ -51,12 +51,12 @@ def reward(num_recs: int, response: BitrecsRequest) -> float:
     bt.logging.info(
         f"Miner reward score: {score}, response val: {response}"
     )
+    #return 1.0
     return score    
     
 
 
-def get_rewards(
-    self,
+def get_rewards(   
     num_recs: int,
     responses: List[BitrecsRequest],   
 ) -> np.ndarray:
@@ -71,5 +71,7 @@ def get_rewards(
     - np.ndarray: An array of rewards for the given query and responses.
     """
     # Get all the reward results by iteratively calling your reward() function.
-    
-    return np.array([reward(num_recs, response) for response in responses])
+    return np.array(
+        [reward(num_recs, response) for response in responses], dtype=float
+    )
+    #return np.array([reward(num_recs, response) for response in responses])

@@ -29,7 +29,7 @@ from template.utils.uids import get_random_uids
 
 def get_pr_request() -> BitrecsRequest:
     """
-    Returns a dummy ProductRecRequest object for testing purposes.
+    Returns a dummy BitrecsRequest object for testing purposes.
 
     """
 
@@ -42,7 +42,7 @@ def get_pr_request() -> BitrecsRequest:
     utc_now = datetime.now(timezone.utc)
     created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
-    p = BitrecsRequest(user="user1", query=query, context=json_context, created_at=created_at, num_results=num_results, site_key="site1", results=[])
+    p = BitrecsRequest(user="user1", query=query, context=json_context, created_at=created_at, num_results=num_results, site_key="site1", results=[], models_used=[], miner_hotkey="", miner_uid="")
     return p
 
 
@@ -61,7 +61,10 @@ async def forward(self):
 
     # TODO(developer): Define how the validator selects a miner to query, how often, etc.
     # get_random_uids is an example method, but you can replace it with your own.
-    miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+    #miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+    miner_uids = get_random_uids(self,  k=self.config.neuron.sample_size)
+    #miner_uids = [0, 2]
+
     bt.logging.info(f"** UID uids: {miner_uids}")
     start_time = time.time()
 
@@ -71,7 +74,8 @@ async def forward(self):
         axons=[self.metagraph.axons[uid] for uid in miner_uids],
         # Construct a dummy query. This simply contains a single integer.
         #synapse=Dummy(dummy_input=self.step),
-        synapse=next_request,        
+        synapse=next_request,     
+        timeout=3600,   
         # All responses have the deserialize function called on them before returning.
         # You are encouraged to define your own deserialization function.
         deserialize=True,
@@ -84,9 +88,20 @@ async def forward(self):
     bt.logging.info(f"Received responses: {responses}")
     
     # Adjust the scores based on responses from miners.
-    rewards = get_rewards(self, num_recs=num_recs, responses=responses)
+    rewards = get_rewards(num_recs=num_recs, responses=responses)
+    assert len(miner_uids) == len(responses) == len(rewards)
 
     bt.logging.info(f"Scored responses: {rewards}")
-    # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
+    
     self.update_scores(rewards, miner_uids)
-    time.sleep(5)
+
+    # for idx, (uid, response, reward) in enumerate(zip(miner_uids, responses, rewards)):
+    #     try:
+    #         # rewards[idx] = 100.0
+    #         bt.logging.info(f"uid: {uid}, coldkey:{self.metagraph.axons[uid].coldkey[:10]}, "
+    #                     f"response: {response}, reward: {rewards[idx]}")
+    #     except Exception as e:
+    #         bt.logging.error(f"Error in logging: {e}")
+    # log_str = '\n' 
+    #bt.logging.info(log_str)
+    

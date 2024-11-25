@@ -1,7 +1,7 @@
 # The MIT License (MIT)
 # Copyright © 2023 Yuma Rao
-# TODO(developer): Set your name
-# Copyright © 2023 <your name>
+# Copyright © 2024 Bitrecs
+# (developer): Bitrecs
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the “Software”), to deal in the Software without restriction, including without limitation
@@ -17,126 +17,20 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import typing
 import bittensor as bt
-import pydantic
 from typing import List
-
-# TODO(developer): Rewrite with your protocol definition.
-
-# This is the protocol for the dummy miner and validator.
-# It is a simple request-response protocol where the validator sends a request
-# to the miner, and the miner responds with a dummy response.
-
-# ---- miner ----
-# Example usage:
-#   def dummy( synapse: Dummy ) -> Dummy:
-#       synapse.dummy_output = synapse.dummy_input + 1
-#       return synapse
-#   axon = bt.axon().attach( dummy ).serve(netuid=...).start()
-
-# ---- validator ---
-# Example usage:
-#   dendrite = bt.dendrite()
-#   dummy_output = dendrite.query( Dummy( dummy_input = 1 ) )
-#   assert dummy_output == 2
-
-
-class Dummy(bt.Synapse):
-    """
-    A simple dummy protocol representation which uses bt.Synapse as its base.
-    This protocol helps in handling dummy request and response communication between
-    the miner and the validator.
-
-    Attributes:
-    - dummy_input: An integer value representing the input request sent by the validator.
-    - dummy_output: An optional integer value which, when filled, represents the response from the miner.
-    """
-
-    # Required request input, filled by sending dendrite caller.
-    dummy_input: int
-
-    # Optional request output, filled by receiving axon.
-    dummy_output: typing.Optional[int] = None
-
-    def deserialize(self) -> int:
-        """
-        Deserialize the dummy output. This method retrieves the response from
-        the miner in the form of dummy_output, deserializes it and returns it
-        as the output of the dendrite.query() call.
-
-        Returns:
-        - int: The deserialized response, which in this case is the value of dummy_output.
-
-        Example:
-        Assuming a Dummy instance has a dummy_output value of 5:
-        >>> dummy_instance = Dummy(dummy_input=4)
-        >>> dummy_instance.dummy_output = 5
-        >>> dummy_instance.deserialize()
-        5
-        """
-        return self.dummy_output
-    
 
 class BitrecsRequest(bt.Synapse):
     created_at: str
-
     user: str
     num_results: int
     query: str
-    context: str    
-    site_key: str
-
-    # status_code: int
-    # status_text: str
-    # response_text: str    
+    context: str | None
+    site_key: str | None
     results: List[str] | None
-    # models_used: List[str]
-    # catalog_size: int
-    # miner_uid: str
-    # miner_public_key: str
-    # reasoning: str
+    models_used: List[str] | None
+    miner_uid: str | None
+    miner_hotkey: str | None
 
-    
-
-# class ProductRecRequest(BitrecsBase):
-
-#     def deserialize(self) -> "ProductRecRequest":
-#         """
-#         Returns the instance of the current ProductRecRequest object.
-
-#         This method is intended to be potentially overridden by subclasses for custom deserialization logic.
-#         In the context of the ProductRecRequest class, it simply returns the instance itself. However, for subclasses
-#         inheriting from this class, it might give a custom implementation for deserialization if need be.
-
-#         Returns:
-#             ProductRecRequest: The current instance of the ProductRecRequest class.
-#         """
-#         return self
-    
-#     query: str
-#     context: str    
-#     num_results: int
-#     site_key: str
-  
-
-# class ProductRecResponse(BitrecsBase):
-
-#     def deserialize(self) -> "ProductRecResponse":
-#         """
-#         Returns the instance of the current ProductRecResponse object.     
-#         """
-#         return self     
-    
-#     status_code: int
-#     status_text: str
-#     response_text: str
-#     created_at: str
-#     results: List[str]
-#     models_used: List[str]
-#     catalog_size: int
-#     miner_uid: str
-#     miner_public_key: str
-#     reasoning: str
-
-
+    def deserialize(self) -> "BitrecsRequest":
+        return self
