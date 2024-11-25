@@ -74,10 +74,10 @@ async def forward(self):
     bt.logging.info(f"** UID uids: {miner_uids}")
     start_time = time.time()
 
-    utc_now = datetime.now(timezone.utc)
-    current_minute = utc_now.minute
-    if current_minute % 20 == 0:
-        bt.log.info(f"Current time: {utc_now.strftime('%H:%M')}")
+    # utc_now = datetime.now(timezone.utc)
+    # current_minute = utc_now.minute
+    # if current_minute % 20 == 0:
+    #     bt.log.info(f"Current time: {utc_now.strftime('%H:%M')}")
 
     # The dendrite client queries the network.
     responses = await self.dendrite(        

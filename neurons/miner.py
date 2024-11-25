@@ -20,6 +20,7 @@
 import time
 import typing
 import bittensor as bt
+from datetime import datetime, timezone
 
 # Bittensor Miner Template:
 import template
@@ -41,28 +42,41 @@ class Miner(BaseMinerNeuron):
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
 
-        # TODO(developer): Anything specific to your use case you can do here
+        bt.logging.info(f"\033[1;32m 🐸 BT Miner uid: {self.uid}\033[0m")
 
     async def forward(
         self, synapse: BitrecsRequest
     ) -> BitrecsRequest:
         """
-        Processes the incoming 'Dummy' synapse by performing a predefined operation on the input data.
-        This method should be replaced with actual logic relevant to the miner's purpose.
+        Takes an API request and generates recs
 
         Args:
-            synapse (template.protocol.Dummy): The synapse object containing the 'dummy_input' data.
+            synapse (template.protocol.BitrecsRequest): The synapse object containing the 'BitrecsRequest' data.
 
         Returns:
-            template.protocol.Dummy: The synapse object with the 'dummy_output' field set to twice the 'dummy_input' value.
+            template.protocol.BitrecsRequest: The synapse object with the recs.
 
-        The 'forward' function is a placeholder and should be overridden with logic that is appropriate for
-        the miner's intended operation. This method demonstrates a basic transformation of input data.
         """
         bt.logging.info("MINER FORWARD PASS")
+        print(self.uid)
         
-        #synapse.dummy_output = synapse.dummy_input * 2
-        synapse.results = ["result1", "result2", "result3", "result4", "result5"]
+        num_results = 5 
+        results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]        
+
+        json_context = "[]"
+        utc_now = datetime.now(timezone.utc)
+        created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
+
+        synapse.num_results = num_results
+        synapse.results = results
+        #synapse.query = query
+
+        synapse.context = json_context
+        synapse.created_at = created_at
+        synapse.models_used = [""]
+        synapse.miner_hotkey = synapse.dendrite.hotkey
+        synapse.miner_uid = str(self.uid)
+        
         return synapse
         
 

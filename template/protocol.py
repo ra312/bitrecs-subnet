@@ -18,13 +18,17 @@
 # DEALINGS IN THE SOFTWARE.
 
 import bittensor as bt
+import pydantic
 from typing import List
 
 class BitrecsRequest(bt.Synapse):
-    created_at: str
-    user: str
-    num_results: int
-    query: str
+    created_at: str | None
+    user: str | None
+    num_results: int = pydantic.Field(
+        0,
+        description="Expected number of recs",
+    )
+    query: str | None
     context: str | None
     site_key: str | None
     results: List[str] | None

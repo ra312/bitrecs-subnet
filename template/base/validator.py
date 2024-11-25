@@ -140,7 +140,11 @@ class BaseValidatorNeuron(BaseNeuron):
         # Check that validator is registered on the network.
         self.sync()
 
-        bt.logging.info(f"Validator starting at block: {self.block}")
+        #bt.logging.info(f"Validator starting at block: {self.block}")
+        bt.logging.info(
+            f"\033[1;32m 🐸 Running validator on network: {self.config.subtensor.chain_endpoint} with netuid: {self.config.netuid}\033[0m")
+        if hasattr(self, "axon"):
+            f"Axon: {self.axon}"
 
         # This loop maintains the validator's operations until intentionally stopped.
         try:
@@ -258,7 +262,7 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.debug("norm", norm)
 
         #print(self.scores)
-        
+
         # TODO FIXME BROKEN
 
         # Compute raw_weights safely
@@ -394,22 +398,23 @@ class BaseValidatorNeuron(BaseNeuron):
 
     def save_state(self):
         """Saves the state of the validator to a file."""
-        bt.logging.info("Saving validator state.")
-
-        # Save the state of the validator to file.
-        np.savez(
-            self.config.neuron.full_path + "/state.npz",
-            step=self.step,
-            scores=self.scores,
-            hotkeys=self.hotkeys,
-        )
+        # logger.info("Saving validator state start.")
+        #
+        # # Save the state of the validator to file.
+        # np.savez(self.config.neuron.full_path + "/state.npz",
+        #          step=self.step,
+        #          scores=self.scores,
+        #          hotkeys=self.hotkeys)
+        # logger.info("Saving validator state end.")
+        pass
 
     def load_state(self):
         """Loads the state of the validator from a file."""
-        bt.logging.info("Loading validator state.")
-
-        # Load the state of the validator from file.
-        state = np.load(self.config.neuron.full_path + "/state.npz")
-        self.step = state["step"]
-        self.scores = state["scores"]
-        self.hotkeys = state["hotkeys"]
+        # logger.info("Loading validator state.")
+        #
+        # # Load the state of the validator from file.
+        # state = np.load(self.config.neuron.full_path + "/state.npz")
+        # self.step = state["step"]
+        # self.scores = state["scores"]
+        # self.hotkeys = state["hotkeys"]
+        pass

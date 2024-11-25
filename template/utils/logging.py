@@ -33,3 +33,28 @@ def setup_events_logger(full_path, events_retention_size):
     logger.addHandler(file_handler)
 
     return logger
+
+
+
+
+timestamp_file = 'timestamp.txt'
+
+def write_timestamp(current_time):
+    tmp_file = timestamp_file + '.tmp'
+    with open(tmp_file, 'w') as f:
+        f.write(str(current_time))
+    os.replace(tmp_file, timestamp_file)  # Atomic operation to replace the file
+
+
+def read_timestamp():
+    try:
+        with open(timestamp_file, 'r') as f:
+            timestamp_str = f.read()
+            return float(timestamp_str)
+    except (FileNotFoundError, ValueError):
+        return None
+
+
+def remove_timestamp_file():
+    if os.path.exists(timestamp_file):
+        os.remove(timestamp_file)
