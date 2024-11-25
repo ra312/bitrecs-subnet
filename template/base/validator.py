@@ -24,6 +24,7 @@ import asyncio
 import argparse
 import threading
 import bittensor as bt
+import time
 
 from typing import List, Union
 from traceback import print_exception
@@ -144,20 +145,29 @@ class BaseValidatorNeuron(BaseNeuron):
         # This loop maintains the validator's operations until intentionally stopped.
         try:
             while True:
-                bt.logging.info(f"step({self.step}) block({self.block})")
+                try:
+                    # logger.info(f"debug 1")
+                    self.loop.run_until_complete(self.concurrent_forward())
 
-                # Run multiple forwards concurrently.
-                self.loop.run_until_complete(self.concurrent_forward())
+                    # logger.info(f"debug 2")
+                    # Check if we should exit.
+                    if self.should_exit:
+                        return
 
-                # Check if we should exit.
-                if self.should_exit:
-                    break
-
-                # Sync metagraph and potentially set weights.
-                self.sync()
-
-                self.step += 1
-
+                    try:
+                        # logger.info(f"debug 3")
+                        self.sync()
+                    except Exception as e:
+                        bt.logging.error(f"Failed to sync with exception: {e}")
+                    # logger.info(f"debug 4")
+                    self.step += 1
+                except Exception as e:
+                    bt.logging.error(f"Failed to run forward with exception: {e}")
+                    time.sleep(60)
+                finally:
+                    bt.logging.info(
+                        f"forward finished, sleep for {15} seconds")
+                    time.sleep(15)
         # If someone intentionally stops the validator, it'll safely terminate operations.
         except KeyboardInterrupt:
             self.axon.stop()
@@ -229,6 +239,12 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.warning(
                 f"Scores contain NaN values. This may be due to a lack of responses from miners, or a bug in your reward functions."
             )
+        
+        if np.all(self.scores == 0):
+            bt.logging.warning(
+                f"Scores are all zero. This may be due to a lack of responses from miners, or a bug in your reward functions."
+            )
+            return
 
         # Calculate the average reward for each uid across non-zero values.
         # Replace any NaN values with 0.
@@ -238,6 +254,12 @@ class BaseValidatorNeuron(BaseNeuron):
         # Check if the norm is zero or contains NaN values
         if np.any(norm == 0) or np.isnan(norm).any():
             norm = np.ones_like(norm)  # Avoid division by zero or NaN
+        
+        bt.logging.debug("norm", norm)
+
+        #print(self.scores)
+        
+        # TODO FIXME BROKEN
 
         # Compute raw_weights safely
         raw_weights = self.scores / norm
@@ -268,20 +290,26 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.debug("uint_weights", uint_weights)
         bt.logging.debug("uint_uids", uint_uids)
 
-        # Set the weights on chain via our subtensor connection.
-        result, msg = self.subtensor.set_weights(
-            wallet=self.wallet,
-            netuid=self.config.netuid,
-            uids=uint_uids,
-            weights=uint_weights,
-            wait_for_finalization=False,
-            wait_for_inclusion=False,
-            version_key=self.spec_version,
-        )
-        if result is True:
-            bt.logging.info("set_weights on chain successfully!")
-        else:
-            bt.logging.error("set_weights failed", msg)
+         # Set the weights on chain via our subtensor connection.
+        try:
+            result, msg = self.subtensor.set_weights(
+                wallet=self.wallet,
+                netuid=self.config.netuid,
+                uids=uint_uids,
+                weights=uint_weights,
+                wait_for_finalization=True,
+                wait_for_inclusion=True,
+                version_key=self.spec_version,
+            )
+            if result is True:
+                #write_timestamp(time.time())
+                print(f"updated timestamp to {time.time()}")
+                bt.logger.info(f"set_weights on chain successfully! msg: {msg}")
+            else:
+                bt.logger.error(f"set_weights on chain failed {msg}")
+        except Exception as e:
+            bt.logger.error(f"set_weights failed with exception: {e}")
+
 
     def resync_metagraph(self):
         """Resyncs the metagraph and updates the hotkeys and moving averages based on the new metagraph."""

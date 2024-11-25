@@ -189,8 +189,19 @@ class BaseMinerNeuron(BaseNeuron):
         self.stop_run_thread()
 
     def resync_metagraph(self):
-        """Resyncs the metagraph and updates the hotkeys and moving averages based on the new metagraph."""
-        bt.logging.info("resync_metagraph()")
+        """
+        Resync the metagraph and update hotkeys and moving averages based on the new metagraph.
+        """
+        # Import copy to make a deepcopy of the previous metagraph.
+        import copy
+        previous_metagraph = copy.deepcopy(self.metagraph)
 
         # Sync the metagraph.
         self.metagraph.sync(subtensor=self.subtensor)
+
+        # Check if the metagraph axon info has changed.
+        if previous_metagraph.axons == self.metagraph.axons:
+            # If metagraph hasn't changed, wait before next check.
+            time.sleep(1)
+            return
+        time.sleep(1)

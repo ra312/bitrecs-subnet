@@ -27,7 +27,7 @@ from template.validator.reward import get_rewards
 from template.utils.uids import get_random_uids
 
 
-def get_pr_request() -> BitrecsRequest:
+def get_bitrecs_request() -> BitrecsRequest:
     """
     Returns a dummy BitrecsRequest object for testing purposes.
 
@@ -42,7 +42,16 @@ def get_pr_request() -> BitrecsRequest:
     utc_now = datetime.now(timezone.utc)
     created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
-    p = BitrecsRequest(user="user1", query=query, context=json_context, created_at=created_at, num_results=num_results, site_key="site1", results=[], models_used=[], miner_hotkey="", miner_uid="")
+    p = BitrecsRequest(user="user1", 
+                       query=query, 
+                       context=json_context, 
+                       created_at=created_at, 
+                       num_results=num_results, 
+                       site_key="site1", 
+                       results=[], 
+                       models_used=[], 
+                       miner_hotkey="", 
+                       miner_uid="")
     return p
 
 
@@ -56,23 +65,23 @@ async def forward(self):
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
 
     """
-    next_request = get_pr_request()
-    num_recs = next_request.num_results
-
-    # TODO(developer): Define how the validator selects a miner to query, how often, etc.
-    # get_random_uids is an example method, but you can replace it with your own.
-    #miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+    next_request = get_bitrecs_request()
+    num_recs = next_request.num_results   
+    
     miner_uids = get_random_uids(self,  k=self.config.neuron.sample_size)
     #miner_uids = [0, 2]
 
     bt.logging.info(f"** UID uids: {miner_uids}")
     start_time = time.time()
 
+    utc_now = datetime.now(timezone.utc)
+    current_minute = utc_now.minute
+    if current_minute % 20 == 0:
+        bt.log.info(f"Current time: {utc_now.strftime('%H:%M')}")
+
     # The dendrite client queries the network.
-    responses = await self.dendrite(
-        # Send the query to selected miner axons in the network.
-        axons=[self.metagraph.axons[uid] for uid in miner_uids],
-        # Construct a dummy query. This simply contains a single integer.
+    responses = await self.dendrite(        
+        axons=[self.metagraph.axons[uid] for uid in miner_uids],        
         #synapse=Dummy(dummy_input=self.step),
         synapse=next_request,     
         timeout=3600,   
@@ -82,7 +91,7 @@ async def forward(self):
     )
     end_time = time.time()
     wall_time = end_time - start_time
-    bt.logging.info(f"Wall time: {wall_time}")
+    bt.logging.info(f"forward Wall time: {wall_time}")
 
     # Log the results for monitoring purposes.
     bt.logging.info(f"Received responses: {responses}")

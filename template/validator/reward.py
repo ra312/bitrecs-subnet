@@ -25,34 +25,36 @@ from typing import List
 
 def reward(num_recs: int, response: BitrecsRequest) -> float:
     """
-    Reward the miner response to the ProductRecRequest 
+    Reward the miner response to the BitrecsRequest 
 
     Nubmer of recommendations should match the requeted number of recommendations   
 
     Returns:
     - float: The reward value for the miner.
     """
+    
     print("*************************************************")
-    print(response)
-    
-    bt.logging.info(
-        f"Miner reward: {response}"
-    )
-    
-    #time.sleep(10)
+    # TODO check format of response as they are from LLMs
 
-    score = 0
- 
-    if len(response.results) == num_recs:
-        score = 0.01
-    elif len(response.results) != 0:
-        score = 0.001
-    
-    bt.logging.info(
-        f"Miner reward score: {score}, response val: {response}"
-    )
-    #return 1.0
-    return score    
+    try:
+        if response == {}:
+            return 0
+        score = 0.05
+        if(len(response.results) == num_recs):
+            score = 0.80
+        #logger.info(f"In reward, score: {score}, query val: {query}, miner's data': {response}")
+        bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response}")
+        return score
+    except Exception as e:
+        #logger.error(f"Error in rewards: {e}, miner data: {response}")
+        bt.logging.info("Error in rewards: {e}, miner data: {response}")
+        return None
+
+    #print(response)    
+    # bt.logging.info(
+    #     f"Miner reward: {response}"
+    # )    
+    #time.sleep(10)
     
 
 
@@ -64,14 +66,17 @@ def get_rewards(
     Returns an array of rewards for the given query and responses.
 
     Args:
-    - query (int): The query sent to the miner.
+    - num_recs (int): The number of results expected per miner response.
     - responses (List[float]): A list of responses from the miner.
 
     Returns:
     - np.ndarray: An array of rewards for the given query and responses.
     """
+    print(responses)
+    
     # Get all the reward results by iteratively calling your reward() function.
     return np.array(
         [reward(num_recs, response) for response in responses], dtype=float
     )
+    
     #return np.array([reward(num_recs, response) for response in responses])
