@@ -17,28 +17,48 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 import numpy as np
-from typing import List
+import time
 import bittensor as bt
+from template.protocol import BitrecsRequest
+from typing import List
 
 
-def reward(query: int, response: int) -> float:
+def reward(num_recs: int, response: BitrecsRequest) -> float:
     """
-    Reward the miner response to the dummy request. This method returns a reward
-    value for the miner, which is used to update the miner's score.
+    Reward the miner response to the ProductRecRequest 
+
+    Nubmer of recommendations should match the requeted number of recommendations   
 
     Returns:
     - float: The reward value for the miner.
     """
+    print("*************************************************")
+    print(response)
+    
     bt.logging.info(
-        f"In rewards, query val: {query}, response val: {response}, rewards val: {1.0 if response == query * 2 else 0}"
+        f"Miner reward: {response}"
     )
-    return 1.0 if response == query * 2 else 0
+    
+    #time.sleep(10)
+
+    score = 0
+ 
+    if len(response.results) == num_recs:
+        score = 0.01
+    elif len(response.results) != 0:
+        score = 0.001
+    
+    bt.logging.info(
+        f"Miner reward score: {score}, response val: {response}"
+    )
+    return score    
+    
 
 
 def get_rewards(
     self,
-    query: int,
-    responses: List[float],
+    num_recs: int,
+    responses: List[BitrecsRequest],   
 ) -> np.ndarray:
     """
     Returns an array of rewards for the given query and responses.
@@ -51,5 +71,5 @@ def get_rewards(
     - np.ndarray: An array of rewards for the given query and responses.
     """
     # Get all the reward results by iteratively calling your reward() function.
-
-    return np.array([reward(query, response) for response in responses])
+    
+    return np.array([reward(num_recs, response) for response in responses])

@@ -19,10 +19,31 @@
 
 import time
 import bittensor as bt
+import random
+from datetime import datetime, timezone
 
-from template.protocol import Dummy
+from template.protocol import BitrecsRequest
 from template.validator.reward import get_rewards
 from template.utils.uids import get_random_uids
+
+
+def get_pr_request() -> BitrecsRequest:
+    """
+    Returns a dummy ProductRecRequest object for testing purposes.
+
+    """
+
+    num_results = 5    
+    #query = "24-WB03" #Divine backpack
+    queries = ["WT02-M-Green", "WT05-L-Purple", "24-MB02", "WSH11-28-Blue", "MH11"]
+    query = random.choice(queries)
+
+    json_context = "[]"
+    utc_now = datetime.now(timezone.utc)
+    created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
+
+    p = BitrecsRequest(user="user1", query=query, context=json_context, created_at=created_at, num_results=num_results, site_key="site1", results=[])
+    return p
 
 
 async def forward(self):
@@ -35,27 +56,35 @@ async def forward(self):
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
 
     """
+    next_request = get_pr_request()
+    num_recs = next_request.num_results
+
     # TODO(developer): Define how the validator selects a miner to query, how often, etc.
     # get_random_uids is an example method, but you can replace it with your own.
     miner_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+    bt.logging.info(f"** UID uids: {miner_uids}")
+    start_time = time.time()
 
     # The dendrite client queries the network.
     responses = await self.dendrite(
         # Send the query to selected miner axons in the network.
         axons=[self.metagraph.axons[uid] for uid in miner_uids],
         # Construct a dummy query. This simply contains a single integer.
-        synapse=Dummy(dummy_input=self.step),
+        #synapse=Dummy(dummy_input=self.step),
+        synapse=next_request,        
         # All responses have the deserialize function called on them before returning.
         # You are encouraged to define your own deserialization function.
         deserialize=True,
     )
+    end_time = time.time()
+    wall_time = end_time - start_time
+    bt.logging.info(f"Wall time: {wall_time}")
 
     # Log the results for monitoring purposes.
     bt.logging.info(f"Received responses: {responses}")
-
-    # TODO(developer): Define how the validator scores responses.
+    
     # Adjust the scores based on responses from miners.
-    rewards = get_rewards(self, query=self.step, responses=responses)
+    rewards = get_rewards(self, num_recs=num_recs, responses=responses)
 
     bt.logging.info(f"Scored responses: {rewards}")
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.

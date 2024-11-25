@@ -19,6 +19,8 @@
 
 import typing
 import bittensor as bt
+import pydantic
+from typing import List
 
 # TODO(developer): Rewrite with your protocol definition.
 
@@ -74,3 +76,67 @@ class Dummy(bt.Synapse):
         5
         """
         return self.dummy_output
+    
+
+class BitrecsRequest(bt.Synapse):
+    created_at: str
+
+    user: str
+    num_results: int
+    query: str
+    context: str    
+    site_key: str
+
+    # status_code: int
+    # status_text: str
+    # response_text: str    
+    results: List[str] | None
+    # models_used: List[str]
+    # catalog_size: int
+    # miner_uid: str
+    # miner_public_key: str
+    # reasoning: str
+
+    
+
+# class ProductRecRequest(BitrecsBase):
+
+#     def deserialize(self) -> "ProductRecRequest":
+#         """
+#         Returns the instance of the current ProductRecRequest object.
+
+#         This method is intended to be potentially overridden by subclasses for custom deserialization logic.
+#         In the context of the ProductRecRequest class, it simply returns the instance itself. However, for subclasses
+#         inheriting from this class, it might give a custom implementation for deserialization if need be.
+
+#         Returns:
+#             ProductRecRequest: The current instance of the ProductRecRequest class.
+#         """
+#         return self
+    
+#     query: str
+#     context: str    
+#     num_results: int
+#     site_key: str
+  
+
+# class ProductRecResponse(BitrecsBase):
+
+#     def deserialize(self) -> "ProductRecResponse":
+#         """
+#         Returns the instance of the current ProductRecResponse object.     
+#         """
+#         return self     
+    
+#     status_code: int
+#     status_text: str
+#     response_text: str
+#     created_at: str
+#     results: List[str]
+#     models_used: List[str]
+#     catalog_size: int
+#     miner_uid: str
+#     miner_public_key: str
+#     reasoning: str
+
+

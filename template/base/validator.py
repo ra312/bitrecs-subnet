@@ -234,6 +234,8 @@ class BaseValidatorNeuron(BaseNeuron):
         # Replace any NaN values with 0.
         # Compute the norm of the scores
         norm = np.linalg.norm(self.scores, ord=1, axis=0, keepdims=True)
+        
+        bt.logging.debug("**************** NORM ", norm)
 
         # Check if the norm is zero or contains NaN values
         if np.any(norm == 0) or np.isnan(norm).any():
