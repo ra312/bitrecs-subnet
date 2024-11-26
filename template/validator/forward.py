@@ -94,7 +94,7 @@ async def forward(self):
     bt.logging.info(f"forward Wall time: {wall_time}")
 
     # Log the results for monitoring purposes.
-    bt.logging.info(f"Received responses: {responses}")
+    bt.logging.info(f"Received {len(responses)} responses: {responses}")
     
     # Adjust the scores based on responses from miners.
     rewards = get_rewards(num_recs=num_recs, responses=responses)

@@ -239,6 +239,9 @@ class BaseValidatorNeuron(BaseNeuron):
         """
 
         # Check if self.scores contains any NaN values and log a warning if it does.
+        bt.logging.info(f"set_weights on chain start")       
+        bt.logging.info(f"Scores: {self.scores}")       
+
         if np.isnan(self.scores).any():
             bt.logging.warning(
                 f"Scores contain NaN values. This may be due to a lack of responses from miners, or a bug in your reward functions."

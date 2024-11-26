@@ -57,8 +57,7 @@ class Miner(BaseMinerNeuron):
             template.protocol.BitrecsRequest: The synapse object with the recs.
 
         """
-        bt.logging.info("MINER FORWARD PASS")
-        print(self.uid)
+        bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))
         
         num_results = 5 
         results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]        
@@ -182,11 +181,11 @@ class Miner(BaseMinerNeuron):
         )
         return priority
     
-    def save_state(self):
-        # bt.logging.warning(
-        #     "hi dimi"
-        # )
-        pass
+    # def save_state(self):
+    #     # bt.logging.warning(
+    #     #     "hi dimi"
+    #     # )
+    #     pass
 
     # def resync_metagraph(self):
         
@@ -197,23 +196,23 @@ class Miner(BaseMinerNeuron):
     #     pass
 
     
-    def resync_metagraph(self):
-        """
-        Resync the metagraph and update hotkeys and moving averages based on the new metagraph.
-        """
-        # Import copy to make a deepcopy of the previous metagraph.
-        import copy
-        previous_metagraph = copy.deepcopy(self.metagraph)
+    # def resync_metagraph(self):
+    #     """
+    #     Resync the metagraph and update hotkeys and moving averages based on the new metagraph.
+    #     """
+    #     # Import copy to make a deepcopy of the previous metagraph.
+    #     import copy
+    #     previous_metagraph = copy.deepcopy(self.metagraph)
 
-        # Sync the metagraph.
-        self.metagraph.sync(subtensor=self.subtensor)
+    #     # Sync the metagraph.
+    #     self.metagraph.sync(subtensor=self.subtensor)
 
-        # Check if the metagraph axon info has changed.
-        if previous_metagraph.axons == self.metagraph.axons:
-            # If metagraph hasn't changed, wait before next check.
-            time.sleep(1)
-            return
-        time.sleep(1)
+    #     # Check if the metagraph axon info has changed.
+    #     if previous_metagraph.axons == self.metagraph.axons:
+    #         # If metagraph hasn't changed, wait before next check.
+    #         time.sleep(1)
+    #         return
+    #     time.sleep(1)
 
 
 
@@ -222,4 +221,4 @@ if __name__ == "__main__":
     with Miner() as miner:
         while True:
             bt.logging.info(f"Miner running... {time.time()}")
-            time.sleep(5)
+            time.sleep(15)
