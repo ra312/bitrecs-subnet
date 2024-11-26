@@ -25,7 +25,6 @@ import argparse
 import threading
 import bittensor as bt
 import time
-import torch
 
 from typing import List, Union
 from traceback import print_exception
@@ -91,7 +90,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
         bt.logging.info("serving ip to chain...")
         try:
-            self.axon = bt.axon(wallet=self.wallet, config=self.config)
+            self.axon = bt.axon(wallet=self.wallet, config=self.config, port=self.config.axon.port)
 
             try:
                 self.subtensor.serve_axon(
