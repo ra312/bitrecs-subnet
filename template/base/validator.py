@@ -25,6 +25,7 @@ import argparse
 import threading
 import bittensor as bt
 import time
+import torch
 
 from typing import List, Union
 from traceback import print_exception
@@ -150,21 +151,17 @@ class BaseValidatorNeuron(BaseNeuron):
         try:
             while True:
                 try:
-                    # logger.info(f"debug 1")
+                    
                     self.loop.run_until_complete(self.concurrent_forward())
-
-                    # logger.info(f"debug 2")
-                    # Check if we should exit.
                     if self.should_exit:
                         return
 
-                    try:
-                        # logger.info(f"debug 3")
+                    try:                        
                         self.sync()
                     except Exception as e:
-                        bt.logging.error(f"Failed to sync with exception: {e}")
-                    # logger.info(f"debug 4")
+                        bt.logging.error(f"Failed to sync with exception: {e}")                    
                     self.step += 1
+
                 except Exception as e:
                     bt.logging.error(f"Failed to run forward with exception: {e}")
                     time.sleep(60)
@@ -267,9 +264,32 @@ class BaseValidatorNeuron(BaseNeuron):
         #print(self.scores)
 
         # TODO FIXME BROKEN
-
         # Compute raw_weights safely
         raw_weights = self.scores / norm
+
+        if np.isscalar(norm):
+            bt.logging.debug("norm is scalar")
+            raw_weights = self.scores / norm
+        else:
+            bt.logging.debug("norm is not scalar")
+            raw_weights = self.scores / norm[:, np.newaxis]
+
+        bt.logging.debug("hi there")
+        
+        # Printing type of arr object
+        bt.logging.debug("Array is of type: ", type(raw_weights))
+
+        # Printing array dimensions (axes)
+        bt.logging.debug("No. of dimensions: ", raw_weights.ndim)
+
+        # Printing shape of array
+        bt.logging.debug("Shape of array: ", raw_weights.shape)
+
+        # Printing size (total number of elements) of array
+        bt.logging.debug("Size of array: ", raw_weights.size)
+
+        # Printing type of elements in array
+        bt.logging.debug("Array stores elements of type: ", raw_weights.dtype)
 
         bt.logging.debug("raw_weights", raw_weights)
         bt.logging.debug("raw_weight_uids", str(self.metagraph.uids.tolist()))
@@ -316,6 +336,8 @@ class BaseValidatorNeuron(BaseNeuron):
                 bt.logger.error(f"set_weights on chain failed {msg}")
         except Exception as e:
             bt.logger.error(f"set_weights failed with exception: {e}")
+
+
 
 
     def resync_metagraph(self):

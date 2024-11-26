@@ -27,13 +27,13 @@ from template.validator.reward import get_rewards
 from template.utils.uids import get_random_uids
 
 
-def get_bitrecs_request() -> BitrecsRequest:
+def get_bitrecs_request(num_results) -> BitrecsRequest:
     """
     Returns a dummy BitrecsRequest object for testing purposes.
 
     """
 
-    num_results = 5    
+    #num_results = random.choice([1, 2, 3, 4, 5])    
     #query = "24-WB03" #Divine backpack
     queries = ["WT02-M-Green", "WT05-L-Purple", "24-MB02", "WSH11-28-Blue", "MH11"]
     query = random.choice(queries)
@@ -65,7 +65,8 @@ async def forward(self):
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
 
     """
-    next_request = get_bitrecs_request()
+    num_results = random.choice([1, 2, 3, 4, 5])    
+    next_request = get_bitrecs_request(num_results)
     num_recs = next_request.num_results   
     
     miner_uids = get_random_uids(self,  k=self.config.neuron.sample_size)
@@ -73,11 +74,6 @@ async def forward(self):
 
     bt.logging.info(f"** UID uids: {miner_uids}")
     start_time = time.time()
-
-    # utc_now = datetime.now(timezone.utc)
-    # current_minute = utc_now.minute
-    # if current_minute % 20 == 0:
-    #     bt.log.info(f"Current time: {utc_now.strftime('%H:%M')}")
 
     # The dendrite client queries the network.
     responses = await self.dendrite(        
@@ -87,7 +83,7 @@ async def forward(self):
         timeout=3600,   
         # All responses have the deserialize function called on them before returning.
         # You are encouraged to define your own deserialization function.
-        deserialize=True,
+        deserialize=False,
     )
     end_time = time.time()
     wall_time = end_time - start_time
@@ -103,14 +99,3 @@ async def forward(self):
     bt.logging.info(f"Scored responses: {rewards}")
     
     self.update_scores(rewards, miner_uids)
-
-    # for idx, (uid, response, reward) in enumerate(zip(miner_uids, responses, rewards)):
-    #     try:
-    #         # rewards[idx] = 100.0
-    #         bt.logging.info(f"uid: {uid}, coldkey:{self.metagraph.axons[uid].coldkey[:10]}, "
-    #                     f"response: {response}, reward: {rewards[idx]}")
-    #     except Exception as e:
-    #         bt.logging.error(f"Error in logging: {e}")
-    # log_str = '\n' 
-    #bt.logging.info(log_str)
-    

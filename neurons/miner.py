@@ -20,6 +20,7 @@
 import time
 import typing
 import bittensor as bt
+import random
 from datetime import datetime, timezone
 
 # Bittensor Miner Template:
@@ -59,17 +60,23 @@ class Miner(BaseMinerNeuron):
         """
         bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))
         
-        num_results = 5 
-        results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]        
+        #num_results = synapse.num_results
+        #results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]      
+
+        things = [["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"], 
+                  ["result4A - rare", "result5A - common"],
+                  ["result1B - superior", "result2B - exalted", "result3B - ornate"],
+                  ["result1C - superior", "result2C - exalted", "result3C - ornate", "result4C - rare"]]
+        results = random.choice(things)
 
         json_context = "[]"
         utc_now = datetime.now(timezone.utc)
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
-        synapse.num_results = num_results
+        #synapse.num_results = num_results
+        
         synapse.results = results
         #synapse.query = query
-
         synapse.context = json_context
         synapse.created_at = created_at
         synapse.models_used = [""]
@@ -181,40 +188,8 @@ class Miner(BaseMinerNeuron):
         )
         return priority
     
-    # def save_state(self):
-    #     # bt.logging.warning(
-    #     #     "hi dimi"
-    #     # )
-    #     pass
-
-    # def resync_metagraph(self):
-        
-    #     #bt.logging.info("hi d()")
-    #     #sleep(90)
-    #     # Sync the metagraph.
-    #     #self.metagraph.sync(subtensor=self.subtensor)
-    #     pass
-
-    
-    # def resync_metagraph(self):
-    #     """
-    #     Resync the metagraph and update hotkeys and moving averages based on the new metagraph.
-    #     """
-    #     # Import copy to make a deepcopy of the previous metagraph.
-    #     import copy
-    #     previous_metagraph = copy.deepcopy(self.metagraph)
-
-    #     # Sync the metagraph.
-    #     self.metagraph.sync(subtensor=self.subtensor)
-
-    #     # Check if the metagraph axon info has changed.
-    #     if previous_metagraph.axons == self.metagraph.axons:
-    #         # If metagraph hasn't changed, wait before next check.
-    #         time.sleep(1)
-    #         return
-    #     time.sleep(1)
-
-
+    def save_state(self):        
+        pass
 
 # This is the main function, which runs the miner.
 if __name__ == "__main__":
