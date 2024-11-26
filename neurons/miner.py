@@ -43,7 +43,7 @@ class Miner(BaseMinerNeuron):
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
 
-        bt.logging.info(f"\033[1;32m 🐸 BT Miner uid: {self.uid}\033[0m")
+        bt.logging.info(f"\033[1;32m 🐸 Bitrecs Miner uid: {self.uid}\033[0m")
 
     async def forward(
         self, synapse: BitrecsRequest
@@ -148,6 +148,11 @@ class Miner(BaseMinerNeuron):
         bt.logging.trace(
             f"Not Blacklisting recognized hotkey {synapse.dendrite.hotkey}"
         )
+
+        bt.logging.debug(
+            f"GOOD hotkey {synapse.dendrite.hotkey}"
+        )
+
         return False, "Hotkey recognized!"
 
     async def priority(self, synapse: template.protocol.BitrecsRequest) -> float:
@@ -183,7 +188,7 @@ class Miner(BaseMinerNeuron):
         priority = float(
             self.metagraph.S[caller_uid]
         )  # Return the stake as the priority.
-        bt.logging.trace(
+        bt.logging.debug(
             f"Prioritizing {synapse.dendrite.hotkey} with value: {priority}"
         )
         return priority
