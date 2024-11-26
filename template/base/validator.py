@@ -291,8 +291,11 @@ class BaseValidatorNeuron(BaseNeuron):
         # Printing type of elements in array
         bt.logging.debug("Array stores elements of type: ", raw_weights.dtype)
 
-        bt.logging.debug("raw_weights", raw_weights)
+        
         bt.logging.debug("raw_weight_uids", str(self.metagraph.uids.tolist()))
+
+        bt.logging.debug("raw_weights", str(raw_weights))
+        
         # Process the raw weights to final_weights via subtensor limitations.
         (
             processed_weight_uids,
