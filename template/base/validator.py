@@ -311,14 +311,18 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.debug("processed_weights", processed_weights)
 
         # Convert to uint16 weights and uids.
-        (
-            uint_uids,
-            uint_weights,
-        ) = convert_weights_and_uids_for_emit(
-            uids=processed_weight_uids, weights=processed_weights
-        )
-        bt.logging.debug("uint_weights", uint_weights)
-        bt.logging.debug("uint_uids", uint_uids)
+        try:
+            (
+                uint_uids,
+                uint_weights,
+            ) = convert_weights_and_uids_for_emit(
+                uids=processed_weight_uids, weights=processed_weights
+            )
+            bt.logging.debug("uint_weights", uint_weights)
+            bt.logging.debug("uint_uids", uint_uids)
+        except Exception as e:
+            bt.logging.error(f"convert_weights_and_uids_for_emit function error: {e}")
+            pass
 
          # Set the weights on chain via our subtensor connection.
         try:
