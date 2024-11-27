@@ -126,8 +126,13 @@ class BaseNeuron(ABC):
         if self.should_sync_metagraph():
             self.resync_metagraph()
 
+        
+        bt.logging.debug("VALIDATOR should_set_weights PRE")
+        
         if self.should_set_weights():
             self.set_weights()
+
+        bt.logging.debug("VALIDATOR should_set_weights POST")
 
         # Always save state.
         self.save_state()

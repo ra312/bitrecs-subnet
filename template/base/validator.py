@@ -25,6 +25,7 @@ import argparse
 import threading
 import bittensor as bt
 import time
+import traceback
 
 from typing import List, Union
 from traceback import print_exception
@@ -157,8 +158,8 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     try:                        
                         self.sync()
-                    except Exception as e:                        
-                        #bt.logging.debug(str(print_exception(type(e), e, e.__traceback__)))
+                    except Exception as e:
+                        bt.logging.error(traceback.format_exc())
                         bt.logging.error(f"Failed to sync with exception: {e}")
 
                     self.step += 1
