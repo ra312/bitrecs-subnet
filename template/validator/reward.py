@@ -73,8 +73,11 @@ def get_rewards(
     - np.ndarray: An array of rewards for the given query and responses.
     """
     bt.logging.info(f"** In get_rewards, responses: {responses}")
-    print(responses)
-    
+    #print(responses)
+
+    for r in responses:
+        bt.logging.info(f"** get_rewards response: {r.miner_uid}")
+
     # Get all the reward results by iteratively calling your reward() function.
     return np.array(
         [reward(num_recs, response) for response in responses], dtype=float
