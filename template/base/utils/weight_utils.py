@@ -161,19 +161,13 @@ def process_weights_for_netuid(
 
     try:
         bittensor.logging.debug(f"weights shape {weights.shape}")
-        bittensor.logging.debug(f"weights t {weights}")        
+        bittensor.logging.debug(f"weights t {weights}")
 
-        #non_zero_weight_idx = np.argwhere(weights > 0).squeeze()
-        non_zero_weight_idx = np.argwhere(weights > 0)
+        non_zero_weight_idx = np.argwhere(weights > 0).squeeze()
         non_zero_weight_idx = np.atleast_1d(non_zero_weight_idx)
-
-        bittensor.logging.debug(f"non_zero_weight_idx {non_zero_weight_idx}")
-        bittensor.logging.debug(f"shape {non_zero_weight_idx.shape}")
         
         non_zero_weight_uids = uids[non_zero_weight_idx]
-        non_zero_weights = weights[non_zero_weight_idx[0]][non_zero_weight_idx[1]]
-        #non_zero_weights = weights[non_zero_weight_idx]
-                                   
+        non_zero_weights = weights[non_zero_weight_idx]
         if non_zero_weights.size == 0 or metagraph.n < min_allowed_weights:
             bittensor.logging.warning("No non-zero weights returning all ones.")
             final_weights = np.ones(metagraph.n) / metagraph.n

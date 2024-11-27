@@ -266,12 +266,12 @@ class BaseValidatorNeuron(BaseNeuron):
         # Compute raw_weights safely
         raw_weights = self.scores / norm
 
-        if np.isscalar(norm):
-            bt.logging.debug("norm is scalar")
-            raw_weights = self.scores / norm
-        else:
-            bt.logging.debug("norm is not scalar")
-            raw_weights = self.scores / norm[:, np.newaxis]
+        # if np.isscalar(norm):
+        #     bt.logging.debug("norm is scalar")
+        #     raw_weights = self.scores / norm
+        # else:
+        #     bt.logging.debug("norm is not scalar")
+        #     raw_weights = self.scores / norm[:, np.newaxis]
 
         bt.logging.debug("hi there")
         
