@@ -61,13 +61,13 @@ class Miner(BaseMinerNeuron):
         bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))
         
         #num_results = synapse.num_results
-        #results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]      
+        results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]      
 
-        things = [["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"], 
-                  ["result4A - rare", "result5A - common"],
-                  ["result1B - superior", "result2B - exalted", "result3B - ornate"],
-                  ["result1C - superior", "result2C - exalted", "result3C - ornate", "result4C - rare"]]
-        results = random.choice(things)
+        # things = [["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"], 
+        #           ["result4A - rare", "result5A - common"],
+        #           ["result1B - superior", "result2B - exalted", "result3B - ornate"],
+        #           ["result1C - superior", "result2C - exalted", "result3C - ornate", "result4C - rare"]]
+        # results = random.choice(things)
 
         json_context = "[]"
         utc_now = datetime.now(timezone.utc)

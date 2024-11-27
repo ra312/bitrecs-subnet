@@ -65,7 +65,8 @@ async def forward(self):
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
 
     """
-    num_results = random.choice([1, 2, 3, 4, 5])    
+    #num_results = random.choice([1, 2, 3, 4, 5])  
+    num_results = 5
     next_request = get_bitrecs_request(num_results)
     num_recs = next_request.num_results   
     
