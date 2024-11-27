@@ -167,7 +167,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 finally:
                     bt.logging.info(
                         f"forward finished, sleep for {15} seconds")
-                    time.sleep(5)
+                    time.sleep(15)
         # If someone intentionally stops the validator, it'll safely terminate operations.
         except KeyboardInterrupt:
             self.axon.stop()
@@ -291,7 +291,7 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.debug("Array stores elements of type: ", raw_weights.dtype)
 
         
-        bt.logging.debug("uids to update", str(self.metagraph.uids.tolist()))
+        bt.logging.debug("uids", str(self.metagraph.uids.tolist()))
 
         bt.logging.debug("raw_weights", str(raw_weights))
         
@@ -299,14 +299,13 @@ class BaseValidatorNeuron(BaseNeuron):
         (
             processed_weight_uids,
             processed_weights,
-        ) = bt.utils.weight_utils.process_weights_for_netuid(
+        ) = process_weights_for_netuid(
             uids=self.metagraph.uids,
             weights=raw_weights,
             netuid=self.config.netuid,
             subtensor=self.subtensor,
             metagraph=self.metagraph,
         )
-        
         bt.logging.debug("processed_weights", processed_weights)
         bt.logging.debug("processed_weight_uids", processed_weight_uids)
 
