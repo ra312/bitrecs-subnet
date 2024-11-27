@@ -124,7 +124,7 @@ def convert_weights_and_uids_for_emit(
     return weight_uids, weight_vals
 
 
-def process_weights_for_netuid_old(
+def process_weights_for_netuid(
         uids,
         weights: np.ndarray,
         netuid: int,
@@ -221,82 +221,6 @@ def process_weights_for_netuid_old(
         x=non_zero_weights, limit=max_weight_limit
     )
     bittensor.logging.debug(f"final_weights {normalized_weights}")
-
-    return non_zero_weight_uids, normalized_weights
-
-
-def process_weights_for_netuid(
-        uids,
-        weights: np.ndarray,
-        netuid: int,
-        subtensor: "bittensor.subtensor",
-        metagraph: "bittensor.metagraph" = None,
-        exclude_quantile: int = 0,
-    ) -> Union[
-        tuple[np.ndarray, np.ndarray], 
-        tuple[np.ndarray, np.ndarray]
-    ]:
-
-    # If no metagraph is provided, fetch the latest one from the chain
-    if metagraph is None:
-        metagraph = subtensor.metagraph(netuid)
-
-    # Cast weights to float32 if they are not already
-    if not isinstance(weights, np.ndarray) or weights.dtype != np.float32:
-        weights = weights.astype(np.float32)
-
-    # Get network configuration parameters
-    quantile = exclude_quantile / 65535  # U16_MAX = 65535
-    min_allowed_weights = subtensor.min_allowed_weights(netuid=netuid)
-    max_weight_limit = subtensor.max_weight_limit(netuid=netuid)
-
-    try:
-        # Find non-zero weights and their corresponding UIDs
-        non_zero_weight_idx = np.argwhere(weights > 0).squeeze()
-        non_zero_weight_idx = np.atleast_1d(non_zero_weight_idx)  # Ensure it's a 1D array
-        non_zero_weight_uids = uids[non_zero_weight_idx]
-        non_zero_weights = weights[non_zero_weight_idx]
-
-        # Handle cases where no valid weights exist
-        if non_zero_weights.size == 0 or metagraph.n < min_allowed_weights:
-            bittensor.logging.warning("No non-zero weights, returning uniform weights.")
-            final_weights = np.ones(metagraph.n) / metagraph.n
-            return np.arange(len(final_weights)), final_weights
-
-        # Handle cases where the number of non-zero weights is below the minimum allowed
-        elif non_zero_weights.size < min_allowed_weights:
-            bittensor.logging.warning("Non-zero weights below minimum allowed, adjusting weights.")
-            weights = np.ones(metagraph.n) * 1e-5  # Set minimum non-zero weights
-            weights[non_zero_weight_idx] += non_zero_weights
-            normalized_weights = normalize_max_weight(x=weights, limit=max_weight_limit)
-            return np.arange(len(normalized_weights)), normalized_weights
-
-    except Exception as e:
-        bittensor.logging.error(traceback.format_exc())
-        bittensor.logging.error(f"Error in process_weights_for_netuid: {e}")
-        return np.zeros(len(uids)), np.zeros(len(uids))
-
-    # Compute the exclude quantile and find the lowest allowed quantile
-    try:
-        max_exclude = max(0, len(non_zero_weights) - min_allowed_weights) / len(non_zero_weights)
-    except Exception:
-        bittensor.logging.warning("Failed to compute max_exclude.")
-        max_exclude = max(0, non_zero_weights.size - min_allowed_weights) / non_zero_weights.size
-
-    exclude_quantile = min([quantile, max_exclude])
-    lowest_quantile = np.quantile(non_zero_weights, exclude_quantile)
-
-    # Exclude weights below the allowed quantile
-    mask = non_zero_weights >= lowest_quantile
-    if mask.any():  # Ensure there are valid weights after filtering
-        non_zero_weight_uids = non_zero_weight_uids[mask]
-        non_zero_weights = non_zero_weights[mask]
-    else:
-        bittensor.logging.warning("No weights above quantile, returning all zeros.")
-        return np.zeros_like(uids), np.zeros_like(weights)
-
-    # Normalize weights to the maximum allowed weight
-    normalized_weights = normalize_max_weight(x=non_zero_weights, limit=max_weight_limit)
 
     return non_zero_weight_uids, normalized_weights
 
