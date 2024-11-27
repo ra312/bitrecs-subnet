@@ -35,27 +35,23 @@ def reward(num_recs: int, response: BitrecsRequest) -> float:
     
     print("*************************************************")
     # TODO check format of response as they are from LLMs
-
     try:
+
         if response == {}:
+            return 0        
+        if num_recs < 1:
             return 0
-        score = 0.05
+        
+        score = 0.00
         if(len(response.results) == num_recs):
             score = 0.80
-        #logger.info(f"In reward, score: {score}, query val: {query}, miner's data': {response}")
+        
         bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response}")
         return score
     except Exception as e:
         #logger.error(f"Error in rewards: {e}, miner data: {response}")
         bt.logging.info("Error in rewards: {e}, miner data: {response}")
-        return None
-
-    #print(response)    
-    # bt.logging.info(
-    #     f"Miner reward: {response}"
-    # )    
-    #time.sleep(10)
-    
+        return None    
 
 
 def get_rewards(   
