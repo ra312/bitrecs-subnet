@@ -33,7 +33,7 @@ def reward(num_recs: int, response: BitrecsRequest) -> float:
     - float: The reward value for the miner.
     """
     
-    print("*************************************************")
+    print("*************** REWARD *************************")
     # TODO check format of response as they are from LLMs
     try:
 
@@ -48,10 +48,9 @@ def reward(num_recs: int, response: BitrecsRequest) -> float:
         
         bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response}")
         return score
-    except Exception as e:
-        #logger.error(f"Error in rewards: {e}, miner data: {response}")
-        bt.logging.info("Error in rewards: {e}, miner data: {response}")
-        return None    
+    except Exception as e:        
+        bt.logging.info(f"Error in rewards: {e}, miner data: {response}")
+        return None
 
 
 def get_rewards(   
@@ -67,16 +66,12 @@ def get_rewards(
 
     Returns:
     - np.ndarray: An array of rewards for the given query and responses.
-    """
-    bt.logging.info(f"** In get_rewards, responses: {responses}")
-    #print(responses)
+    """    
 
     for r in responses:
         bt.logging.info(f"** get_rewards response: {r.miner_uid}")
-
-    # Get all the reward results by iteratively calling your reward() function.
+    
     return np.array(
         [reward(num_recs, response) for response in responses], dtype=float
-    )
+    )    
     
-    #return np.array([reward(num_recs, response) for response in responses])
