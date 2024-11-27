@@ -299,8 +299,9 @@ class BaseValidatorNeuron(BaseNeuron):
             subtensor=self.subtensor,
             metagraph=self.metagraph,
         )
-        bt.logging.debug("processed_weights", processed_weights)
+        
         bt.logging.debug("processed_weight_uids", processed_weight_uids)
+        bt.logging.debug("processed_weights", processed_weights)
 
         # Convert to uint16 weights and uids.
         (

@@ -212,9 +212,11 @@ def process_weights_for_netuid(
     non_zero_weights = non_zero_weights[lowest_quantile <= non_zero_weights]
     bittensor.logging.debug(f"non_zero_weight_uids {non_zero_weight_uids}")
     bittensor.logging.debug(f"type non_zero_weight_uids {type(non_zero_weight_uids)}")
+    bittensor.logging.debug(f"shape non_zero_weight_uids {non_zero_weight_uids.shape}")
 
     bittensor.logging.debug(f"non_zero_weights {non_zero_weights}")
     bittensor.logging.debug(f"type non_zero_weights {type(non_zero_weights)}")    
+    bittensor.logging.debug(f"shape non_zero_weights {non_zero_weights.shape}")
 
     # Normalize weights and return.
     normalized_weights = normalize_max_weight(
