@@ -160,6 +160,8 @@ def process_weights_for_netuid(
     # Find all non zero weights.
 
     try:
+        bittensor.logging.debug(f"weights shape {weights.shape}")
+        bittensor.logging.debug(f"weights t {weights}")
 
         non_zero_weight_idx = np.argwhere(weights > 0).squeeze()
         non_zero_weight_idx = np.atleast_1d(non_zero_weight_idx)
