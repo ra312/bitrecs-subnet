@@ -291,17 +291,22 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.debug("raw_weights", str(raw_weights))
         
         # Process the raw weights to final_weights via subtensor limitations.
-        (
-            processed_weight_uids,
-            processed_weights,
-        ) = process_weights_for_netuid(
-            uids=self.metagraph.uids,
-            weights=raw_weights,
-            netuid=self.config.netuid,
-            subtensor=self.subtensor,
-            metagraph=self.metagraph,
-        )
-        
+        try:
+
+            (
+                processed_weight_uids,
+                processed_weights,
+            ) = process_weights_for_netuid(
+                uids=self.metagraph.uids,
+                weights=raw_weights,
+                netuid=self.config.netuid,
+                subtensor=self.subtensor,
+                metagraph=self.metagraph,
+            )
+        except Exception as e:
+            bt.logging.error(f"process_weights_for_netuid function error: {e}")
+            pass
+            
         bt.logging.debug("processed_weight_uids", processed_weight_uids)
         bt.logging.debug("processed_weights", processed_weights)
 
