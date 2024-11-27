@@ -70,7 +70,7 @@ async def forward(self):
     num_recs = next_request.num_results   
     
     miner_uids = get_random_uids(self,  k=self.config.neuron.sample_size)
-    miner_uids = [5]
+    #miner_uids = [5]
 
     bt.logging.info(f"** UID uids: {miner_uids}")
     start_time = time.time()
