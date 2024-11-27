@@ -308,8 +308,8 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.error(f"process_weights_for_netuid function error: {e}")
             pass
             
-        bt.logging.debug("processed_weight_uids", processed_weight_uids)
-        bt.logging.debug("processed_weights", processed_weights)
+        bt.logging.debug(f"processed_weight_uids {processed_weight_uids}")        
+        bt.logging.debug(f"processed_weights {processed_weights}")
 
         # Convert to uint16 weights and uids.
         try:
@@ -319,8 +319,10 @@ class BaseValidatorNeuron(BaseNeuron):
             ) = convert_weights_and_uids_for_emit(
                 uids=processed_weight_uids, weights=processed_weights
             )
-            bt.logging.debug("uint_weights", uint_weights)
-            bt.logging.debug("uint_uids", uint_uids)
+                        
+            bt.logging.debug(f"uint_weights {uint_weights}")        
+            bt.logging.debug(f"uint_uids {uint_uids}")
+
         except Exception as e:
             bt.logging.error(f"convert_weights_and_uids_for_emit function error: {e}")
             pass
