@@ -326,11 +326,11 @@ class BaseValidatorNeuron(BaseNeuron):
             if result is True:
                 #write_timestamp(time.time())
                 print(f"updated timestamp to {time.time()}")
-                bt.logger.info(f"set_weights on chain successfully! msg: {msg}")
+                bt.logging.info(f"set_weights on chain successfully! msg: {msg}")
             else:
-                bt.logger.error(f"set_weights on chain failed {msg}")
+                bt.logging.error(f"set_weights on chain failed {msg}")
         except Exception as e:
-            bt.logger.error(f"set_weights failed with exception: {e}")
+            bt.logging.error(f"set_weights failed with exception: {e}")
 
 
 
