@@ -157,8 +157,10 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     try:                        
                         self.sync()
-                    except Exception as e:
-                        bt.logging.error(f"Failed to sync with exception: {e}")                    
+                    except Exception as e:                        
+                        bt.logging.debug(str(print_exception(type(e), e, e.__traceback__)))
+                        bt.logging.error(f"Failed to sync with exception: {e}")
+                        
                     self.step += 1
 
                 except Exception as e:
