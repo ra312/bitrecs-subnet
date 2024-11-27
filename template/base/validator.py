@@ -291,7 +291,7 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.debug("Array stores elements of type: ", raw_weights.dtype)
 
         
-        bt.logging.debug("raw_weight_uids", str(self.metagraph.uids.tolist()))
+        bt.logging.debug("uids to update", str(self.metagraph.uids.tolist()))
 
         bt.logging.debug("raw_weights", str(raw_weights))
         

@@ -2,6 +2,7 @@ import numpy as np
 from typing import Tuple, List, Union, Any
 import bittensor
 from numpy import ndarray, dtype, floating, complexfloating
+import traceback
 
 U32_MAX = 4294967295
 U16_MAX = 65535
@@ -157,29 +158,36 @@ def process_weights_for_netuid(
     bittensor.logging.debug("max_weight_limit", max_weight_limit)
 
     # Find all non zero weights.
-    non_zero_weight_idx = np.argwhere(weights > 0).squeeze()
-    #non_zero_weight_idx = np.atleast_1d(non_zero_weight_idx)
-    non_zero_weight_uids = uids[non_zero_weight_idx]
-    non_zero_weights = weights[non_zero_weight_idx]
-    if non_zero_weights.size == 0 or metagraph.n < min_allowed_weights:
-        bittensor.logging.warning("No non-zero weights returning all ones.")
-        final_weights = np.ones(metagraph.n) / metagraph.n
-        bittensor.logging.debug(f"final_weights {final_weights}")
-        return np.arange(len(final_weights)), final_weights
 
-    elif non_zero_weights.size < min_allowed_weights:
-        bittensor.logging.warning(
-            "No non-zero weights less then min allowed weight, returning all ones."
-        )
-        weights = (
-                np.ones(metagraph.n) * 1e-5
-        )  # creating minimum even non-zero weights
-        weights[non_zero_weight_idx] += non_zero_weights
-        bittensor.logging.debug(f"final_weights {weights}")
-        normalized_weights = normalize_max_weight(
-            x=weights, limit=max_weight_limit
-        )
-        return np.arange(len(normalized_weights)), normalized_weights
+    try:
+
+        non_zero_weight_idx = np.argwhere(weights > 0).squeeze()
+        non_zero_weight_idx = np.atleast_1d(non_zero_weight_idx)
+        non_zero_weight_uids = uids[non_zero_weight_idx]
+        non_zero_weights = weights[non_zero_weight_idx]
+        if non_zero_weights.size == 0 or metagraph.n < min_allowed_weights:
+            bittensor.logging.warning("No non-zero weights returning all ones.")
+            final_weights = np.ones(metagraph.n) / metagraph.n
+            bittensor.logging.debug(f"final_weights {final_weights}")
+            return np.arange(len(final_weights)), final_weights
+
+        elif non_zero_weights.size < min_allowed_weights:
+            bittensor.logging.warning(
+                "No non-zero weights less then min allowed weight, returning all ones."
+            )
+            weights = (
+                    np.ones(metagraph.n) * 1e-5
+            )  # creating minimum even non-zero weights
+            weights[non_zero_weight_idx] += non_zero_weights
+            bittensor.logging.debug(f"final_weights {weights}")
+            normalized_weights = normalize_max_weight(
+                x=weights, limit=max_weight_limit
+            )
+            return np.arange(len(normalized_weights)), normalized_weights
+    except Exception as e:
+        bittensor.logging.error(traceback.format_exc())
+        bittensor.logging.error(f"Error in process_weights_for_netuid {e}")
+        pass
 
     bittensor.logging.debug(f"non_zero_weights {non_zero_weights}")
 
