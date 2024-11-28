@@ -65,12 +65,13 @@ async def forward(self):
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
 
     """
-    num_results = random.choice([1, 2, 3, 4, 5])    
+    #num_results = random.choice([1, 2, 3, 4, 5])  
+    num_results = 5
     next_request = get_bitrecs_request(num_results)
     num_recs = next_request.num_results   
     
     miner_uids = get_random_uids(self,  k=self.config.neuron.sample_size)
-    #miner_uids = [0, 2]
+    #miner_uids = [5]
 
     bt.logging.info(f"** UID uids: {miner_uids}")
     start_time = time.time()
@@ -79,8 +80,7 @@ async def forward(self):
     responses = await self.dendrite(        
         axons=[self.metagraph.axons[uid] for uid in miner_uids],        
         #synapse=Dummy(dummy_input=self.step),
-        synapse=next_request,     
-        timeout=3600,   
+        synapse=next_request,
         # All responses have the deserialize function called on them before returning.
         # You are encouraged to define your own deserialization function.
         deserialize=False,

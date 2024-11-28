@@ -25,7 +25,7 @@ import argparse
 import threading
 import bittensor as bt
 import time
-import torch
+import traceback
 
 from typing import List, Union
 from traceback import print_exception
@@ -91,7 +91,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
         bt.logging.info("serving ip to chain...")
         try:
-            self.axon = bt.axon(wallet=self.wallet, config=self.config)
+            self.axon = bt.axon(wallet=self.wallet, config=self.config, port=self.config.axon.port)
 
             try:
                 self.subtensor.serve_axon(
@@ -159,7 +159,9 @@ class BaseValidatorNeuron(BaseNeuron):
                     try:                        
                         self.sync()
                     except Exception as e:
-                        bt.logging.error(f"Failed to sync with exception: {e}")                    
+                        bt.logging.error(traceback.format_exc())
+                        bt.logging.error(f"Failed to sync with exception: {e}")
+
                     self.step += 1
 
                 except Exception as e:
@@ -265,14 +267,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
         # TODO FIXME BROKEN
         # Compute raw_weights safely
-        raw_weights = self.scores / norm
-
-        if np.isscalar(norm):
-            bt.logging.debug("norm is scalar")
-            raw_weights = self.scores / norm
-        else:
-            bt.logging.debug("norm is not scalar")
-            raw_weights = self.scores / norm[:, np.newaxis]
+        raw_weights = self.scores / norm 
 
         bt.logging.debug("hi there")
         
@@ -292,33 +287,45 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.debug("Array stores elements of type: ", raw_weights.dtype)
 
         
-        bt.logging.debug("raw_weight_uids", str(self.metagraph.uids.tolist()))
+        bt.logging.debug("uids", str(self.metagraph.uids.tolist()))
 
         bt.logging.debug("raw_weights", str(raw_weights))
         
         # Process the raw weights to final_weights via subtensor limitations.
-        (
-            processed_weight_uids,
-            processed_weights,
-        ) = process_weights_for_netuid(
-            uids=self.metagraph.uids,
-            weights=raw_weights,
-            netuid=self.config.netuid,
-            subtensor=self.subtensor,
-            metagraph=self.metagraph,
-        )
-        bt.logging.debug("processed_weights", processed_weights)
-        bt.logging.debug("processed_weight_uids", processed_weight_uids)
+        try:
+
+            (
+                processed_weight_uids,
+                processed_weights,
+            ) = process_weights_for_netuid(
+                uids=self.metagraph.uids,
+                weights=raw_weights,
+                netuid=self.config.netuid,
+                subtensor=self.subtensor,
+                metagraph=self.metagraph,
+            )
+        except Exception as e:
+            bt.logging.error(f"process_weights_for_netuid function error: {e}")
+            pass
+            
+        bt.logging.debug(f"processed_weight_uids {processed_weight_uids}")        
+        bt.logging.debug(f"processed_weights {processed_weights}")
 
         # Convert to uint16 weights and uids.
-        (
-            uint_uids,
-            uint_weights,
-        ) = convert_weights_and_uids_for_emit(
-            uids=processed_weight_uids, weights=processed_weights
-        )
-        bt.logging.debug("uint_weights", uint_weights)
-        bt.logging.debug("uint_uids", uint_uids)
+        try:
+            (
+                uint_uids,
+                uint_weights,
+            ) = convert_weights_and_uids_for_emit(
+                uids=processed_weight_uids, weights=processed_weights
+            )
+                        
+            bt.logging.debug(f"uint_weights {uint_weights}")        
+            bt.logging.debug(f"uint_uids {uint_uids}")
+
+        except Exception as e:
+            bt.logging.error(f"convert_weights_and_uids_for_emit function error: {e}")
+            pass
 
          # Set the weights on chain via our subtensor connection.
         try:
@@ -334,11 +341,11 @@ class BaseValidatorNeuron(BaseNeuron):
             if result is True:
                 #write_timestamp(time.time())
                 print(f"updated timestamp to {time.time()}")
-                bt.logger.info(f"set_weights on chain successfully! msg: {msg}")
+                bt.logging.info(f"set_weights on chain successfully! msg: {msg}")
             else:
-                bt.logger.error(f"set_weights on chain failed {msg}")
+                bt.logging.error(f"set_weights on chain failed {msg}")
         except Exception as e:
-            bt.logger.error(f"set_weights failed with exception: {e}")
+            bt.logging.error(f"set_weights failed with exception: {e}")
 
 
 
