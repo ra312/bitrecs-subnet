@@ -85,7 +85,9 @@ class Miner(BaseMinerNeuron):
         #self.step += 1
 
         output_synapse=BitrecsRequest(
-            name=synapse.name,
+            name=synapse.name, 
+            axon=synapse.axon,
+            dendrite=synapse.dendrite,            
             created_at=created_at,
             user=synapse.user,
             num_results=synapse.num_results,
