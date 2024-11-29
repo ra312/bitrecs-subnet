@@ -130,6 +130,20 @@ def add_args(cls, parser):
         default="",
     )
 
+    parser.add_argument(
+        "--api.enabled",
+        action="store_true",
+        help="Enables the validator API endpoint.",
+        default=False,
+    )
+
+    parser.add_argument(
+        "--api.exclusive",
+        action="store_true",
+        help="If true, validator only handles API requests.",
+        default=False,
+    )
+
 
 def add_miner_args(cls, parser):
     """Add miner specific arguments to the parser."""
