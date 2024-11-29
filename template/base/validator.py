@@ -27,7 +27,7 @@ import time
 import traceback
 import anyio.to_thread
 
-from typing import List, Union
+from typing import List, Union, Optional
 from traceback import print_exception
 
 from template.base.neuron import BaseNeuron
@@ -41,30 +41,44 @@ from template.utils.config import add_validator_args
 from template.api.api_server import ApiServer
 from template.protocol import BitrecsRequest
 from dataclasses import dataclass
+from queue import SimpleQueue, Empty
 
+api_queue = SimpleQueue() # Queue of SynapseEventPair
 
 @dataclass
 class SynapseWithEvent:
     """ Object that API server can send to main thread to be serviced. """
     input_synapse: BitrecsRequest
     event: threading.Event
-    #output_synapse: BitrecsRequest
+    output_synapse: BitrecsRequest
 
 
 async def api_forward(synapse: BitrecsRequest) -> BitrecsRequest:
-    bt.logging.info(f"api_forward: {synapse}")
-    bt.logging.info(f"api_forward type: {type(synapse)}")
+    bt.logging.info(f"api_forward validator synapse: {synapse}")
+    bt.logging.info(f"api_forward validator synapse type: {type(synapse)}")
     
     """ Forward function for API server. """
     synapse_with_event = SynapseWithEvent(
         input_synapse=synapse,
         event=threading.Event(),
-        #output_synapse=BitrecsRequest()
+        output_synapse=BitrecsRequest(
+            name=synapse.name,                     
+            created_at=synapse.created_at,
+            user=synapse.user,
+            num_results=synapse.num_results,
+            query=synapse.query,
+            context=synapse.context,
+            site_key=synapse.site_key,
+            results=synapse.results,
+            models_used=synapse.models_used,
+            miner_uid=synapse.miner_uid,
+            miner_hotkey=synapse.miner_hotkey
+        )
     )
-    #api_queue.put(synapse_with_event)
+    api_queue.put(synapse_with_event)
     # Wait until the main thread marks this synapse as processed.
     await anyio.to_thread.run_sync(synapse_with_event.event.wait)
-    return synapse_with_event
+    return synapse_with_event.output_synapse
 
 
 
@@ -159,6 +173,13 @@ class BaseValidatorNeuron(BaseNeuron):
         ]
         await asyncio.gather(*coroutines)
 
+    async def concurrent_forward2(self, pr: BitrecsRequest):
+        coroutines = [
+            self.forward(pr)
+            for _ in range(self.config.neuron.num_concurrent_forwards)
+        ]
+        await asyncio.gather(*coroutines)
+
     def run(self):
         """
         Initiates and manages the main loop for the miner on the Bittensor network. The main loop handles graceful shutdown on keyboard interrupts and logs unforeseen errors.
@@ -193,7 +214,25 @@ class BaseValidatorNeuron(BaseNeuron):
             while True:
                 try:
                     
-                    self.loop.run_until_complete(self.concurrent_forward())
+
+                    synapse_with_event: Optional[SynapseWithEvent] = None
+                    try:
+                        synapse_with_event = api_queue.get(timeout=10)
+                        bt.logging.info(f"VALIDATOR run synapse from API server {synapse_with_event}")
+                        
+                    except Empty:
+                        # No synapse from API server.
+                        pass
+
+                    if synapse_with_event is not None:
+                        bt.logging.info("Processing synapse from API server")
+                        #self.forward()
+                        self.loop.run_until_complete(self.concurrent_forward2(synapse_with_event.input_synapse))
+                        synapse_with_event.event.set()
+                    else:                       
+                        bt.logging.info("Processing syntetic concurrent forward")                    
+                        self.loop.run_until_complete(self.concurrent_forward())
+
                     if self.should_exit:
                         return
 
@@ -211,7 +250,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 finally:
                     bt.logging.info(
                         f"forward finished, sleep for {15} seconds")
-                    time.sleep(15)
+                    time.sleep(10)
         # If someone intentionally stops the validator, it'll safely terminate operations.
         except KeyboardInterrupt:
             self.axon.stop()

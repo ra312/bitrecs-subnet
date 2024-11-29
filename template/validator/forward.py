@@ -27,7 +27,7 @@ from template.validator.reward import get_rewards
 from template.utils.uids import get_random_uids
 
 
-def get_bitrecs_request(num_results) -> BitrecsRequest:
+def get_bitrecs_dummy_request(num_results) -> BitrecsRequest:
     """
     Returns a dummy BitrecsRequest object for testing purposes.
 
@@ -55,7 +55,7 @@ def get_bitrecs_request(num_results) -> BitrecsRequest:
     return p
 
 
-async def forward(self):
+async def forward(self, pr: BitrecsRequest = None):
     """
     The forward function is called by the validator every time step.
 
@@ -63,13 +63,19 @@ async def forward(self):
 
     Args:
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
+        pr (:obj:`template.protocol.BitrecsRequest`): The end user request object to be sent to the network (from API)
 
     """
     #num_results = random.choice([1, 2, 3, 4, 5])  
     num_results = 5
-    next_request = get_bitrecs_request(num_results)
-    num_recs = next_request.num_results   
-    
+
+    if pr is not None: #API REQUEST
+        next_request = pr
+        num_results = pr.num_results
+    else:
+        next_request = get_bitrecs_dummy_request(num_results)    
+
+    num_recs = next_request.num_results    
     miner_uids = get_random_uids(self,  k=self.config.neuron.sample_size)
     #miner_uids = [5]
 

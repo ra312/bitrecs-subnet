@@ -19,15 +19,10 @@
 
 
 import time
-
-# Bittensor
 import bittensor as bt
-
-# import base validator class which takes care of most of the boilerplate
 from template.base.validator import BaseValidatorNeuron
-
-# Bittensor Validator Template:
 from template.validator import forward
+from template.protocol import BitrecsRequest
 
 
 class Validator(BaseValidatorNeuron):
@@ -47,7 +42,7 @@ class Validator(BaseValidatorNeuron):
 
         # TODO(developer): Anything specific to your use case you can do here
 
-    async def forward(self):
+    async def forward(self, pr : BitrecsRequest = None):
         """
         Validator forward pass. Consists of:
         - Generating the query
@@ -55,9 +50,8 @@ class Validator(BaseValidatorNeuron):
         - Getting the responses
         - Rewarding the miners
         - Updating the scores
-        """
-        # TODO(developer): Rewrite this function based on your protocol definition.
-        return await forward(self)
+        """                
+        return await forward(self, pr)
 
 
 # The main function parses the configuration and runs the validator.

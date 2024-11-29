@@ -52,3 +52,19 @@ class BitrecsRequest(bt.Synapse):
     #         "miner_uid": self.miner_uid,
     #         "miner_hotkey": self.miner_hotkey,
     #     }
+
+
+
+# class ProductRecResponse:
+#     user: str
+#     original_query: str    
+#     status_code: int
+#     status_text: str
+#     response_text: str
+#     created_at: str
+#     results: List[str]
+#     models_used: List[str]
+#     catalog_size: int
+#     miner_uid: str
+#     miner_public_key: str
+#     reasoning: str

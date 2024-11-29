@@ -1,30 +1,22 @@
 import os
 import json
 import time
-
+import uvicorn
 import traceback
-from typing import Callable, Awaitable, List, Optional
-
 import bittensor as bt
+
+from typing import Callable, Awaitable, List, Optional
 from bittensor.core.axon import FastAPIThreadedServer
 from fastapi import  APIRouter
 from fastapi.responses import JSONResponse
 from fastapi import FastAPI, Request
 from template.protocol import BitrecsRequest
 #from pyngrok import ngrok
-import uvicorn
 
-#from neurons.protocol import Translate
-#from bittranslate import is_api_data_valid
-#from langdetect import detect
-
-#ForwardFn = Callable[[Translate], Awaitable[Translate]]
 ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
-
 
 auth_data = dict()
 request_counts = {}
-
 
 def is_api_data_valid(data):
     if not isinstance(data, dict):
@@ -45,7 +37,6 @@ def is_api_data_valid(data):
             return False, "requests_per_min is not an int"
 
     return True, "Formatting is good"
-
 
 
 def load_api_config():
@@ -71,7 +62,6 @@ def load_api_config():
 
 
 async def auth_rate_limiting_middleware(request: Request, call_next):
-
     # Check if API key is valid
     # TODO use an official "auth key" header 
     # such that programs such as web browsers
@@ -161,15 +151,11 @@ class ApiServer:
         self.router.add_api_route(
             "/rec", 
             self.get_rec,            
-            methods=["POST"], 
+            methods=["POST"]  
         )
        
         self.app.include_router(self.router)
-
         self.api_json = api_json
-        #self.lang_pairs = lang_pairs
-        #self.max_char = max_char
-
         self.ngrok_domain = ngrok_domain
         self.tunnel = None
         bt.logging.info(f"\033[1;32m API Server initialized \033[0m")
@@ -179,37 +165,49 @@ class ApiServer:
         return JSONResponse(status_code=200, content={"detail": "pong"})
     
     async def get_rec(self, request: BitrecsRequest):
-
-        # thing = await self.print_req(request)
-        # bt.logging.debug(f"API get_rec request:  {thing}")
-
-        #body = await request.json()        
         bt.logging.debug(f"API get_rec request:  {request}")
         bt.logging.debug(f"API get_rec request type:  {type(request)}")
-
-        # pr = BitrecsRequest(**body)                
-        # bt.logging.debug(f"API BitrecsRequest:  {pr}")
-        # Recreate the synapse with the source_lang.
-        # request = BitrecsRequest(user=request.user, 
-        #                          query=request.query,
-        #                          num_results=request.num_results,
-        #                             num_results_per_source=request.num_results_per_source,
-        #                          )            
-        # )
-
-        try:
-            
-            bt.logging.debug(f"API get_rec start forward  ")
+        try:            
+            bt.logging.debug(f"API get_rec start forward")
             response = await self.forward_fn(request)
-            bt.logging.debug(f"API get_rec response:  {response}")
+            bt.logging.debug(f"API get_rec response: {response}")
+            bt.logging.debug(f"API get_rec response type: {type(response)}")
 
-            return JSONResponse(status_code=200,
-                                content={"detail": "success", "raw_response": response.text})
+          #class ProductRecResponse:
+            # user: str
+            # original_query: str    
+            # status_code: int
+            # status_text: str
+            # response_text: str
+            # created_at: str
+            # results: List[str]
+            # models_used: List[str]
+            # catalog_size: int
+            # miner_uid: str
+            # miner_public_key: str
+            # reasoning: str
+            
+            rec = {
+                    "user": response.user, 
+                    "original_query": response.query,
+                    "status_code": "200",
+                    "status_text": "Success",
+                    "response_text": "Success text",
+                    "created_at": response.created_at,
+                    "results": response.results,
+                    "models_used": response.models_used,
+                    "catalog_size": "0",
+                    "miner_uid": response.miner_uid,
+                    "miner_hotkey": response.miner_hotkey,
+                    "reasoning": "testing"
+            }
+
+            return JSONResponse(status_code=200, content=rec)
 
         except Exception as e:
             bt.logging.error(f"API get_rec error:  {e}")
             return JSONResponse(status_code=500,
-                                content={"detail": "error", "raw_response": "error 500"})
+                                content={"detail": "error", "status_code": 500})
         
 
     # async def translate(self, request: Translate):
@@ -321,26 +319,20 @@ class ApiServer:
         #     self.tunnel = None
 
     @staticmethod
-    async def print_req(request: Request):
-        
+    async def print_req(request: Request):        
         # Get request method
         method = request.method
-
         # Get request headers
         headers = request.headers
-
         # Get query parameters
         query_params = request.query_params
-
         # Get the body (awaitable for POST requests)
         body = await request.body()
-
         # Get the JSON body (if JSON is expected)
         try:
             json_body = await request.json()
         except Exception as e:
             json_body = None  # Not JSON or failed parsing
-
         return {
             "method": method,
             "headers": dict(headers),
