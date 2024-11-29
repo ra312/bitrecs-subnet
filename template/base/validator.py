@@ -251,13 +251,15 @@ class BaseValidatorNeuron(BaseNeuron):
                 except Exception as e:
                     bt.logging.error(f"Failed to run forward with exception: {e}")
                     time.sleep(60)
-                finally:
-                    bt.logging.info(f"forward finished, sleep for {15} seconds")
+                finally:                   
                     if api_enabled and api_exclusive:
+                        bt.logging.info(f"forward finished, ready for next request")
                         #time.sleep(10)
                         pass
                     else:
+                        bt.logging.info(f"forward finished, sleep for {10} seconds")
                         time.sleep(10)
+                        
         # If someone intentionally stops the validator, it'll safely terminate operations.
         except KeyboardInterrupt:
             self.axon.stop()
