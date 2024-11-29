@@ -123,21 +123,16 @@ class BaseValidatorNeuron(BaseNeuron):
         # Create asyncio event loop to manage async tasks.
         self.loop = asyncio.get_event_loop()
 
-        api_enabled = self.config.api.enabled
-        # if config.enable_api:
-        if api_enabled:
+        if self.config.api.enabled:
             # external requests
             api_server = ApiServer(
                 axon_port=self.config.axon.port,
                 forward_fn=api_forward,
-                api_json=self.config.api_json,
-                #lang_pairs=validator._lang_pairs,
-                #max_char=config.max_char,
+                api_json=self.config.api_json,          
                 ngrok_domain="bitrecs.ai"
             )
             api_server.start()            
             bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: {api_server.fast_server.config.host} on Axon: {api_server.fast_server.config.port} \033[0m")
-                        
 
         # Instantiate runners
         self.should_exit: bool = False
@@ -225,20 +220,19 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     synapse_with_event: Optional[SynapseWithEvent] = None
                     try:
-                        synapse_with_event = api_queue.get(timeout=10)
+                        synapse_with_event = api_queue.get(timeout=5)
                         bt.logging.info(f"api_queue queue found a Request {synapse_with_event}")
                     except Empty:
                         # No synapse from API server.
                         pass
 
-                    if synapse_with_event is not None and api_enabled:
+                    if synapse_with_event is not None and api_enabled: #API request
                         bt.logging.info("Processing synapse from API server")
-                        #self.forward()
                         self.loop.run_until_complete(self.concurrent_forward2(synapse_with_event.input_synapse))
                         synapse_with_event.event.set()
                     else:     
-                        if not api_exclusive:                  
-                            bt.logging.info("Processing syntetic concurrent forward")                    
+                        if not api_exclusive: #Regular validator loop                
+                            bt.logging.info("Processing syntetic concurrent forward")
                             self.loop.run_until_complete(self.concurrent_forward())
 
                     if self.should_exit:
@@ -256,9 +250,12 @@ class BaseValidatorNeuron(BaseNeuron):
                     bt.logging.error(f"Failed to run forward with exception: {e}")
                     time.sleep(60)
                 finally:
-                    bt.logging.info(
-                        f"forward finished, sleep for {15} seconds")
-                    time.sleep(10)
+                    bt.logging.info(f"forward finished, sleep for {15} seconds")
+                    if api_enabled and api_exclusive:
+                        #time.sleep(10)
+                        pass
+                    else:
+                        time.sleep(10)
         # If someone intentionally stops the validator, it'll safely terminate operations.
         except KeyboardInterrupt:
             self.axon.stop()
