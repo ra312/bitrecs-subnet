@@ -126,11 +126,11 @@ class BaseNeuron(ABC):
         if self.should_sync_metagraph():
             self.resync_metagraph()
         
-        bt.logging.debug("VALIDATOR should_set_weights PRE")
+        bt.logging.debug(f"{self.neuron_type} should_set_weights PRE")
         if self.should_set_weights():
-            bt.logging.debug("VALIDATOR should_set_weights IS TRUE! - attemping set_weights ... ")
+            bt.logging.debug(f"{self.neuron_type} should_set_weights IS TRUE! - attemping set_weights ... ")
             self.set_weights()
-        bt.logging.debug("VALIDATOR should_set_weights POST")
+        bt.logging.debug(f"{self.neuron_type} should_set_weights POST")
 
         # Always save state.
         self.save_state()

@@ -82,7 +82,8 @@ class Miner(BaseMinerNeuron):
         synapse.models_used = [""]
         synapse.miner_hotkey = synapse.dendrite.hotkey
         synapse.miner_uid = str(self.uid)
-        
+
+        #self.step += 1
         return synapse
         
 
@@ -201,4 +202,4 @@ if __name__ == "__main__":
     with Miner() as miner:
         while True:
             bt.logging.info(f"Miner running... {time.time()}")
-            time.sleep(15)
+            #time.sleep(15)
