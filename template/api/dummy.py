@@ -20,8 +20,8 @@
 import bittensor as bt
 from typing import List, Optional, Union, Any, Dict
 from template.protocol import Dummy
-from bittensor.subnets import SubnetsAPI
-from template.protocol import BitrecsRequest
+from bittensor.utils.subnets import SubnetsAPI
+from template.protocol import BitrecsRequest, BitrecsResponse
 
 class DummyAPI(SubnetsAPI):
     def __init__(self, wallet: "bt.wallet"):
@@ -51,10 +51,8 @@ class DummyAPI(SubnetsAPI):
 #         self.netuid = 1
 #         self.name = "bitrecsapi"
 
-#     def prepare_synapse(self, br_rec: BitrecsRequest) -> Dummy:
-#         synapse.br_rec = br_rec
-
-        
+#     def prepare_synapse(self, br_rec: BitrecsRequest) -> BitrecsRequest:
+#         br_rec.user = "Bitrecs API Request"        
 #         return br_rec
 
 #     def process_responses(
@@ -64,7 +62,8 @@ class DummyAPI(SubnetsAPI):
 #         for response in responses:
 #             if response.dendrite.status_code != 200:
 #                 continue
-#             return outputs.append(response.dummy_output)
+#             #return outputs.append(response.dummy_output)
+#             return outputs.append(response)
 #         return outputs
 
 
