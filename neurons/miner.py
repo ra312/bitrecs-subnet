@@ -99,6 +99,8 @@ class Miner(BaseMinerNeuron):
             miner_uid=str(self.uid),
             miner_hotkey=synapse.dendrite.hotkey
         )
+        
+        bt.logging.info(f"MINER FORWARD PASS RESULT -> {output_synapse}")
 
         return output_synapse
         
