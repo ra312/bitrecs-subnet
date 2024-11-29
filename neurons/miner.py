@@ -94,8 +94,8 @@ class Miner(BaseMinerNeuron):
             site_key=synapse.site_key,
             results=results,
             models_used=[""],
-            miner_uid=synapse.dendrite.hotkey,
-            miner_hotkey=str(self.uid)
+            miner_uid=str(self.uid),
+            miner_hotkey=synapse.dendrite.hotkey
         )
 
         return output_synapse

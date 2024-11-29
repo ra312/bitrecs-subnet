@@ -176,7 +176,7 @@ class BaseValidatorNeuron(BaseNeuron):
             self.forward(pr)
             for _ in range(self.config.neuron.num_concurrent_forwards)
         ]
-        await asyncio.gather(*coroutines)
+        return await asyncio.gather(*coroutines)
 
     def run(self):
         """
@@ -230,7 +230,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.info("Processing synapse from API server")
                         thing = self.loop.run_until_complete(self.concurrent_forward2(synapse_with_event.input_synapse))
                         bt.logging.info(f"thing: {thing}")
-                        
+
                         synapse_with_event.event.set()
                     else:     
                         if not api_exclusive: #Regular validator loop                
