@@ -19,7 +19,8 @@ import uvicorn
 #from langdetect import detect
 
 #ForwardFn = Callable[[Translate], Awaitable[Translate]]
-ForwardFn = Callable[[BitrecsRequest], Awaitable[BitrecsRequest]]
+ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
+
 
 auth_data = dict()
 request_counts = {}
@@ -157,6 +158,12 @@ class ApiServer:
             self.ping,            
             methods=["GET"],
         )
+        self.router.add_api_route(
+            "/rec", 
+            self.get_rec,            
+            methods=["POST"], 
+        )
+       
         self.app.include_router(self.router)
 
         self.api_json = api_json
@@ -170,6 +177,40 @@ class ApiServer:
     async def ping(self):
         bt.logging.info(f"\033[1;32m API Server ping \033[0m")
         return JSONResponse(status_code=200, content={"detail": "pong"})
+    
+    async def get_rec(self, request: BitrecsRequest):
+
+        # thing = await self.print_req(request)
+        # bt.logging.debug(f"API get_rec request:  {thing}")
+
+        #body = await request.json()        
+        bt.logging.debug(f"API get_rec request:  {request}")
+        bt.logging.debug(f"API get_rec request type:  {type(request)}")
+
+        # pr = BitrecsRequest(**body)                
+        # bt.logging.debug(f"API BitrecsRequest:  {pr}")
+        # Recreate the synapse with the source_lang.
+        # request = BitrecsRequest(user=request.user, 
+        #                          query=request.query,
+        #                          num_results=request.num_results,
+        #                             num_results_per_source=request.num_results_per_source,
+        #                          )            
+        # )
+
+        try:
+            
+            bt.logging.debug(f"API get_rec start forward  ")
+            response = await self.forward_fn(request)
+            bt.logging.debug(f"API get_rec response:  {response}")
+
+            return JSONResponse(status_code=200,
+                                content={"detail": "success", "raw_response": response.text})
+
+        except Exception as e:
+            bt.logging.error(f"API get_rec error:  {e}")
+            return JSONResponse(status_code=500,
+                                content={"detail": "error", "raw_response": "error 500"})
+        
 
     # async def translate(self, request: Translate):
 
@@ -279,6 +320,32 @@ class ApiServer:
         #     )
         #     self.tunnel = None
 
+    @staticmethod
+    async def print_req(request: Request):
+        
+        # Get request method
+        method = request.method
 
+        # Get request headers
+        headers = request.headers
 
+        # Get query parameters
+        query_params = request.query_params
+
+        # Get the body (awaitable for POST requests)
+        body = await request.body()
+
+        # Get the JSON body (if JSON is expected)
+        try:
+            json_body = await request.json()
+        except Exception as e:
+            json_body = None  # Not JSON or failed parsing
+
+        return {
+            "method": method,
+            "headers": dict(headers),
+            "query_params": dict(query_params),
+            "body": body.decode("utf-8") if body else None,
+            "json_body": json_body,
+        }
 

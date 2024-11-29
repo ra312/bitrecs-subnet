@@ -48,20 +48,23 @@ class SynapseWithEvent:
     """ Object that API server can send to main thread to be serviced. """
     input_synapse: BitrecsRequest
     event: threading.Event
-    output_synapse: BitrecsRequest
+    #output_synapse: BitrecsRequest
 
 
 async def api_forward(synapse: BitrecsRequest) -> BitrecsRequest:
+    bt.logging.info(f"api_forward: {synapse}")
+    bt.logging.info(f"api_forward type: {type(synapse)}")
+    
     """ Forward function for API server. """
     synapse_with_event = SynapseWithEvent(
         input_synapse=synapse,
         event=threading.Event(),
-        output_synapse=BitrecsRequest()
+        #output_synapse=BitrecsRequest()
     )
     #api_queue.put(synapse_with_event)
     # Wait until the main thread marks this synapse as processed.
     await anyio.to_thread.run_sync(synapse_with_event.event.wait)
-    return synapse_with_event.output_synapse
+    return synapse_with_event
 
 
 
