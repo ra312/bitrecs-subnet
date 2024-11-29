@@ -1,3 +1,3 @@
 {
-    "keys": {"change-me": {"requests_per_min":  4}}
+    "keys": {"change-me": {"requests_per_min":  60}}
   }

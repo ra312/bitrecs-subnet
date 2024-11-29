@@ -258,7 +258,7 @@ def add_validator_args(cls, parser):
     parser.add_argument(
         "--api.exclusive",
         action="store_true",
-        help="If true, validator only handles API requests.",
+        help="If set validator only handles API requests.",
         default=False,
     )
 

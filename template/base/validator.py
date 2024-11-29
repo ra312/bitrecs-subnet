@@ -232,7 +232,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         synapse_with_event.event.set()
                     else:     
                         if not api_exclusive: #Regular validator loop                
-                            bt.logging.info("Processing syntetic concurrent forward")
+                            bt.logging.info("Processing synthetic concurrent forward")
                             self.loop.run_until_complete(self.concurrent_forward())
 
                     if self.should_exit:
@@ -265,9 +265,10 @@ class BaseValidatorNeuron(BaseNeuron):
         # In case of unforeseen errors, the validator will log the error and continue operations.
         except Exception as err:
             bt.logging.error(f"Error during validation: {str(err)}")
-            bt.logging.debug(
-                str(print_exception(type(err), err, err.__traceback__))
-            )
+            bt.logging.debug(traceback.format_exc(err))
+            # bt.logging.debug(
+            #     str(print_exception(type(err), err, err.__traceback__))
+            # )
 
     def run_in_background_thread(self):
         """
