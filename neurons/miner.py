@@ -75,16 +75,30 @@ class Miner(BaseMinerNeuron):
 
         #synapse.num_results = num_results
         
-        synapse.results = results
-        #synapse.query = query
-        synapse.context = json_context
-        synapse.created_at = created_at
-        synapse.models_used = [""]
-        synapse.miner_hotkey = synapse.dendrite.hotkey
-        synapse.miner_uid = str(self.uid)
-
+        # synapse.results = results
+        # #synapse.query = query
+        # synapse.context = json_context
+        # synapse.created_at = created_at
+        # synapse.models_used = [""]
+        # synapse.miner_hotkey = synapse.dendrite.hotkey
+        # synapse.miner_uid = str(self.uid)
         #self.step += 1
-        return synapse
+
+        output_synapse=BitrecsRequest(
+            name=synapse.name,
+            created_at=created_at,
+            user=synapse.user,
+            num_results=synapse.num_results,
+            query=synapse.query,
+            context=json_context,
+            site_key=synapse.site_key,
+            results=results,
+            models_used=[""],
+            miner_uid=synapse.dendrite.hotkey,
+            miner_hotkey=str(self.uid)
+        )
+
+        return output_synapse
         
 
     async def blacklist(
