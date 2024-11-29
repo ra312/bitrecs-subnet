@@ -165,9 +165,10 @@ class ApiServer:
 
         self.ngrok_domain = ngrok_domain
         self.tunnel = None
-        bt.logging.info(f"\033[1;32m ApiServer init \033[0m")
+        bt.logging.info(f"\033[1;32m API Server initialized \033[0m")
 
     async def ping(self):
+        bt.logging.info(f"\033[1;32m API Server ping \033[0m")
         return JSONResponse(status_code=200, content={"detail": "pong"})
 
     # async def translate(self, request: Translate):

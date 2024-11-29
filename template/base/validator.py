@@ -106,7 +106,7 @@ class BaseValidatorNeuron(BaseNeuron):
         # Create asyncio event loop to manage async tasks.
         self.loop = asyncio.get_event_loop()
 
-       # if config.enable_api:
+        # if config.enable_api:
         if 1==1:
             # external requests
             api_server = ApiServer(
