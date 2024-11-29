@@ -228,7 +228,9 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     if synapse_with_event is not None and api_enabled: #API request
                         bt.logging.info("Processing synapse from API server")
-                        self.loop.run_until_complete(self.concurrent_forward2(synapse_with_event.input_synapse))
+                        thing = self.loop.run_until_complete(self.concurrent_forward2(synapse_with_event.input_synapse))
+                        bt.logging.info(f"thing: {thing}")
+                        
                         synapse_with_event.event.set()
                     else:     
                         if not api_exclusive: #Regular validator loop                
