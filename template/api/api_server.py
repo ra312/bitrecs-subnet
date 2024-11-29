@@ -1,0 +1,283 @@
+import os
+import json
+import time
+
+import traceback
+from typing import Callable, Awaitable, List, Optional
+
+import bittensor as bt
+from bittensor.core.axon import FastAPIThreadedServer
+from fastapi import  APIRouter
+from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request
+from template.protocol import BitrecsRequest
+#from pyngrok import ngrok
+import uvicorn
+
+#from neurons.protocol import Translate
+#from bittranslate import is_api_data_valid
+#from langdetect import detect
+
+#ForwardFn = Callable[[Translate], Awaitable[Translate]]
+ForwardFn = Callable[[BitrecsRequest], Awaitable[BitrecsRequest]]
+
+auth_data = dict()
+request_counts = {}
+
+
+def is_api_data_valid(data):
+    if not isinstance(data, dict):
+        return False, "Not a dictionary"
+
+    if "keys" not in data.keys():
+        return False, "Missing users key"
+
+    if not isinstance(data["keys"], dict):
+        return False, "Keys field is not a dict"
+
+    for key, value in data["keys"].items():
+        if not isinstance(value, dict):
+            return False, "Key value is not a dictionary"
+        if "requests_per_min" not in value.keys():
+            return False, "Missing requests_per_min field"
+        if not isinstance(value["requests_per_min"], int):
+            return False, "requests_per_min is not an int"
+
+    return True, "Formatting is good"
+
+
+
+def load_api_config():
+    bt.logging.debug("Loading API config")
+
+    try:
+        if not os.path.exists("template/api/api.json"):
+            raise Exception(f"{'template/api/api.json'} does not exist")
+
+        with open("template/api/api.json", 'r') as file:
+            api_data = json.load(file)
+            bt.logging.trace("api_data", api_data)
+
+            valid, reason = is_api_data_valid(api_data)
+            if not valid:
+                raise Exception(f"{'neurons/api.json'} is poorly formatted. {reason}")
+            if "change-me" in api_data["keys"]:
+                bt.logging.warning("YOU ARE USING THE DEFAULT API KEY. CHANGE IT FOR SECURITY REASONS.")
+        return api_data
+    except Exception as e:
+        bt.logging.error("Error loading API config:", e)
+        traceback.print_exc()
+
+
+async def auth_rate_limiting_middleware(request: Request, call_next):
+
+    # Check if API key is valid
+    # TODO use an official "auth key" header 
+    # such that programs such as web browsers
+    # know to hide this info from JavaScript and other environments.
+    auth_api = request.headers.get('auth')
+    auth_data = load_api_config()
+    time_window = 60
+
+    bt.logging.info("auth_data", auth_data)
+
+    if auth_api not in  auth_data["keys"].keys():
+        bt.logging.debug(f"Unauthorized key: {auth_api}")
+        return JSONResponse(status_code=401, content={"detail": "Unauthorized",
+                                                      "translated_texts": []})
+
+    requests_per_min = auth_data["keys"][auth_api]["requests_per_min"]
+
+    # Rate limiting
+    current_time = time.time()
+    if auth_api in request_counts:
+        requests, start_time = request_counts[auth_api]
+
+        if current_time - start_time > time_window:
+            # start a new time period
+            request_counts[auth_api] = (1, current_time)
+        elif requests < requests_per_min:
+            # same time period
+            request_counts[auth_api] = (requests + 1, start_time)
+        else:
+            bt.logging.debug(f"Rate limit exceeded for key: {auth_api}")
+            return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded", "translated_texts": []})
+    else:
+        request_counts[auth_api] = (1, current_time)
+
+    response = await call_next(request)
+    return response
+
+# def connect_ngrok_tunnel(local_port: int, domain: str) -> ngrok.NgrokTunnel:
+#     auth_token = os.environ.get('NGROK_AUTH_TOKEN', None)
+#     if auth_token is not None:
+#         ngrok.set_auth_token(auth_token)
+
+#     tunnel = ngrok.connect(
+#         addr=str(local_port),
+#         proto="http",
+#         # Domain is required.
+#         domain=domain
+#     )
+#     bt.logging.info(
+#         f"API is available over NGROK at {tunnel.public_url}"
+#     )
+
+#     return tunnel
+
+class ApiServer:
+    app: FastAPI
+    fast_server: FastAPIThreadedServer
+    router: APIRouter
+    forward_fn: ForwardFn
+    #tunnel: Optional[ngrok.NgrokTunnel]
+    ngrok_domain: Optional[str]
+
+    def __init__(
+            self, 
+            axon_port: int,
+            forward_fn: ForwardFn,
+            api_json: str,            
+            ngrok_domain: Optional[str]
+    ):
+
+        self.forward_fn = forward_fn
+        self.app = FastAPI()
+        #self.app.middleware('http')(auth_rate_limiting_middleware)
+
+        self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
+            self.app,
+            host="0.0.0.0",
+            port=axon_port,
+            log_level="trace" if bt.logging.__trace_on__ else "critical"
+        ))
+        self.router = APIRouter()
+        self.router.add_api_route(
+            "/ping", 
+            self.ping,            
+            methods=["GET"],
+        )
+        self.app.include_router(self.router)
+
+        self.api_json = api_json
+        #self.lang_pairs = lang_pairs
+        #self.max_char = max_char
+
+        self.ngrok_domain = ngrok_domain
+        self.tunnel = None
+        bt.logging.info(f"\033[1;32m ApiServer init \033[0m")
+
+    async def ping(self):
+        return JSONResponse(status_code=200, content={"detail": "pong"})
+
+    # async def translate(self, request: Translate):
+
+    #     if (request.source_lang, request.target_lang) in self.lang_pairs:
+    #         source_lang = request.source_lang
+    #         bt.logging.trace(
+    #             f"Detected in lang_pairs "
+    #         )
+    #     elif request.source_lang == "auto":
+    #         source_lang, warning = self._detect_lang(request.source_texts, request.target_lang)
+    #         if not warning:
+    #             bt.logging.trace(
+    #                 f"Source lang: classified as {source_lang}"
+    #             )
+    #         else:
+    #             bt.logging.trace(
+    #                 f"Source lang: {warning}.  Classified as {source_lang}"
+    #             )
+    #     else:
+    #         return JSONResponse(
+    #             status_code=400,
+    #             content={
+    #                 "detail": "Invalid source_lang. Please provide a language code or set it to /'auto'",
+    #                 "translated_texts": []
+    #             })
+
+    #     # Recreate the synapse with the source_lang.
+    #     request = Translate(
+    #         source_lang=source_lang,
+    #         target_lang=request.target_lang,
+    #         source_texts=request.source_texts,
+    #         translated_texts=[],
+    #     )
+
+    #     request_lang_pair = (source_lang, request.target_lang)
+
+    #     if request_lang_pair not in self.lang_pairs:
+    #         return JSONResponse(
+    #             status_code=400, 
+    #             content={
+    #                 "detail": "Invalid language pair", 
+    #                 "translated_texts": []
+    #             }
+    #         )
+
+    #     for source_text in request.source_texts:
+    #         if len(source_text) > self.max_char :
+    #             return JSONResponse(
+    #                 status_code=400, 
+    #                 content={
+    #                     "detail": (
+    #                         "Source text is too long. "
+    #                         f"Must be under {self.max_char} characters"
+    #                     ), 
+    #                     "translated_texts": []
+    #                 }
+    #             )
+
+    #     for translated_text in request.translated_texts:
+    #         # also check the length of the translated text for good measure.
+    #         if len(translated_text) > self.max_char:
+    #             return JSONResponse(
+    #                 status_code=400, 
+    #                 content={
+    #                     "detail": (
+    #                         "Translated text is too long. "
+    #                         f"Must be under {self.max_char} characters"
+    #                     ), 
+    #                     "translated_texts": []
+    #                 }
+    #             )
+
+    #     if len(request.source_texts) > 2:
+    #         return JSONResponse(
+    #             status_code=400,
+    #             content={
+    #                 "detail": (
+    #                     "Batch size for source texts is too large. "
+    #                     "Please set it to <= 2"
+    #                 ), 
+    #                 "translated_texts": []
+    #             }
+    #         )
+
+    #     response = await self.forward_fn(request)
+    #     bt.logging.debug(f"API: response.translated_texts {response.translated_texts}")
+    #     return JSONResponse(status_code=200,
+    #                         content={"detail": "success", "translated_texts": response.translated_texts})
+
+    def start(self):
+        self.fast_server.start()
+        bt.logging.info(f"API server started at {self.fast_server.config.host}:{self.fast_server.config.port}")
+
+        # if self.ngrok_domain is not None:
+        #     self.tunnel = connect_ngrok_tunnel(
+        #         local_port=self.fast_server.config.port,
+        #         domain=self.ngrok_domain
+        #     )
+
+    def stop(self):
+        self.fast_server.stop()
+        bt.logging.info("API server stopped")
+
+        # if self.tunnel is not None:
+        #     ngrok.disconnect(
+        #         public_url=self.tunnel.public_url
+        #     )
+        #     self.tunnel = None
+
+
+
+

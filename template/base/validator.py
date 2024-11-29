@@ -1,7 +1,6 @@
 # The MIT License (MIT)
 # Copyright © 2023 Yuma Rao
-# TODO(developer): Set your name
-# Copyright © 2023 <your name>
+# Copyright © 2024 bitrecs.ai
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the “Software”), to deal in the Software without restriction, including without limitation
@@ -26,6 +25,7 @@ import threading
 import bittensor as bt
 import time
 import traceback
+import anyio.to_thread
 
 from typing import List, Union
 from traceback import print_exception
@@ -37,6 +37,32 @@ from template.base.utils.weight_utils import (
 )  # TODO: Replace when bittensor switches to numpy
 from template.mock import MockDendrite
 from template.utils.config import add_validator_args
+
+from template.api.api_server import ApiServer
+from template.protocol import BitrecsRequest
+from dataclasses import dataclass
+
+
+@dataclass
+class SynapseWithEvent:
+    """ Object that API server can send to main thread to be serviced. """
+    input_synapse: BitrecsRequest
+    event: threading.Event
+    output_synapse: BitrecsRequest
+
+
+async def api_forward(synapse: BitrecsRequest) -> BitrecsRequest:
+    """ Forward function for API server. """
+    synapse_with_event = SynapseWithEvent(
+        input_synapse=synapse,
+        event=threading.Event(),
+        output_synapse=BitrecsRequest()
+    )
+    #api_queue.put(synapse_with_event)
+    # Wait until the main thread marks this synapse as processed.
+    await anyio.to_thread.run_sync(synapse_with_event.event.wait)
+    return synapse_with_event.output_synapse
+
 
 
 class BaseValidatorNeuron(BaseNeuron):
@@ -80,6 +106,19 @@ class BaseValidatorNeuron(BaseNeuron):
         # Create asyncio event loop to manage async tasks.
         self.loop = asyncio.get_event_loop()
 
+       # if config.enable_api:
+        if 1==1:
+            # external requests
+            api_server = ApiServer(
+                axon_port=self.config.axon.port,
+                forward_fn=api_forward,
+                api_json=self.config.api_json,
+                #lang_pairs=validator._lang_pairs,
+                #max_char=config.max_char,
+                ngrok_domain="bitrecs.ai"
+            )
+            api_server.start()
+
         # Instantiate runners
         self.should_exit: bool = False
         self.is_running: bool = False
@@ -92,7 +131,6 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.info("serving ip to chain...")
         try:
             self.axon = bt.axon(wallet=self.wallet, config=self.config, port=self.config.axon.port)
-
             try:
                 self.subtensor.serve_axon(
                     netuid=self.config.netuid,
@@ -262,33 +300,21 @@ class BaseValidatorNeuron(BaseNeuron):
             norm = np.ones_like(norm)  # Avoid division by zero or NaN
         
         bt.logging.debug("norm", norm)
-
-        #print(self.scores)
-
-        # TODO FIXME BROKEN
+        
         # Compute raw_weights safely
-        raw_weights = self.scores / norm 
-
-        bt.logging.debug("hi there")
+        raw_weights = self.scores / norm         
         
         # Printing type of arr object
         bt.logging.debug("Array is of type: ", type(raw_weights))
-
         # Printing array dimensions (axes)
         bt.logging.debug("No. of dimensions: ", raw_weights.ndim)
-
         # Printing shape of array
         bt.logging.debug("Shape of array: ", raw_weights.shape)
-
         # Printing size (total number of elements) of array
         bt.logging.debug("Size of array: ", raw_weights.size)
-
         # Printing type of elements in array
-        bt.logging.debug("Array stores elements of type: ", raw_weights.dtype)
-
-        
+        bt.logging.debug("Array stores elements of type: ", raw_weights.dtype)        
         bt.logging.debug("uids", str(self.metagraph.uids.tolist()))
-
         bt.logging.debug("raw_weights", str(raw_weights))
         
         # Process the raw weights to final_weights via subtensor limitations.
@@ -346,8 +372,6 @@ class BaseValidatorNeuron(BaseNeuron):
                 bt.logging.error(f"set_weights on chain failed {msg}")
         except Exception as e:
             bt.logging.error(f"set_weights failed with exception: {e}")
-
-
 
 
     def resync_metagraph(self):
@@ -453,3 +477,5 @@ class BaseValidatorNeuron(BaseNeuron):
         # self.scores = state["scores"]
         # self.hotkeys = state["hotkeys"]
         pass
+
+
