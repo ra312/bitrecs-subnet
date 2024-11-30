@@ -235,9 +235,9 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     if synapse_with_event is not None and api_enabled: #API request
                         bt.logging.info("** Processing synapse from API server **")
-                        #available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
 
-                        available_uids = get_random_uids(self, k=8)                        
+                        available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+                        #available_uids = get_random_uids(self, k=8)                        
                         bt.logging.debug(f"available_uids: {available_uids}")
 
                         # available_uids = [
@@ -256,7 +256,9 @@ class BaseValidatorNeuron(BaseNeuron):
                         # )
 
                         #chosen_uids = [0, 1, 2, 3, 4, 5, 6, 7]
-                        chosen_uids = [0]
+                        #chosen_uids = [0]
+                        
+                        chosen_uids = available_uids
                         
                         bt.logging.debug(f"len(chosen_uids): {len(chosen_uids)}")
                         bt.logging.debug(f"chosen_uids: {chosen_uids}")
@@ -272,6 +274,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
                         if number_of_recs_desired > 10:
                             bt.logging.error("Number of recommendations should be less than 10")
+                            synapse_with_event.event.set()
                             continue
 
                         # Send request to the miner population
@@ -290,6 +293,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         
                         if not len(chosen_uids) == len(responses) == len(rewards):
                             bt.logging.error("MISMATCH in lengths of chosen_uids, responses and rewards")
+                            synapse_with_event.event.set()
                             continue
 
                         bt.logging.info(f"Scored responses: {rewards}")
@@ -301,7 +305,6 @@ class BaseValidatorNeuron(BaseNeuron):
                         if selected_response is None:
                             bt.logging.error("No valid result could be parsed ! skipping request")
                             synapse_with_event.event.set()
-
                             continue
 
                         synapse_with_event.output_synapse = selected_response
