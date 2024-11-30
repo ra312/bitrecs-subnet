@@ -47,7 +47,7 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
         # Check each result to exist in the context
         #["{'sku': '24-UG06', 'name': 'Affirm Water Bottle', 'price': 7.0}", 
         #"{'sku': '24-WG084', 'name': 'Sprite Foam Yoga Brick', 'price': 5.0}", 
-        store_catalog: list[Product] = json.loads(ground_truth.context)       
+        store_catalog: list[Product] = json.loads(ground_truth.context)
         #bt.logging.info(f"** reward context: {store_catalog}")
 
         bt.logging.info(f"** reward response results: {response.results}")
