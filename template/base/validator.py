@@ -267,7 +267,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             chosen_axons,
                             api_request,
                             deserialize=False,
-                            timeout=30
+                            timeout=5
                         )
                         
                         bt.logging.debug(f"len(responses): {len(responses)}")
