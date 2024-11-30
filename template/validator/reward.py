@@ -42,20 +42,18 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
             return 0.00        
         
         # Check each result to exist in the context
-        sku = response.query
-        context = response.context
-        
-        
-        products: list[Product] = json.loads(ground_truth.context)
-        bt.logging.info(f"** reward context: {products}")
+        #["{'sku': '24-UG06', 'name': 'Affirm Water Bottle', 'price': 7.0}", 
+        #"{'sku': '24-WG084', 'name': 'Sprite Foam Yoga Brick', 'price': 5.0}", 
+        store_catalog: list[Product] = json.loads(ground_truth.context)       
+        #bt.logging.info(f"** reward context: {store_catalog}")
+        for result in response.results:
+            product: Product = json.loads(result)
+            # Check if sku exists in the context
+            if not does_sku_exist(product.sku, store_catalog):
+                bt.logging.info(f"Miner has invalid results: {response.miner_hotkey}")
+                return 0.00            
 
-        # # Check each result is not empty
-        # for r in response.results:
-        #     if r is None or r == "" or len(r) < 5:
-        #         bt.logging.info(f"Miner has invalid results: {response.miner_hotkey}")
-        #         return 0.00
-            
-        # Check each result to exist in the context
+        score = 1
         
         bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response.miner_hotkey}")
 
@@ -99,7 +97,9 @@ def get_rewards(
 
     # zero_scored_candidates = [r for r in responses if r is None or r.results is None or len(r.results) < 1]   
 
-    
+    if num_recs < 1 or num_recs > 20:
+        bt.logging.info(f"Invalid number of recommendations: {num_recs}")
+        raise ValueError("configuration of num_recs is invalid")
     
     for r in responses:
         bt.logging.info(f"** get_rewards response: {r.miner_uid}")
@@ -128,7 +128,7 @@ class Product:
 
 
 
-def does_sku_exist(sku:str, context: List[Product]) -> bool:
+def does_sku_exist(sku: str, context: List[Product]) -> bool:
     """
     Check if sku exists in the context
     """
