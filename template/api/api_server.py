@@ -165,7 +165,7 @@ class ApiServer:
         return JSONResponse(status_code=200, content={"detail": "pong"})
     
     async def get_rec(self, request: BitrecsRequest):
-        bt.logging.debug(f"API get_rec request:  {request}")
+        bt.logging.debug(f"API get_rec request:  {request.computed_body_hash}")
         bt.logging.debug(f"API get_rec request type:  {type(request)}")
         try:            
             bt.logging.debug(f"API get_rec start forward")
