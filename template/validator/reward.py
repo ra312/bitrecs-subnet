@@ -88,10 +88,13 @@ def get_rewards(
         bt.logging.info(f"** get_rewards response: {r.miner_uid}")
         #bt.logging.info(f"** get_rewards headers: {r.to_headers()}")
         headers = r.to_headers()
+        axon_time = -1
+        dendrite_time = -1
+        if "bt_header_axon_process_time" in headers:
+            axon_time = headers["bt_header_axon_process_time"]
+        if "bt_header_dendrite_process_time" in headers:
+            dendrite_time = headers["bt_header_dendrite_process_time"]
 
-        axon_time = headers["bt_header_axon_process_time"]
-        dendrite_time = headers["bt_header_dendrite_process_time"]
-        
         bt.logging.info(f"** get_rewards axon_time: {r.miner_uid}:{axon_time}")
         bt.logging.info(f"** get_rewards dendrite_time: {r.miner_uid}:{dendrite_time}")
 
