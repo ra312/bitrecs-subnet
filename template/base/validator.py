@@ -242,7 +242,7 @@ class BaseValidatorNeuron(BaseNeuron):
                     if synapse_with_event is not None and api_enabled: #API request
                         bt.logging.info("** Processing synapse from API server **")
 
-                        available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+                        # available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
                         # available_uids = [
                         #     uid
                         #     for uid in range(self.metagraph.n.item())
@@ -252,17 +252,17 @@ class BaseValidatorNeuron(BaseNeuron):
                         #         vpermit_tao_limit=0.1
                         #     )
                         # ]
-                        bt.logging.trace(f"available_uids: {available_uids}")
-                        chosen_uids = random.sample(
-                            available_uids,
-                            k=clamp(min=1, max=10, x=len(available_uids))
-                        )
+                        # bt.logging.trace(f"available_uids: {available_uids}")
+                        # chosen_uids = random.sample(
+                        #     available_uids,
+                        #     k=clamp(min=1, max=10, x=len(available_uids))
+                        # )
+                        chosen_uids = [1,2,3]
+                        
                         bt.logging.debug(f"len(chosen_uids): {len(chosen_uids)}")
                         bt.logging.debug(f"chosen_uids: {chosen_uids}")
-                        chosen_axons = [
-                            self.metagraph.axons[uid]
-                            for uid in chosen_uids
-                        ]
+
+                        chosen_axons = [self.metagraph.axons[uid] for uid in chosen_uids]
                         bt.logging.trace(f"chosen_axons: {chosen_axons}")
 
                         api_request = synapse_with_event.input_synapse
