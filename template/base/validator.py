@@ -46,6 +46,10 @@ from queue import SimpleQueue, Empty
 
 from template.utils.uids import check_uid_availability, get_random_uids, clamp
 from template.validator.reward import get_rewards
+from dotenv import load_dotenv
+load_dotenv()
+
+
 
 api_queue = SimpleQueue() # Queue of SynapseEventPair
 

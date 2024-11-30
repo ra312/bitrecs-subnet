@@ -30,6 +30,8 @@ from template.base.miner import BaseMinerNeuron
 from template.llms.prompt_factory import PromptFactory
 from template.protocol import BitrecsRequest
 from template.llms.llama_local import OllamaLocal
+from dotenv import load_dotenv
+load_dotenv()
 
 
 class LLM(Enum):
@@ -56,7 +58,8 @@ async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: 
         return []    
     bt.logging.info(f"do_work LLM OLLAMA_LOCAL_URL: {OLLAMA_LOCAL_URL}")
 
-    prompt = PromptFactory(sku=user_prompt, context=context, num_recs=num_recs, load_catalog=False).generate_prompt()
+    factory = PromptFactory(sku=user_prompt, context=context, num_recs=num_recs, load_catalog=False)
+    prompt = factory.generate_prompt()
     bt.logging.info(f"do_work LLM prompt: {prompt}")
     
     llm = OllamaLocal(ollama_url=OLLAMA_LOCAL_URL, model=model, system_prompt=system_prompt, temp=0.1)
