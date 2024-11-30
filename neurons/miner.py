@@ -153,7 +153,7 @@ class Miner(BaseMinerNeuron):
             context="[]",
             site_key=synapse.site_key,
             results=final_results,
-            models_used=[""],
+            models_used=[model],
             miner_uid=str(self.uid),
             miner_hotkey=synapse.dendrite.hotkey
         )
