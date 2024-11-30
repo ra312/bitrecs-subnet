@@ -285,23 +285,19 @@ class BaseValidatorNeuron(BaseNeuron):
                         selected_rec = rewards.argmax()
                         winner = responses[selected_rec]
                         bt.logging.info(f"Winner: {winner}")
-
+                        synapse_with_event.output_synapse = winner
+                        # Mark the synapse as processed, API will then return to the client
+                        synapse_with_event.event.set()
 
                         bt.logging.info(f"Scored responses: {rewards}")                        
                         self.update_scores(rewards, chosen_uids)
 
                         #TODO ranking and scoring
-                        selected_response = self.select_top_result(api_request, responses)
-                        if selected_response is None:
-                            bt.logging.error("No valid result could be parsed ! skipping request")
-                            synapse_with_event.event.set()                            
-                            continue
-
-                        synapse_with_event.output_synapse = selected_response
-                        # Mark the synapse as processed, API will then return to the client
-                        synapse_with_event.event.set()
-
-
+                        # selected_response = self.select_top_result(api_request, responses)
+                        # if selected_response is None:
+                        #     bt.logging.error("No valid result could be parsed ! skipping request")
+                        #     synapse_with_event.event.set()                            
+                        #     continue
 
                     else:     
                         if not api_exclusive: #Regular validator loop                

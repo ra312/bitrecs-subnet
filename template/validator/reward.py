@@ -32,6 +32,8 @@ class Product:
     name: str
     price: float
 
+ALPHA_TIME_DECAY = 0.05
+
 
 def does_sku_exist(sku: str, context: List[Product]) -> bool:
     """
@@ -65,8 +67,8 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
     try:
         score = 0.00
         if len(response.results) != num_recs:            
-            return 0.00        
-        
+            return 0.00      
+
         # Check each result to exist in the context
         #["{'sku': '24-UG06', 'name': 'Affirm Water Bottle', 'price': 7.0}"]         
         store_catalog: list[Product] = json.loads(ground_truth.context)
@@ -95,9 +97,17 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
                 bt.logging.info(f"JSON ERROR: {e}, miner data: {response.miner_hotkey}")
                 return 0.0
 
-        score = 0.80
-        
+        score = 0.80        
         bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response.miner_hotkey}")
+
+        #Check ttl time        
+        headers = response.to_headers()
+        if "bt_header_dendrite_process_time" in headers:
+            dendrite_time = headers["bt_header_dendrite_process_time"] #0.000132  1.2
+            score = score - ALPHA_TIME_DECAY * float(dendrite_time)
+        else:
+            bt.loggin.error(f"Error in reward: dendrite_time not found in headers")
+            return 0.0
 
         return score
     except Exception as e:        
