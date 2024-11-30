@@ -247,7 +247,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             if check_uid_availability(
                                 metagraph=self.metagraph,
                                 uid=uid,
-                                vpermit_tao_limit=self.config.neuron.vpermit_tao_limit
+                                vpermit_tao_limit=0.1
                             )
                         ]
                         bt.logging.trace(f"available_uids: {available_uids}")
