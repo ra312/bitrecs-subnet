@@ -45,6 +45,7 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
         sku = response.query
         context = response.context
         
+        
         products: list[Product] = json.loads(ground_truth.context)
         bt.logging.info(f"** reward context: {products}")
 
