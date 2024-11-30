@@ -187,8 +187,9 @@ class BaseValidatorNeuron(BaseNeuron):
     def select_top_result(self, original_request: BitrecsRequest, miner_results: List[BitrecsRequest]) -> BitrecsRequest:
         """Selects the top result from the list of results."""
         for r in miner_results:
-            bt.logging.info(f"select_top_result Result: {r}")            
+            #bt.logging.info(f"select_top_result Result: {r}")
             if len(r.results) == original_request.num_results:
+                bt.logging.info(f"select_top_result TOP RESULT: {r}")
                 return r            
         return None
 
