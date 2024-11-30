@@ -61,7 +61,7 @@ async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: 
     
     try:
         #llm_response = llm.ask_ollama(prompt)
-        llm_response = LLMFactory.query_llm(server=server, model=model, system_prompt=system_prompt, temp=0.1, prompt=prompt)
+        llm_response = LLMFactory.query_llm(server=server, model=model, system_prompt=system_prompt, temp=0.1, user_prompt=prompt)
         if not llm_response or len(llm_response) < 10:
             bt.logging.error("LLM response is empty.")
             return []
