@@ -190,7 +190,7 @@ class BaseValidatorNeuron(BaseNeuron):
             #bt.logging.info(f"select_top_result Result: {r}")
             if len(r.results) == original_request.num_results:
                 bt.logging.info(f"select_top_result TOP RESULT: {r}")
-                return r            
+                return r
         return None
 
 

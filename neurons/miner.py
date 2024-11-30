@@ -111,19 +111,19 @@ class Miner(BaseMinerNeuron):
         #           ["result4A - rare", "result5A - common"],
         #           ["result1B - superior", "result2B - exalted", "result3B - ornate"],
         #           ["result1C - superior", "result2C - exalted", "result3C - ornate", "result4C - rare"]]
-        # results = random.choice(things)        
-     
-        bt.logging.info(f"Using LLM: {self.llm_toggle }")
+        # results = random.choice(things)
+       
         bt.logging.info(f"User Query: {synapse.query }")
 
         model = "llama3.2"
         model = "llama3.1:70b"
-        
+
         server = LLM.OLLAMA_LOCAL
         context = synapse.context
         num_recs = synapse.num_results
         try:
             results2 = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)
+            bt.logging.info(f"Calling {server}")
             bt.logging.info(f"LLM {model} Results2 count({len(results2)})")
             bt.logging.info(f"{results2}")
         except Exception as e:
