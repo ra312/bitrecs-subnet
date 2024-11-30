@@ -135,7 +135,7 @@ class PromptFactory:
         """.format(self.num_recs)
 
         #print(prompt)
-        bt.logging.info("generated prompt: {}".format(prompt))
+        #bt.logging.info("generated prompt: {}".format(prompt))
         
         return prompt
     
