@@ -71,17 +71,24 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
         #bt.logging.info(f"** reward context: {store_catalog}")
         bt.logging.info(f"** reward response results: {response.results}")
 
+        valid_items = set()
         for result in response.results:            
             try:             
                 result = result.replace("\'", "\"")
                 product: Product = json.loads(result)
                 bt.logging.info(f"** {response.miner_uid} reward product: {product}")
                 sku = product["sku"]
+                if sku in valid_items:
+                    bt.logging.info(f"Miner has duplicate results: {response.miner_hotkey}")
+                    return 0.0               
+                
                 # Check if sku exists in the context
                 if not does_sku_exist(sku, store_catalog):
                     bt.logging.info(f"Miner has invalid results: {response.miner_hotkey}")
                     return 0.01
-
+                
+                valid_items.add(sku)
+                
             except Exception as e:
                 bt.logging.info(f"JSON ERROR: {e}, miner data: {response.miner_hotkey}")
                 return 0.0
