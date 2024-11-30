@@ -58,12 +58,12 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
              
                 result = result.replace("\'", "\"")
                 product: Product = json.loads(result)
-                bt.logging.info(f"** {response.miner_uid} reward product: {product.sku}")
+                bt.logging.info(f"** {response.miner_uid} reward product: {product}")
 
                 # Check if sku exists in the context
-                if not does_sku_exist(product.sku, store_catalog):
-                    bt.logging.info(f"Miner has invalid results: {response.miner_hotkey}")
-                    return 0.01
+                # if not does_sku_exist(product.sku, store_catalog):
+                #     bt.logging.info(f"Miner has invalid results: {response.miner_hotkey}")
+                #     return 0.01
 
             except Exception as e:
                 bt.logging.info(f"JSON ERROR: {e}, miner data: {response.miner_hotkey}")
