@@ -60,10 +60,8 @@ def reward(num_recs: int, response: BitrecsRequest) -> float:
                 return 0.00
             
         # Check each result to exist in the context
-
-
         
-        #bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response.miner_hotkey}")
+        bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response.miner_hotkey}")
 
         return score
     except Exception as e:        
