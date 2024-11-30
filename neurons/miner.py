@@ -125,7 +125,7 @@ class Miner(BaseMinerNeuron):
         server = LLM.OLLAMA_LOCAL
         try:
             results2 = await do_work(user_prompt=synapse.query, server=server, model=model)
-            bt.logging.info(f"LLM {model} Results2 count({len(results2)}")
+            bt.logging.info(f"LLM {model} Results2 count({len(results2)})")
             bt.logging.info(f"{results2}")
         except Exception as e:
             bt.logging.error(f"Error calling do_work: {e}")
