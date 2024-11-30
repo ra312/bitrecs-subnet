@@ -39,7 +39,7 @@ class LLM(Enum):
     CHAT_GPT = 3
 
 
-async def do_work(user_prompt: str, server: LLM, model: str, system_prompt="You are a helpful assistant.") -> list:
+async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: str, system_prompt="You are a helpful assistant.") -> list:
     """
     Do your work here. This function is called by the forward function to generate recs.
     You can use any method you prefer to generate recs    
@@ -56,7 +56,7 @@ async def do_work(user_prompt: str, server: LLM, model: str, system_prompt="You 
         bt.logging.error("OLLAMA_LOCAL_URL not set.")
         return []    
    
-    llm_rec_prompt = PromptFactory(user_prompt).prompt()
+    llm_rec_prompt = PromptFactory(user_prompt, context=context, num_recs=num_recs, load_catalog=False).prompt()
     bt.logging.info(f"do_work LLM prompt: {llm_rec_prompt}")
     
     llm = OllamaLocal(OLLAMA_LOCAL_URL, model, system_prompt)
@@ -124,8 +124,10 @@ class Miner(BaseMinerNeuron):
 
         model = "llama3.2"
         server = LLM.OLLAMA_LOCAL
+        context = synapse.context
+        num_recs = synapse.num_results
         try:
-            results2 = await do_work(user_prompt=synapse.query, server=server, model=model)
+            results2 = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)
             bt.logging.info(f"LLM {model} Results2 count({len(results2)})")
             bt.logging.info(f"{results2}")
         except Exception as e:
@@ -138,7 +140,7 @@ class Miner(BaseMinerNeuron):
             dendrite=synapse.dendrite,            
             created_at=created_at,
             user=synapse.user,
-            num_results=synapse.num_results,
+            num_results=num_recs,
             query=synapse.query,
             context=json_context,
             site_key=synapse.site_key,
