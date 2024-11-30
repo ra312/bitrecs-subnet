@@ -171,7 +171,7 @@ class ApiServer:
         try:            
             bt.logging.debug(f"API get_rec start forward")
             response = await self.forward_fn(request)
-            bt.logging.debug(f"API get_rec response: {response}")
+            #bt.logging.debug(f"API get_rec response: {response}")
             bt.logging.debug(f"API get_rec response type: {type(response)}")
 
           #class ProductRecResponse:
