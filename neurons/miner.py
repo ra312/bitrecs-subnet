@@ -26,7 +26,6 @@ from datetime import datetime, timezone
 from enum import Enum
 
 import template
-# import base miner class which takes care of most of the boilerplate
 from template.base.miner import BaseMinerNeuron
 from template.llms.prompt_factory import PromptFactory
 from template.protocol import BitrecsRequest
@@ -57,14 +56,14 @@ async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: 
         return []    
     bt.logging.info(f"do_work LLM OLLAMA_LOCAL_URL: {OLLAMA_LOCAL_URL}")
 
-    llm_rec_prompt = PromptFactory(user_prompt, context=context, num_recs=num_recs, load_catalog=False).prompt()
-    bt.logging.info(f"do_work LLM prompt: {llm_rec_prompt}")
+    prompt = PromptFactory(user_prompt, context=context, num_recs=num_recs, load_catalog=False).prompt()
+    bt.logging.info(f"do_work LLM prompt: {prompt}")
     
     llm = OllamaLocal(ollama_url=OLLAMA_LOCAL_URL, model=model, system_prompt=system_prompt, temp=0.1)
 
     try:
 
-        llm_response = llm.ask_ollama(llm_rec_prompt)
+        llm_response = llm.ask_ollama(prompt)
         if not llm_response or len(llm_response) < 10:
             bt.logging.error("LLM response is empty.")
             return []
@@ -112,18 +111,14 @@ class Miner(BaseMinerNeuron):
         #           ["result4A - rare", "result5A - common"],
         #           ["result1B - superior", "result2B - exalted", "result3B - ornate"],
         #           ["result1C - superior", "result2C - exalted", "result3C - ornate", "result4C - rare"]]
-        # results = random.choice(things)
-
-        json_context = "[]"
-        utc_now = datetime.now(timezone.utc)
-        created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")        
-
-        self.llm_toggle = LLM.OLLAMA_LOCAL
-        
+        # results = random.choice(things)        
+     
         bt.logging.info(f"Using LLM: {self.llm_toggle }")
         bt.logging.info(f"User Query: {synapse.query }")
 
         model = "llama3.2"
+        model = "llama3.1:70b"
+        
         server = LLM.OLLAMA_LOCAL
         context = synapse.context
         num_recs = synapse.num_results
@@ -135,6 +130,9 @@ class Miner(BaseMinerNeuron):
             bt.logging.error(f"Error calling do_work: {e}")
             pass
 
+        utc_now = datetime.now(timezone.utc)
+        created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")        
+
         output_synapse=BitrecsRequest(
             name=synapse.name, 
             axon=synapse.axon,
@@ -143,7 +141,7 @@ class Miner(BaseMinerNeuron):
             user=synapse.user,
             num_results=num_recs,
             query=synapse.query,
-            context=json_context,
+            context="[]",
             site_key=synapse.site_key,
             results=results,
             models_used=[""],
