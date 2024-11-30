@@ -48,13 +48,19 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
         #bt.logging.info(f"** reward context: {store_catalog}")
         for result in response.results:
             
-            product: Product = json.loads(result)
-            bt.logging.info(f"** {response.miner_uid} reward product: {product.sku}")
+            try:
 
-            # Check if sku exists in the context
-            if not does_sku_exist(product.sku, store_catalog):
-                bt.logging.info(f"Miner has invalid results: {response.miner_hotkey}")
-                return 0.01
+                product: Product = json.loads(result)
+                bt.logging.info(f"** {response.miner_uid} reward product: {product.sku}")
+
+                # Check if sku exists in the context
+                if not does_sku_exist(product.sku, store_catalog):
+                    bt.logging.info(f"Miner has invalid results: {response.miner_hotkey}")
+                    return 0.01
+
+            except Exception as e:
+                bt.logging.info(f"JSON ERROR: {e}, miner data: {response.miner_hotkey}")
+                return 0.0
 
         score = 0.80
         
