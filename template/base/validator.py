@@ -67,27 +67,22 @@ async def api_forward(synapse: BitrecsRequest) -> BitrecsRequest:
     bt.logging.info(f"api_forward validator synapse type: {type(synapse)}")
     
     """ Forward function for API server. """
-    # synapse_with_event = SynapseWithEvent(
-    #     input_synapse=synapse,
-    #     event=threading.Event(),
-    #     output_synapse=BitrecsRequest(
-    #         name=synapse.name,                     
-    #         created_at=synapse.created_at,
-    #         user=synapse.user,
-    #         num_results=synapse.num_results,
-    #         query=synapse.query,
-    #         context=synapse.context,
-    #         site_key=synapse.site_key,
-    #         results=synapse.results,
-    #         models_used=synapse.models_used,
-    #         miner_uid=synapse.miner_uid,
-    #         miner_hotkey=synapse.miner_hotkey
-    #     )
-    # )
     synapse_with_event = SynapseWithEvent(
         input_synapse=synapse,
         event=threading.Event(),
-        output_synapse=BitrecsRequest()
+        output_synapse=BitrecsRequest(
+            name=synapse.name,                     
+            created_at=synapse.created_at,
+            user=synapse.user,
+            num_results=synapse.num_results,
+            query=synapse.query,
+            context=synapse.context,
+            site_key=synapse.site_key,
+            results=synapse.results,
+            models_used=synapse.models_used,
+            miner_uid=synapse.miner_uid,
+            miner_hotkey=synapse.miner_hotkey
+        )
     )
     api_queue.put(synapse_with_event)
     # Wait until the main thread marks this synapse as processed.
