@@ -47,7 +47,7 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
         
         products: list[Product] = json.loads(ground_truth.context)
         bt.logging.info(f"** reward context: {products}")
-        
+
         # # Check each result is not empty
         # for r in response.results:
         #     if r is None or r == "" or len(r) < 5:
@@ -116,8 +116,8 @@ def get_rewards(
 
     
     return np.array(
-        [reward(num_recs, response) for response in responses], dtype=float
-    )    
+        [reward(num_recs, ground_truth, response) for response in responses], dtype=float
+    )
     
 
 class Product:
