@@ -142,7 +142,7 @@ class Miner(BaseMinerNeuron):
 
         final_results = []
         for r in enumerate(results):
-            r = str(r).lstrip("'").rstrip("'").strip
+            r = str(r).lstrip("'").rstrip("'").strip()
             final_results.append("{}".format(r))
 
         output_synapse=BitrecsRequest(
