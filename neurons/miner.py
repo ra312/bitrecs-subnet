@@ -60,7 +60,7 @@ async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: 
     llm_rec_prompt = PromptFactory(user_prompt, context=context, num_recs=num_recs, load_catalog=False).prompt()
     bt.logging.info(f"do_work LLM prompt: {llm_rec_prompt}")
     
-    llm = OllamaLocal(OLLAMA_LOCAL_URL, model, system_prompt)
+    llm = OllamaLocal(ollama_url=OLLAMA_LOCAL_URL, model=model, system_prompt=system_prompt, temp=0.1)
 
     try:
 
