@@ -115,8 +115,9 @@ class Miner(BaseMinerNeuron):
        
         bt.logging.info(f"User Query: {synapse.query }")
 
-        model = "llama3.2"
-        model = "llama3.1:70b"
+        #model = "llama3.2"
+
+        model = "llama3.1:latest"
 
         server = LLM.OLLAMA_LOCAL
         context = synapse.context
