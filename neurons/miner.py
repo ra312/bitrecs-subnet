@@ -129,12 +129,16 @@ class Miner(BaseMinerNeuron):
             bt.logging.info(f"Calling {server}")
             bt.logging.info(f"LLM {model} Results2 count({len(results2)})")
             bt.logging.info(f"{results2}")
+
+            #if len(results2) > 0:
+            results = results2
+
         except Exception as e:
             bt.logging.error(f"Error calling do_work: {e}")
             pass
 
         utc_now = datetime.now(timezone.utc)
-        created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")        
+        created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
         output_synapse=BitrecsRequest(
             name=synapse.name, 
