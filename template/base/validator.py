@@ -63,7 +63,7 @@ class SynapseWithEvent:
 
 
 async def api_forward(synapse: BitrecsRequest) -> BitrecsRequest:
-    bt.logging.info(f"api_forward validator synapse: {synapse}")
+    #bt.logging.info(f"api_forward validator synapse: {synapse}")
     bt.logging.info(f"api_forward validator synapse type: {type(synapse)}")
     
     """ Forward function for API server. """
