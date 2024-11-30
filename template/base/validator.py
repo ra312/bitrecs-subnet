@@ -300,6 +300,8 @@ class BaseValidatorNeuron(BaseNeuron):
                         selected_response = self.select_top_result(api_request, responses)
                         if selected_response is None:
                             bt.logging.error("No valid result could be parsed ! skipping request")
+                            synapse_with_event.event.set()
+
                             continue
 
                         synapse_with_event.output_synapse = selected_response
