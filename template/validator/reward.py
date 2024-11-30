@@ -37,8 +37,8 @@ def reward(num_recs: int, response: BitrecsRequest) -> float:
     # TODO check format of response as they are from LLMs
     try:
 
-        if response == {}:
-            score = 0        
+        if response == {} or None:
+            score = 0
         elif num_recs < 1:
             score = 0
         elif len(response.results) < num_recs:
@@ -52,14 +52,14 @@ def reward(num_recs: int, response: BitrecsRequest) -> float:
         
         bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response}")
         return score
-    except Exception as e:        
+    except Exception as e:
         bt.logging.info(f"Error in rewards: {e}, miner data: {response}")
         return None
 
 
-def get_rewards(   
+def get_rewards(
     num_recs: int,
-    responses: List[BitrecsRequest],   
+    responses: List[BitrecsRequest],
 ) -> np.ndarray:
     """
     Returns an array of rewards for the given query and responses.
@@ -71,7 +71,7 @@ def get_rewards(
     Returns:
     - np.ndarray: An array of rewards for the given query and responses.
     """    
-
+    
     for r in responses:
         bt.logging.info(f"** get_rewards response: {r.miner_uid}")
     

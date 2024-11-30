@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 # Copyright © 2023 Yuma Rao
-# Copyright © 2024 bitrecs.ai
+# Copyright © 2024 Bitrecs
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the “Software”), to deal in the Software without restriction, including without limitation
@@ -16,19 +16,51 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import os
+import sys
 import time
 import typing
 import bittensor as bt
 import random
 from datetime import datetime, timezone
+from enum import Enum
 
-# Bittensor Miner Template:
 import template
-
 # import base miner class which takes care of most of the boilerplate
 from template.base.miner import BaseMinerNeuron
+from template.llms.prompt_factory import PromptFactory
 from template.protocol import BitrecsRequest
 from template.llms.llama_local import OllamaLocal
+
+class LLM_TOGGLE(Enum):
+    OLLAMA_LOCAL = 1
+    OPEN_ROUTER = 2
+    CHAT_GPT = 3
+
+
+async def do_work(user_prompt: str, toggle_mode: LLM_TOGGLE) -> list:
+    """
+    Call LLM to generate a response to a prompt.
+    """
+    bt.logging.info(f"do_work Prompt: {user_prompt}")
+    bt.logging.info(f"do_work LLM toggle: {toggle_mode}")
+
+    OLLAMA_LOCAL_URL = os.getenv("OLLAMA_LOCAL_URL")
+    if not OLLAMA_LOCAL_URL:
+        raise ValueError("OLLAMA_LOCAL_URL is not set in .env file")
+    
+    llm = OllamaLocal("http://10.0.0.40:11434/api/chat", "llama3.2", "You are a helpful assistant.")
+    llm_rec_prompt = PromptFactory(user_prompt).prompt()
+    bt.logging.info(f"do_work LLM prompt: {llm_rec_prompt}")
+
+    llm_response = llm.ask_ollama(llm_rec_prompt)
+
+    bt.logging.info(f"do_work LLM response: {llm_response}")
+
+    
+
+    return []
+
 
 class Miner(BaseMinerNeuron):
     """
@@ -52,12 +84,12 @@ class Miner(BaseMinerNeuron):
             synapse (template.protocol.BitrecsRequest): The synapse object containing the 'BitrecsRequest' data.
 
         Returns:
-            template.protocol.BitrecsRequest: The synapse object with the recs.
+            template.protocol.BitrecsRequest: The synapse object with the recs same object modified with updated fields.
 
         """
         bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))
         
-        #num_results = synapse.num_results
+        num_results = synapse.num_results
         results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]      
 
         # things = [["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"], 
@@ -68,21 +100,15 @@ class Miner(BaseMinerNeuron):
 
         json_context = "[]"
         utc_now = datetime.now(timezone.utc)
-        created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
+        created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")        
 
-        #synapse.num_results = num_results
+        self.llm_toggle = LLM_TOGGLE.OLLAMA_LOCAL
         
-        # synapse.results = results
-        # #synapse.query = query
-        # synapse.context = json_context
-        # synapse.created_at = created_at
-        # synapse.models_used = [""]
-        # synapse.miner_hotkey = synapse.dendrite.hotkey
-        # synapse.miner_uid = str(self.uid)
-        #self.step += 1
-        
-        #local_lama = OllamaLocal("http://10.0.0.40:11434/api/chat", "llama3.2", "You are a helpful assistant.")
-        
+        bt.logging.info(f"Using LLM: {self.llm_toggle }")
+        bt.logging.info(f"User Query: {synapse.query }")
+
+        results2 = await do_work(synapse.query)
+
 
         output_synapse=BitrecsRequest(
             name=synapse.name, 

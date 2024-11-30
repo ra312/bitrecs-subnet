@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 # Copyright © 2023 Yuma Rao
-# Copyright © 2024 bitrecs.ai
+# Copyright © 2024 Bitrecs
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the “Software”), to deal in the Software without restriction, including without limitation
@@ -28,7 +28,6 @@ import traceback
 import anyio.to_thread
 import random
 
-
 from typing import List, Union, Optional
 from traceback import print_exception
 
@@ -37,7 +36,7 @@ from template.base.utils.weight_utils import (
     process_weights_for_netuid,
     convert_weights_and_uids_for_emit, 
 )  # TODO: Replace when bittensor switches to numpy
-from template.mock import MockDendrite
+
 from template.utils.config import add_validator_args
 
 from template.api.api_server import ApiServer
@@ -49,6 +48,7 @@ from template.utils.uids import check_uid_availability, get_random_uids, clamp
 from template.validator.reward import get_rewards
 
 api_queue = SimpleQueue() # Queue of SynapseEventPair
+
 
 @dataclass
 class SynapseWithEvent:
@@ -106,10 +106,11 @@ class BaseValidatorNeuron(BaseNeuron):
         self.hotkeys = copy.deepcopy(self.metagraph.hotkeys)
 
         # Dendrite lets us send messages to other nodes (axons) in the network.
-        if self.config.mock:
-            self.dendrite = MockDendrite(wallet=self.wallet)
-        else:
-            self.dendrite = bt.dendrite(wallet=self.wallet)
+        # if self.config.mock:
+        #     self.dendrite = MockDendrite(wallet=self.wallet)
+        # else:
+
+        self.dendrite = bt.dendrite(wallet=self.wallet)
         bt.logging.info(f"Dendrite: {self.dendrite}")
 
         # Set up initial scoring weights for validation
@@ -134,7 +135,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 axon_port=self.config.axon.port,
                 forward_fn=api_forward,
                 api_json=self.config.api_json,          
-                ngrok_domain="bitrecs.ai"
+                ngrok_domain="bitrecs"
             )
             api_server.start()            
             bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: {api_server.fast_server.config.host} on Axon: {api_server.fast_server.config.port} \033[0m")
@@ -235,7 +236,11 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     if synapse_with_event is not None and api_enabled: #API request
                         bt.logging.info("** Processing synapse from API server **")
-                        # available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+                        #available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+
+                        available_uids = get_random_uids(self, k=3)                        
+                        bt.logging.debug(f"available_uids: {available_uids}")
+
                         # available_uids = [
                         #     uid
                         #     for uid in range(self.metagraph.n.item())
@@ -250,6 +255,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         #     available_uids,
                         #     k=clamp(min=1, max=10, x=len(available_uids))
                         # )
+
                         chosen_uids = [1, 2, 3, 4, 5]
                         
                         bt.logging.debug(f"len(chosen_uids): {len(chosen_uids)}")
@@ -259,20 +265,28 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.trace(f"chosen_axons: {chosen_axons}")
 
                         api_request = synapse_with_event.input_synapse
-                        number_of_recs_desired = api_request.num_results
+                        number_of_recs_desired = api_request.num_results                       
+
+                        if number_of_recs_desired > 10:
+                            bt.logging.error("Number of recommendations should be less than 10")
+                            continue
 
                         # Send request to the miner population
-                        responses = self.dendrite.query(                            
-                            chosen_axons,                            
-                            api_request,                            
+                        responses = self.dendrite.query(
+                            chosen_axons,
+                            api_request,
                             deserialize=False,
                             timeout=10.0
                         )
                         bt.logging.debug(f"len(responses): {len(responses)}")
 
-                        # Adjust the scores based on responses from miners.                        
+                        # Adjust the scores based on responses from miners.
                         rewards = get_rewards(num_recs=number_of_recs_desired, responses=responses)
-                        assert len(chosen_uids) == len(responses) == len(rewards)
+                        #assert len(chosen_uids) == len(responses) == len(rewards)
+                        
+                        if not len(chosen_uids) == len(responses) == len(rewards):
+                            bt.logging.error("MISMATCH in lengths of chosen_uids, responses and rewards")
+                            continue
 
                         bt.logging.info(f"Scored responses: {rewards}")
                         
@@ -285,9 +299,6 @@ class BaseValidatorNeuron(BaseNeuron):
                             continue
 
                         synapse_with_event.output_synapse = selected_response
-                        # thing = self.loop.run_until_complete(self.concurrent_forward2(synapse_with_event.input_synapse))
-                        # bt.logging.info(f"thing: {thing}")
-
                         # Mark the synapse as processed, API will then return to the client
                         synapse_with_event.event.set()
 
@@ -329,9 +340,7 @@ class BaseValidatorNeuron(BaseNeuron):
         except Exception as err:
             bt.logging.error(f"Error during validation: {str(err)}")
             bt.logging.debug(traceback.format_exc(err))
-            # bt.logging.debug(
-            #     str(print_exception(type(err), err, err.__traceback__))
-            # )
+                     
 
     def run_in_background_thread(self):
         """

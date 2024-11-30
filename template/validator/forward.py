@@ -100,7 +100,9 @@ async def forward(self, pr: BitrecsRequest = None):
     
     # Adjust the scores based on responses from miners.
     rewards = get_rewards(num_recs=num_recs, responses=responses)
-    assert len(miner_uids) == len(responses) == len(rewards)
+    #assert len(miner_uids) == len(responses) == len(rewards)
+    if not len(miner_uids) == len(responses) == len(rewards):
+        bt.logging.error(f"MISMATCH Error in rewards: {rewards}, responses: {responses}, miner_uids: {miner_uids}")
 
     bt.logging.info(f"Scored responses: {rewards}")
     
