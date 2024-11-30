@@ -46,6 +46,7 @@ from dataclasses import dataclass
 from queue import SimpleQueue, Empty
 
 from template.utils.uids import check_uid_availability, get_random_uids, clamp
+from template.validator.reward import get_rewards
 
 api_queue = SimpleQueue() # Queue of SynapseEventPair
 
@@ -258,18 +259,24 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.trace(f"chosen_axons: {chosen_axons}")
 
                         api_request = synapse_with_event.input_synapse
+                        number_of_recs_desired = api_request.num_results
 
                         # Send request to the miner population
-                        responses = self.dendrite.query(
-                            # Send the query to all axons in the network.
-                            chosen_axons,
-                            # Construct a query.
-                            api_request,
-                            # All responses have the deserialize function called on them before returning.
+                        responses = self.dendrite.query(                            
+                            chosen_axons,                            
+                            api_request,                            
                             deserialize=False,
                             timeout=10.0
                         )
                         bt.logging.debug(f"len(responses): {len(responses)}")
+
+                        # Adjust the scores based on responses from miners.                        
+                        rewards = get_rewards(num_recs=number_of_recs_desired, responses=responses)
+                        assert len(chosen_uids) == len(responses) == len(rewards)
+
+                        bt.logging.info(f"Scored responses: {rewards}")
+                        
+                        self.update_scores(rewards, chosen_uids)
 
                         #TODO ranking and scoring
                         selected_response = self.select_top_result(api_request, responses)
