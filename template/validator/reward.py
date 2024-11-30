@@ -16,14 +16,35 @@
 # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
+
 import numpy as np
 import time
 import bittensor as bt
 from template.protocol import BitrecsRequest
 from template.llms.prompt_factory import PromptFactory
 from typing import List
-import json
+from dataclasses import dataclass
 
+
+@dataclass
+class Product:
+    sku: str
+    name: str
+    price: float
+
+
+def does_sku_exist(sku: str, context: List[Product]) -> bool:
+    """
+    Check if sku exists in the context
+    """
+    if not sku or not context:
+        return False
+    if len(context) == 0:
+        return False
+    for product in context:
+        if product["sku"].lower().strip() == sku.lower().strip():
+            return True
+    return False   
 
 
 def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest) -> float:
@@ -49,13 +70,10 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
         #"{'sku': '24-WG084', 'name': 'Sprite Foam Yoga Brick', 'price': 5.0}", 
         store_catalog: list[Product] = json.loads(ground_truth.context)
         #bt.logging.info(f"** reward context: {store_catalog}")
-
         bt.logging.info(f"** reward response results: {response.results}")
 
-        for result in response.results:
-            
-            try:
-             
+        for result in response.results:            
+            try:             
                 result = result.replace("\'", "\"")
                 product: Product = json.loads(result)
                 bt.logging.info(f"** {response.miner_uid} reward product: {product}")
@@ -137,22 +155,4 @@ def get_rewards(
     )
     
 
-class Product:
-    sku: str
-    name: str
-    price: float
-
-def does_sku_exist(sku: str, context: List[Product]) -> bool:
-    """
-    Check if sku exists in the context
-    """
-    if not sku or not context:
-        return False
-    if len(context) == 0:
-        return False
-    for product in context:
-        if product["sku"].lower() == sku.lower():
-            return True
-    return False
-   
 
