@@ -3,11 +3,9 @@ from os import path
 import pathlib
 import base64
 import requests
-from typing import List
-from pydantic import BaseModel
 
 
-class OllamaLocal(BaseModel):
+class OllamaLocal():
     def __init__(self, ollama_url: str, model: str, system_prompt: str, temp=0.1):
         if not ollama_url:
             raise Exception
