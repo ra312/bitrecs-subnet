@@ -237,7 +237,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.info("** Processing synapse from API server **")
                         #available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
 
-                        available_uids = get_random_uids(self, k=3)                        
+                        available_uids = get_random_uids(self, k=8)                        
                         bt.logging.debug(f"available_uids: {available_uids}")
 
                         # available_uids = [
@@ -268,7 +268,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
                         #self.forward(api_request)
 
-                        number_of_recs_desired = api_request.num_results                       
+                        number_of_recs_desired = api_request.num_results
 
                         if number_of_recs_desired > 10:
                             bt.logging.error("Number of recommendations should be less than 10")
@@ -279,7 +279,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             chosen_axons,
                             api_request,
                             deserialize=False,
-                            timeout=10.0
+                            timeout=30
                         )
                         
                         bt.logging.debug(f"len(responses): {len(responses)}")
