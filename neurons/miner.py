@@ -27,7 +27,9 @@ from template.base.miner import BaseMinerNeuron
 from template.protocol import BitrecsRequest
 from template.llms.prompt_factory import PromptFactory
 from template.llms.llama_local import OllamaLocal
-from template.llms.factory import LLM
+from template.llms.factory import LLM, LLMFactory
+from template.llms.open_router import OpenRouter
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -53,21 +55,17 @@ async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: 
         model = "llama3.1"
     bt.logging.info(f"do_work LLM model: {model}")
 
-    OLLAMA_LOCAL_URL = os.getenv("OLLAMA_LOCAL_URL")
-    if not OLLAMA_LOCAL_URL or len(OLLAMA_LOCAL_URL) < 10:
-        bt.logging.error("OLLAMA_LOCAL_URL not set.")
-        return []    
-    bt.logging.info(f"do_work LLM OLLAMA_LOCAL_URL: {OLLAMA_LOCAL_URL}")
 
     factory = PromptFactory(sku=user_prompt, context=context, num_recs=num_recs, load_catalog=False)
-    prompt = factory.generate_prompt()
-    bt.logging.info(f"do_work LLM prompt: {prompt}")
-    
-    llm = OllamaLocal(ollama_url=OLLAMA_LOCAL_URL, model=model, system_prompt=system_prompt, temp=0.1)
+    prompt = factory.generate_prompt()    
+    system_prompt = "You are a helpful assistant."    
 
+    #bt.logging.info(f"do_work LLM prompt: {prompt}")    
+    #llm = OllamaLocal(ollama_url=OLLAMA_LOCAL_URL, model=model, system_prompt=system_prompt, temp=0.1)
     try:
 
-        llm_response = llm.ask_ollama(prompt)
+        #llm_response = llm.ask_ollama(prompt)
+        llm_response = LLMFactory.query_llm(server, model, system_prompt=system_prompt, temp=0.1, prompt=prompt)
         if not llm_response or len(llm_response) < 10:
             bt.logging.error("LLM response is empty.")
             return []
@@ -121,19 +119,22 @@ class Miner(BaseMinerNeuron):
        
         bt.logging.info(f"User Query: {synapse.query }")
 
-        #model = "llama3.2"
-        model = "llama3.1"
+       
 
-        server = LLM.OLLAMA_LOCAL
+        #model = "llama3.2"
+        #model = "llama3.1"
+        
+        model = "google/gemini-flash-1.5-8b"
+        server = LLM.OPEN_ROUTER
+
         context = synapse.context
         num_recs = synapse.num_results
         try:
+
             results2 = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)
             bt.logging.info(f"Calling {server}")
             bt.logging.info(f"LLM {model} Results2 count({len(results2)})")
-            bt.logging.info(f"{results2}")
-
-            #if len(results2) > 0:
+            bt.logging.info(f"{results2}")            
             results = results2
 
         except Exception as e:
