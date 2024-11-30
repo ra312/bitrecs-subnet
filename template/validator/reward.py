@@ -20,8 +20,11 @@ import numpy as np
 import time
 import bittensor as bt
 from template.protocol import BitrecsRequest
+from template.llms.prompt_factory import PromptFactory
 from typing import List
 import json
+
+
 
 def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest) -> float:
     """
@@ -52,9 +55,8 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
         for result in response.results:
             
             try:
-                if result is None or len(result) == 0:
-                    return 0.0
-                
+             
+                result = result.replace("\'", "\"")
                 product: Product = json.loads(result)
                 bt.logging.info(f"** {response.miner_uid} reward product: {product.sku}")
 
