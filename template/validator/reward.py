@@ -17,14 +17,14 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import numpy as np
 import time
+import json
+import numpy as np
 import bittensor as bt
 from template.protocol import BitrecsRequest
 from template.llms.prompt_factory import PromptFactory
 from typing import List
 from dataclasses import dataclass
-
 
 @dataclass
 class Product:
@@ -42,7 +42,7 @@ def does_sku_exist(sku: str, context: List[Product]) -> bool:
     if len(context) == 0:
         return False
     for product in context:
-        if product["sku"].lower().strip() == sku.lower().strip():
+        if product.sku.lower().strip() == sku.lower().strip():
             return True
     return False   
 
@@ -77,7 +77,7 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
                 result = result.replace("\'", "\"")
                 product: Product = json.loads(result)
                 bt.logging.info(f"** {response.miner_uid} reward product: {product}")
-                sku = product["sku"]
+                sku = product.sku
                 # Check if sku exists in the context
                 if not does_sku_exist(sku, store_catalog):
                     bt.logging.info(f"Miner has invalid results: {response.miner_hotkey}")
