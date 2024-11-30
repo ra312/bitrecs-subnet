@@ -39,7 +39,7 @@ def reward(num_recs: int, response: BitrecsRequest) -> float:
 
         if response == {} or None:
             score = 0
-        elif num_recs < 1:
+        elif len(response.results) < 1:
             score = 0
         elif len(response.results) < num_recs:
             return 0.01
