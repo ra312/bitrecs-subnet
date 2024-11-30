@@ -86,6 +86,7 @@ def get_rewards(
     
     for r in responses:
         bt.logging.info(f"** get_rewards response: {r.miner_uid}")
+        bt.logging.info(f"** get_rewards headers: {r.to_headers()}")
     
     return np.array(
         [reward(num_recs, response) for response in responses], dtype=float

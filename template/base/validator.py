@@ -241,22 +241,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
                         #available_uids = get_random_uids(self, k=8)                        
                         bt.logging.debug(f"available_uids: {available_uids}")
-
-                        # available_uids = [
-                        #     uid
-                        #     for uid in range(self.metagraph.n.item())
-                        #     if check_uid_availability(
-                        #         metagraph=self.metagraph,
-                        #         uid=uid,
-                        #         vpermit_tao_limit=0.1
-                        #     )
-                        # ]
-                        # bt.logging.trace(f"available_uids: {available_uids}")
-                        # chosen_uids = random.sample(
-                        #     available_uids,
-                        #     k=clamp(min=1, max=10, x=len(available_uids))
-                        # )
-
+                     
                         #chosen_uids = [0, 1, 2, 3, 4, 5, 6, 7]
                         #chosen_uids = [0]
 
@@ -269,9 +254,6 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.trace(f"chosen_axons: {chosen_axons}")
 
                         api_request = synapse_with_event.input_synapse
-
-                        #self.forward(api_request)
-
                         number_of_recs_desired = api_request.num_results
 
                         if number_of_recs_desired > 10:
