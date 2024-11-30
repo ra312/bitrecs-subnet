@@ -21,9 +21,9 @@ import time
 import bittensor as bt
 from template.protocol import BitrecsRequest
 from typing import List
+import json
 
-
-def reward(num_recs: int, response: BitrecsRequest) -> float:
+def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest) -> float:
     """
     Reward the miner response to the BitrecsRequest 
 
@@ -35,29 +35,24 @@ def reward(num_recs: int, response: BitrecsRequest) -> float:
     
     print("*************** REWARD *************************")
     # TODO check format of response as they are from LLMs
+
     try:
-
-        if response == {} or None:
-            score = 0
-        elif len(response.results) < 1:
-            score = 0
-        elif len(response.results) < num_recs:
-            return 0.01
-        elif len(response.results) == num_recs:
-            score = 0.80
-        elif len(response.results) > num_recs:
-            score = 0.02
-        else:
-            score = 0
-
-        if score == 0:
-            return score
+        score = 0.00
+        if len(response.results) != num_recs:            
+            return 0.00        
         
-        # Check each result is not empty
-        for r in response.results:
-            if r is None or r == "" or len(r) < 5:
-                bt.logging.info(f"Miner has invalid results: {response.miner_hotkey}")
-                return 0.00
+        # Check each result to exist in the context
+        sku = response.query
+        context = response.context
+        
+        products: list[Product] = json.loads(ground_truth.context)
+        bt.logging.info(f"** reward context: {products}")
+        
+        # # Check each result is not empty
+        # for r in response.results:
+        #     if r is None or r == "" or len(r) < 5:
+        #         bt.logging.info(f"Miner has invalid results: {response.miner_hotkey}")
+        #         return 0.00
             
         # Check each result to exist in the context
         
@@ -71,6 +66,7 @@ def reward(num_recs: int, response: BitrecsRequest) -> float:
 
 def get_rewards(
     num_recs: int,
+    ground_truth: BitrecsRequest,
     responses: List[BitrecsRequest],
 ) -> np.ndarray:
     """
@@ -83,6 +79,26 @@ def get_rewards(
     Returns:
     - np.ndarray: An array of rewards for the given query and responses.
     """    
+
+    #for each response, calculate the reward
+
+    #remove no results records - score them all 0
+
+    #of the ones that have results, check if the number of results is equal to the number of recommendations
+
+    #if the skus are not in the context, score them 0
+
+    #ensure the skus exist in the context
+
+    #order the remainign results by time spend dendrite_time 
+
+    #select the best performing response as the winner
+
+    # scored_candidates = [r for r in responses if r is not None and r.results is not None and len(r.results) > 0]    
+
+    # zero_scored_candidates = [r for r in responses if r is None or r.results is None or len(r.results) < 1]   
+
+    
     
     for r in responses:
         bt.logging.info(f"** get_rewards response: {r.miner_uid}")
@@ -103,3 +119,21 @@ def get_rewards(
         [reward(num_recs, response) for response in responses], dtype=float
     )    
     
+
+class Product:
+    sku: str
+    name: str
+    price: float
+
+
+
+def does_sku_exist(sku:str, context: List[Product]) -> bool:
+    """
+    Check if sku exists in the context
+    """
+    for product in context:
+        if product.sku.lower() == sku.lower():
+            return True
+    return False
+   
+

@@ -272,7 +272,9 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.debug(f"len(responses): {len(responses)}")
 
                         # Adjust the scores based on responses from miners.
-                        rewards = get_rewards(num_recs=number_of_recs_desired, responses=responses)
+                        rewards = get_rewards(num_recs=number_of_recs_desired, 
+                                              ground_truth=api_request,
+                                              responses=responses)
                         #assert len(chosen_uids) == len(responses) == len(rewards)
                         
                         if not len(chosen_uids) == len(responses) == len(rewards):
