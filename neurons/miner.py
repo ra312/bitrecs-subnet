@@ -55,7 +55,8 @@ async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: 
     if not OLLAMA_LOCAL_URL or len(OLLAMA_LOCAL_URL) < 10:
         bt.logging.error("OLLAMA_LOCAL_URL not set.")
         return []    
-   
+    bt.logging.info(f"do_work LLM OLLAMA_LOCAL_URL: {OLLAMA_LOCAL_URL}")
+
     llm_rec_prompt = PromptFactory(user_prompt, context=context, num_recs=num_recs, load_catalog=False).prompt()
     bt.logging.info(f"do_work LLM prompt: {llm_rec_prompt}")
     
