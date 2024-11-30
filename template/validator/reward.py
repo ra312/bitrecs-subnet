@@ -49,6 +49,19 @@ def reward(num_recs: int, response: BitrecsRequest) -> float:
             score = 0.02
         else:
             score = 0
+
+        if score == 0:
+            return score
+        
+        # Check each result is not empty
+        for r in response.results:
+            if r is None or r == "" or len(r) < 5:
+                bt.logging.info(f"Miner has invalid results: {response.miner_hotkey}")
+                return 0.00
+            
+        # Check each result to exist in the context
+
+
         
         #bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response.miner_hotkey}")
 
