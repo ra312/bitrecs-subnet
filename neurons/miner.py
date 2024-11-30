@@ -140,11 +140,8 @@ class Miner(BaseMinerNeuron):
         utc_now = datetime.now(timezone.utc)
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
-        final_results = []
-        for r in enumerate(results):
-            r = str(r).lstrip("'").rstrip("'").strip()
-            final_results.append("{}".format(r))
-
+        final_results = [str(r) for r in results]
+     
         output_synapse=BitrecsRequest(
             name=synapse.name, 
             axon=synapse.axon,
