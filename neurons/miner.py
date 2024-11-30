@@ -21,7 +21,6 @@ import sys
 import time
 import typing
 import bittensor as bt
-import random
 import template
 from datetime import datetime, timezone
 from template.base.miner import BaseMinerNeuron
@@ -33,7 +32,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: str, system_prompt="You are a helpful assistant.") -> list:
+async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: str, system_prompt="You are a helpful assistant.") -> typing.List[str]:
     """
     Do your miner work here. This function is called by the forward function to generate recs.
     You can use any method you prefer to generate recs. 

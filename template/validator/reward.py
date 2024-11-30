@@ -27,7 +27,7 @@ def reward(num_recs: int, response: BitrecsRequest) -> float:
     """
     Reward the miner response to the BitrecsRequest 
 
-    Nubmer of recommendations should match the requeted number of recommendations   
+    Nubmer of recommendations should match the requested number of recommendations   
 
     Returns:
     - float: The reward value for the miner.

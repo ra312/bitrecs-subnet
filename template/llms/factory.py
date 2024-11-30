@@ -42,7 +42,7 @@ class OllamaLocal():
         self.temp = temp
     
     def query(self, user_prompt):
-        return "OllamaLocalLLM"
+        return ""
     
 class OpenRouter():
     def __init__(self, model, system_prompt, temp):
@@ -51,7 +51,7 @@ class OpenRouter():
         self.temp = temp
     
     def query(self, user_prompt):
-        return "OllamaLocalLLM"
+        return ""
     
 class ChatGPT():
     def __init__(self, model, system_prompt, temp):
@@ -60,7 +60,7 @@ class ChatGPT():
         self.temp = temp
     
     def query(self, user_prompt):
-        return "OllamaLocalLLM"
+        return ""
     
 class vLLM():
     def __init__(self, model, system_prompt, temp):
@@ -69,4 +69,4 @@ class vLLM():
         self.temp = temp
     
     def query(self, user_prompt):
-        return "OllamaLocalLLM"
+        return ""
