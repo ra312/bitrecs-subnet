@@ -255,7 +255,8 @@ class BaseValidatorNeuron(BaseNeuron):
                         #     k=clamp(min=1, max=10, x=len(available_uids))
                         # )
 
-                        chosen_uids = [1, 2, 3, 4, 5, 6]
+                        chosen_uids = [0, 1, 2, 3, 4, 5, 6]
+                        
                         
                         bt.logging.debug(f"len(chosen_uids): {len(chosen_uids)}")
                         bt.logging.debug(f"chosen_uids: {chosen_uids}")
@@ -264,6 +265,9 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.trace(f"chosen_axons: {chosen_axons}")
 
                         api_request = synapse_with_event.input_synapse
+
+                        #self.forward(api_request)
+
                         number_of_recs_desired = api_request.num_results                       
 
                         if number_of_recs_desired > 10:
@@ -277,6 +281,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             deserialize=False,
                             timeout=10.0
                         )
+                        
                         bt.logging.debug(f"len(responses): {len(responses)}")
 
                         # Adjust the scores based on responses from miners.
