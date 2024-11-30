@@ -1,7 +1,6 @@
 # The MIT License (MIT)
 # Copyright © 2023 Yuma Rao
-# TODO(developer): Set your name
-# Copyright © 2023 <your name>
+# Copyright © 2024 bitrecs.ai
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the “Software”), to deal in the Software without restriction, including without limitation
@@ -29,21 +28,19 @@ import template
 # import base miner class which takes care of most of the boilerplate
 from template.base.miner import BaseMinerNeuron
 from template.protocol import BitrecsRequest
-
+from template.llms.llama_local import OllamaLocal
 
 class Miner(BaseMinerNeuron):
     """
-    Your miner neuron class. You should use this class to define your miner's behavior. In particular, you should replace the forward function with your own logic. You may also want to override the blacklist and priority functions according to your needs.
+    Main miner class which generates product recommendations based on incoming requests.
+    You are encouraged to modify this class to generate better recs using whatever method you prefer.
 
-    This class inherits from the BaseMinerNeuron class, which in turn inherits from BaseNeuron. The BaseNeuron class takes care of routine tasks such as setting up wallet, subtensor, metagraph, logging directory, parsing config, etc. You can override any of the methods in BaseNeuron if you need to customize the behavior.
-
-    This class provides reasonable default behavior for a miner such as blacklisting unrecognized hotkeys, prioritizing requests based on stake, and forwarding requests to the forward function. If you need to define custom
     """
 
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
 
-        bt.logging.info(f"\033[1;32m 🐸 Bitrecs Miner uid: {self.uid}\033[0m")
+        bt.logging.info(f"\033[1;32m 🐸 Bitrecs Miner started uid: {self.uid}\033[0m")
 
     async def forward(
         self, synapse: BitrecsRequest
@@ -83,6 +80,9 @@ class Miner(BaseMinerNeuron):
         # synapse.miner_hotkey = synapse.dendrite.hotkey
         # synapse.miner_uid = str(self.uid)
         #self.step += 1
+        
+        #local_lama = OllamaLocal("http://10.0.0.40:11434/api/chat", "llama3.2", "You are a helpful assistant.")
+        
 
         output_synapse=BitrecsRequest(
             name=synapse.name, 

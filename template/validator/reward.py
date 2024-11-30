@@ -38,13 +38,17 @@ def reward(num_recs: int, response: BitrecsRequest) -> float:
     try:
 
         if response == {}:
-            return 0        
-        if num_recs < 1:
-            return 0
-        
-        score = 0.00
-        if(len(response.results) == num_recs):
+            score = 0        
+        elif num_recs < 1:
+            score = 0
+        elif len(response.results) < num_recs:
+            return 0.01
+        elif len(response.results) == num_recs:
             score = 0.80
+        elif len(response.results) > num_recs:
+            score = 0.02
+        else:
+            score = 0
         
         bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response}")
         return score
