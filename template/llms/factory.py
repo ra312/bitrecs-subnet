@@ -21,7 +21,8 @@ class LLM(Enum):
 
 class LLMFactory:
 
-    def query_llm(self, server: LLM, model: str, system_prompt="You are a helpful assistant", temp=0.1, user_prompt="") -> str:
+    @staticmethod
+    def query_llm(server: LLM, model: str, system_prompt="You are a helpful assistant", temp=0.1, user_prompt="") -> str:
         match server:
             case LLM.OLLAMA_LOCAL:
                 return OllamaLocalInterface(model, system_prompt, temp).query(user_prompt)
