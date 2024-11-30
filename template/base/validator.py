@@ -214,6 +214,8 @@ class BaseValidatorNeuron(BaseNeuron):
         
         bt.logging.info(f"Validator starting at block: {self.block}")
 
+        bt.logging.info(f"Validator SAMPLE SIZE: {self.config.neuron.sample_size}")       
+
         # This loop maintains the validator's operations until intentionally stopped.
         try:
             while True:
@@ -257,7 +259,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
                         #chosen_uids = [0, 1, 2, 3, 4, 5, 6, 7]
                         #chosen_uids = [0]
-                        
+
                         chosen_uids = available_uids
                         
                         bt.logging.debug(f"len(chosen_uids): {len(chosen_uids)}")
