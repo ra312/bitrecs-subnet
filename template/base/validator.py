@@ -239,13 +239,13 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.info("** Processing synapse from API server **")
 
                         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-                        #available_uids = get_random_uids(self, k=8)                        
+                        #available_uids = get_random_uids(self, k=8)
                         bt.logging.debug(f"available_uids: {available_uids}")
                      
-                        chosen_uids = [0, 1, 2, 3, 4, 5, 6, 7]
+                        #chosen_uids = [0, 1, 2, 3, 4, 5, 6, 7]
                         #chosen_uids = [0]
 
-                        #chosen_uids = available_uids
+                        chosen_uids = available_uids
                         #np.append(chosen_uids, [1])                        
                         
                         bt.logging.debug(f"len(chosen_uids): {len(chosen_uids)}")
@@ -267,7 +267,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             chosen_axons,
                             api_request,
                             deserialize=False,
-                            timeout=5
+                            timeout=10
                         )
                         
                         bt.logging.debug(f"len(responses): {len(responses)}")
