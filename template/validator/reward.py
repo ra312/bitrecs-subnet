@@ -50,7 +50,8 @@ def reward(num_recs: int, response: BitrecsRequest) -> float:
         else:
             score = 0
         
-        bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response}")
+        bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response.miner_hotkey}")
+
         return score
     except Exception as e:
         bt.logging.info(f"Error in rewards: {e}, miner data: {response}")
