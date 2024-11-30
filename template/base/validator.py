@@ -246,7 +246,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         #chosen_uids = [0]
 
                         #chosen_uids = available_uids
-                        #np.append(chosen_uids, [1])
+                        #np.append(chosen_uids, [1])                        
                         
                         bt.logging.debug(f"len(chosen_uids): {len(chosen_uids)}")
                         bt.logging.debug(f"chosen_uids: {chosen_uids}")
@@ -263,7 +263,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             continue
 
                         # Send request to the miner population
-                        responses = self.dendrite.query(
+                        responses = self.dendrite(
                             chosen_axons,
                             api_request,
                             deserialize=False,
