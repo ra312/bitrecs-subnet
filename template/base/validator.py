@@ -275,16 +275,19 @@ class BaseValidatorNeuron(BaseNeuron):
                         # Adjust the scores based on responses from miners.
                         rewards = get_rewards(num_recs=number_of_recs_desired, 
                                               ground_truth=api_request,
-                                              responses=responses)
-                        #assert len(chosen_uids) == len(responses) == len(rewards)
+                                              responses=responses)                        
                         
                         if not len(chosen_uids) == len(responses) == len(rewards):
                             bt.logging.error("MISMATCH in lengths of chosen_uids, responses and rewards")
                             synapse_with_event.event.set()
                             continue
+                            
+                        selected_rec = rewards.argmax()
+                        winner = responses[selected_rec]
+                        bt.logging.info(f"Winner: {winner}")
 
-                        bt.logging.info(f"Scored responses: {rewards}")
-                        
+
+                        bt.logging.info(f"Scored responses: {rewards}")                        
                         self.update_scores(rewards, chosen_uids)
 
                         #TODO ranking and scoring
@@ -297,6 +300,8 @@ class BaseValidatorNeuron(BaseNeuron):
                         synapse_with_event.output_synapse = selected_response
                         # Mark the synapse as processed, API will then return to the client
                         synapse_with_event.event.set()
+
+
 
                     else:     
                         if not api_exclusive: #Regular validator loop                

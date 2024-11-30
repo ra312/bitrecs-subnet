@@ -52,6 +52,8 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
     Reward the miner response to the BitrecsRequest 
 
     Nubmer of recommendations should match the requested number of recommendations   
+    Unique recommendations in the response is expected
+    Malformed json or bad skus are penalized
 
     Returns:
     - float: The reward value for the miner.
@@ -88,7 +90,7 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
                     return 0.01
                 
                 valid_items.add(sku)
-                
+
             except Exception as e:
                 bt.logging.info(f"JSON ERROR: {e}, miner data: {response.miner_hotkey}")
                 return 0.0
@@ -117,43 +119,25 @@ def get_rewards(
 
     Returns:
     - np.ndarray: An array of rewards for the given query and responses.
-    """    
-
-    #for each response, calculate the reward
-
-    #remove no results records - score them all 0
-
-    #of the ones that have results, check if the number of results is equal to the number of recommendations
-
-    #if the skus are not in the context, score them 0
-
-    #ensure the skus exist in the context
-
-    #order the remainign results by time spend dendrite_time 
-
-    #select the best performing response as the winner
-
-    # scored_candidates = [r for r in responses if r is not None and r.results is not None and len(r.results) > 0]    
-
-    # zero_scored_candidates = [r for r in responses if r is None or r.results is None or len(r.results) < 1]   
+    """
 
     if num_recs < 1 or num_recs > 20:
         bt.logging.info(f"Invalid number of recommendations: {num_recs}")
         raise ValueError("configuration of num_recs is invalid")
     
-    for r in responses:
-        bt.logging.info(f"** get_rewards response: {r.miner_uid}")
-        #bt.logging.info(f"** get_rewards headers: {r.to_headers()}")
-        headers = r.to_headers()
-        axon_time = -1
-        dendrite_time = -1
-        if "bt_header_axon_process_time" in headers:
-            axon_time = headers["bt_header_axon_process_time"]
-        if "bt_header_dendrite_process_time" in headers:
-            dendrite_time = headers["bt_header_dendrite_process_time"]
+    # for r in responses:
+    #     bt.logging.info(f"** get_rewards response: {r.miner_uid}")
+    #     #bt.logging.info(f"** get_rewards headers: {r.to_headers()}")
+    #     headers = r.to_headers()
+    #     axon_time = -1
+    #     dendrite_time = -1
+    #     if "bt_header_axon_process_time" in headers:
+    #         axon_time = headers["bt_header_axon_process_time"]
+    #     if "bt_header_dendrite_process_time" in headers:
+    #         dendrite_time = headers["bt_header_dendrite_process_time"]
 
-        bt.logging.info(f"** get_rewards axon_time: {r.miner_uid}:{axon_time}")
-        bt.logging.info(f"** get_rewards dendrite_time: {r.miner_uid}:{dendrite_time}")
+    #     bt.logging.info(f"** get_rewards axon_time: {r.miner_uid}:{axon_time}")
+    #     bt.logging.info(f"** get_rewards dendrite_time: {r.miner_uid}:{dendrite_time}")
 
     
     return np.array(
