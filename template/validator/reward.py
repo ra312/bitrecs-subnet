@@ -59,9 +59,9 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
                 result = result.replace("\'", "\"")
                 product: Product = json.loads(result)
                 bt.logging.info(f"** {response.miner_uid} reward product: {product}")
-
+                sku = product["sku"]
                 # Check if sku exists in the context
-                if not does_sku_exist(product.sku, store_catalog):
+                if not does_sku_exist(sku, store_catalog):
                     bt.logging.info(f"Miner has invalid results: {response.miner_hotkey}")
                     return 0.01
 
@@ -151,7 +151,7 @@ def does_sku_exist(sku: str, context: List[Product]) -> bool:
     if len(context) == 0:
         return False
     for product in context:
-        if product.sku.lower() == sku.lower():
+        if product["sku"].lower() == sku.lower():
             return True
     return False
    
