@@ -313,7 +313,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
                 except Exception as e:
                     bt.logging.error(f"Failed to run forward with exception: {e}")
-                    if synapse_with_event.event:
+                    if synapse_with_event and synapse_with_event.event:
                         synapse_with_event.event.event.set()
                     time.sleep(60)
                 finally:                   
