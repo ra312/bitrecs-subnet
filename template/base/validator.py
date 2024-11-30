@@ -182,14 +182,14 @@ class BaseValidatorNeuron(BaseNeuron):
         await asyncio.gather(*coroutines)
         
    
-    def select_top_result(self, original_request: BitrecsRequest, miner_results: List[BitrecsRequest]) -> BitrecsRequest:
-        """Selects the top result from the list of results."""
-        for r in miner_results:
-            #bt.logging.info(f"select_top_result Result: {r}")
-            if len(r.results) == original_request.num_results:
-                bt.logging.info(f"select_top_result TOP RESULT: {r}")
-                return r
-        return None
+    # def select_top_result(self, original_request: BitrecsRequest, miner_results: List[BitrecsRequest]) -> BitrecsRequest:
+    #     """Selects the top result from the list of results."""
+    #     for r in miner_results:
+    #         #bt.logging.info(f"select_top_result Result: {r}")
+    #         if len(r.results) == original_request.num_results:
+    #             bt.logging.info(f"select_top_result TOP RESULT: {r}")
+    #             return r
+    #     return None
 
 
     def run(self):
@@ -267,7 +267,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             chosen_axons,
                             api_request,
                             deserialize=False,
-                            timeout=10
+                            timeout=15
                         )
                         
                         bt.logging.debug(f"len(responses): {len(responses)}")
@@ -284,12 +284,14 @@ class BaseValidatorNeuron(BaseNeuron):
                             
                         selected_rec = rewards.argmax()
                         winner = responses[selected_rec]
-                        bt.logging.info(f"Winner: {winner}")
+                        #bt.logging.info(f"Winner: {winner}")
+
+                        winner.context = ""
                         synapse_with_event.output_synapse = winner
                         # Mark the synapse as processed, API will then return to the client
                         synapse_with_event.event.set()
 
-                        bt.logging.info(f"Scored responses: {rewards}")                        
+                        bt.logging.info(f"Scored responses: {rewards}")    
                         self.update_scores(rewards, chosen_uids)
 
                         #TODO ranking and scoring
