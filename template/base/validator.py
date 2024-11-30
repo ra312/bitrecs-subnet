@@ -175,12 +175,12 @@ class BaseValidatorNeuron(BaseNeuron):
         ]
         await asyncio.gather(*coroutines)
 
-    async def concurrent_forward2(self, pr: BitrecsRequest):
-        coroutines = [
-            self.forward(pr)
-            for _ in range(self.config.neuron.num_concurrent_forwards)
-        ]
-        return await asyncio.gather(*coroutines)
+    # async def concurrent_forward2(self, pr: BitrecsRequest):
+    #     coroutines = [
+    #         self.forward(pr)
+    #         for _ in range(self.config.neuron.num_concurrent_forwards)
+    #     ]
+    #     return await asyncio.gather(*coroutines)
     
     def select_top_result(self, original_request: BitrecsRequest, miner_results: List[BitrecsRequest]) -> BitrecsRequest:
         """Selects the top result from the list of results."""
@@ -193,32 +193,25 @@ class BaseValidatorNeuron(BaseNeuron):
 
     def run(self):
         """
-        Initiates and manages the main loop for the miner on the Bittensor network. The main loop handles graceful shutdown on keyboard interrupts and logs unforeseen errors.
+        Initiates and manages the main loop for the validator on the Bitrecs subnet
 
         This function performs the following primary tasks:
         1. Check for registration on the Bittensor network.
-        2. Continuously forwards queries to the miners on the network, rewarding their responses and updating the scores accordingly.
+        2. Configures an API endpoint which receive organic requests from the API server.
         3. Periodically resynchronizes with the chain; updating the metagraph with the latest network state and setting weights.
+        4. Runs a loop that generates synthetic requests and forwards them to the network.
 
-        The essence of the validator's operations is in the forward function, which is called every step. The forward function is responsible for querying the network and scoring the responses.
-
-        Note:
-            - The function leverages the global configurations set during the initialization of the miner.
-            - The miner's axon serves as its interface to the Bittensor network, handling incoming and outgoing requests.
-
-        Raises:
-            KeyboardInterrupt: If the miner is stopped by a manual interruption.
-            Exception: For unforeseen errors during the miner's operation, which are logged for diagnosis.
         """
 
         # Check that validator is registered on the network.
         self.sync()
-
-        #bt.logging.info(f"Validator starting at block: {self.block}")
+        
         bt.logging.info(
             f"\033[1;32m 🐸 Running validator on network: {self.config.subtensor.chain_endpoint} with netuid: {self.config.netuid}\033[0m")
         if hasattr(self, "axon"):
             f"Axon: {self.axon}"
+        
+        bt.logging.info(f"Validator starting at block: {self.block}")
 
         # This loop maintains the validator's operations until intentionally stopped.
         try:
@@ -241,7 +234,6 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     if synapse_with_event is not None and api_enabled: #API request
                         bt.logging.info("** Processing synapse from API server **")
-
                         # available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
                         # available_uids = [
                         #     uid
@@ -267,6 +259,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
                         api_request = synapse_with_event.input_synapse
 
+                        # Send request to the miner population
                         responses = self.dendrite.query(
                             # Send the query to all axons in the network.
                             chosen_axons,
@@ -276,7 +269,6 @@ class BaseValidatorNeuron(BaseNeuron):
                             deserialize=False,
                             timeout=10.0
                         )
-
                         bt.logging.debug(f"len(responses): {len(responses)}")
 
                         #TODO ranking and scoring
@@ -288,6 +280,8 @@ class BaseValidatorNeuron(BaseNeuron):
                         synapse_with_event.output_synapse = selected_response
                         # thing = self.loop.run_until_complete(self.concurrent_forward2(synapse_with_event.input_synapse))
                         # bt.logging.info(f"thing: {thing}")
+
+                        # Mark the synapse as processed, API will then return to the client
                         synapse_with_event.event.set()
 
                     else:     
