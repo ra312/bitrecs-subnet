@@ -110,7 +110,8 @@ class Miner(BaseMinerNeuron):
         """
         bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))
         
-        num_results = synapse.num_results
+        #num_results = synapse.num_results
+        
         results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]      
 
         # things = [["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"], 
@@ -127,9 +128,12 @@ class Miner(BaseMinerNeuron):
         
         bt.logging.info(f"Using LLM: {self.llm_toggle }")
         bt.logging.info(f"User Query: {synapse.query }")
-
-        results2 = await do_work(user_prompt=synapse.query, toggle_mode=self.llm_toggle)
-        bt.logging.info(f"LLM Results2 count({len(results2)}) : {results2}")
+        try:
+            results2 = await do_work(user_prompt=synapse.query, toggle_mode=self.llm_toggle)
+            bt.logging.info(f"LLM Results2 count({len(results2)}) : {results2}")
+        except Exception as e:
+            bt.logging.error(f"Error calling do_work: {e}")
+            pass       
 
 
         output_synapse=BitrecsRequest(
