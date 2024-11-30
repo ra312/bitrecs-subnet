@@ -26,6 +26,8 @@ import bittensor as bt
 import time
 import traceback
 import anyio.to_thread
+import random
+
 
 from typing import List, Union, Optional
 from traceback import print_exception
@@ -42,6 +44,8 @@ from template.api.api_server import ApiServer
 from template.protocol import BitrecsRequest
 from dataclasses import dataclass
 from queue import SimpleQueue, Empty
+
+from utils.uids import check_uid_availability, get_random_uids, clamp
 
 api_queue = SimpleQueue() # Queue of SynapseEventPair
 
@@ -177,6 +181,15 @@ class BaseValidatorNeuron(BaseNeuron):
             for _ in range(self.config.neuron.num_concurrent_forwards)
         ]
         return await asyncio.gather(*coroutines)
+    
+    def select_top_result(self, original_request: BitrecsRequest, miner_results: List[BitrecsRequest]) -> BitrecsRequest:
+        """Selects the top result from the list of results."""
+        for r in miner_results:
+            bt.logging.info(f"select_top_result Result: {r}")            
+            if len(r.results) == original_request.num_results:
+                return r            
+        return None
+
 
     def run(self):
         """
@@ -227,11 +240,53 @@ class BaseValidatorNeuron(BaseNeuron):
                         pass
 
                     if synapse_with_event is not None and api_enabled: #API request
-                        bt.logging.info("Processing synapse from API server")
-                        thing = self.loop.run_until_complete(self.concurrent_forward2(synapse_with_event.input_synapse))
-                        bt.logging.info(f"thing: {thing}")
+                        bt.logging.info("** Processing synapse from API server **")
+                        available_uids = [
+                            uid
+                            for uid in range(self.metagraph.n.item())
+                            if check_uid_availability(
+                                metagraph=self.metagraph,
+                                uid=uid
+                            )
+                        ]
+                        bt.logging.trace(f"available_uids: {available_uids}")
+                        chosen_uids = random.sample(
+                            available_uids,
+                            k=clamp(min=1, max=self.config.miners_per_step, x=len(available_uids))
+                        )
+                        bt.logging.debug(f"len(chosen_uids): {len(chosen_uids)}")
+                        bt.logging.debug(f"chosen_uids: {chosen_uids}")
+                        chosen_axons = [
+                            self.metagraph.axons[uid]
+                            for uid in chosen_uids
+                        ]
+                        bt.logging.trace(f"chosen_axons: {chosen_axons}")
 
+                        api_request = synapse_with_event.input_synapse
+
+                        responses = self.dendrite.query(
+                            # Send the query to all axons in the network.
+                            chosen_axons,
+                            # Construct a query.
+                            api_request,
+                            # All responses have the deserialize function called on them before returning.
+                            deserialize=False,
+                            timeout=10.0
+                        )
+
+                        bt.logging.debug(f"len(responses): {len(responses)}")
+
+                        #TODO ranking and scoring
+                        selected_response = self.select_top_result(api_request, responses)
+                        if selected_response is None:
+                            bt.logging.error("No valid result could be parsed ! skipping request")
+                            continue
+
+                        synapse_with_event.output_synapse = selected_response
+                        # thing = self.loop.run_until_complete(self.concurrent_forward2(synapse_with_event.input_synapse))
+                        # bt.logging.info(f"thing: {thing}")
                         synapse_with_event.event.set()
+                        
                     else:     
                         if not api_exclusive: #Regular validator loop                
                             bt.logging.info("Processing synthetic concurrent forward")
@@ -259,7 +314,7 @@ class BaseValidatorNeuron(BaseNeuron):
                     else:
                         bt.logging.info(f"forward finished, sleep for {10} seconds")
                         time.sleep(10)
-                        
+
         # If someone intentionally stops the validator, it'll safely terminate operations.
         except KeyboardInterrupt:
             self.axon.stop()

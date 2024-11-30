@@ -60,3 +60,12 @@ def get_random_uids(self, k: int, exclude: List[int] = None) -> np.ndarray:
         )
     uids = np.array(random.sample(available_uids, k))
     return uids
+
+def clamp(min: int, max: int, x: int) -> int:
+    """ Clamp `x` into the range `[min,max]`. """
+
+    if x<min:
+        return min
+    if x>max:
+        return max
+    return x
