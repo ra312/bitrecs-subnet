@@ -1,7 +1,6 @@
 # The MIT License (MIT)
 # Copyright © 2023 Yuma Rao
 # Copyright © 2024 Bitrecs
-# (developer): Bitrecs
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the “Software”), to deal in the Software without restriction, including without limitation
@@ -35,20 +34,3 @@ class BitrecsRequest(bt.Synapse):
     models_used: List[str] | None
     miner_uid: str | None
     miner_hotkey: str | None
-
-    # def deserialize(self) -> "BitrecsRequest":
-    #     return self    
-    
-    # def deserialize(self) -> dict:
-    #     return {
-    #         "created_at": self.created_at,
-    #         "user": self.user,
-    #         "num_results": self.num_results,
-    #         "query": self.query,
-    #         "context": self.context,
-    #         "site_key": self.site_key,
-    #         "results": self.results,
-    #         "models_used": self.models_used,
-    #         "miner_uid": self.miner_uid,
-    #         "miner_hotkey": self.miner_hotkey,
-    #     }

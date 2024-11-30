@@ -1,7 +1,6 @@
 # The MIT License (MIT)
 # Copyright © 2023 Yuma Rao
-# TODO(developer): Set your name
-# Copyright © 2023 <your name>
+# Copyright © 2024 Bitrecs
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the “Software”), to deal in the Software without restriction, including without limitation
@@ -17,33 +16,83 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import os
+import sys
 import time
 import typing
 import bittensor as bt
-import random
-from datetime import datetime, timezone
-
-# Bittensor Miner Template:
 import template
-
-# import base miner class which takes care of most of the boilerplate
+from datetime import datetime, timezone
 from template.base.miner import BaseMinerNeuron
 from template.protocol import BitrecsRequest
+from template.llms.prompt_factory import PromptFactory
+from template.llms.llama_local import OllamaLocal
+from template.llms.factory import LLM
+from dotenv import load_dotenv
+load_dotenv()
+
+
+async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: str, system_prompt="You are a helpful assistant.") -> typing.List[str]:
+    """
+    Do your miner work here. This function is called by the forward function to generate recs.
+    You can use any method you prefer to generate recs. 
+    In this example, we are using a local instance of ollama.
+
+    Args:
+        user_prompt (str): The user query.
+        context (str): The context of the user query, generally this is set of products to chose from
+        num_recs (int): The number of recommendations to generate.
+        server (LLM): The LLM server type to query.
+        model (str): The LLM model to use.
+        system_prompt (str): The system prompt for the LLM.
+
+    """
+    bt.logging.info(f"do_work Prompt: {user_prompt}")
+    bt.logging.info(f"do_work LLM server: {server}")
+    if not model:
+        model = "llama3.1"
+    bt.logging.info(f"do_work LLM model: {model}")
+
+    OLLAMA_LOCAL_URL = os.getenv("OLLAMA_LOCAL_URL")
+    if not OLLAMA_LOCAL_URL or len(OLLAMA_LOCAL_URL) < 10:
+        bt.logging.error("OLLAMA_LOCAL_URL not set.")
+        return []    
+    bt.logging.info(f"do_work LLM OLLAMA_LOCAL_URL: {OLLAMA_LOCAL_URL}")
+
+    factory = PromptFactory(sku=user_prompt, context=context, num_recs=num_recs, load_catalog=False)
+    prompt = factory.generate_prompt()
+    bt.logging.info(f"do_work LLM prompt: {prompt}")
+    
+    llm = OllamaLocal(ollama_url=OLLAMA_LOCAL_URL, model=model, system_prompt=system_prompt, temp=0.1)
+
+    try:
+
+        llm_response = llm.ask_ollama(prompt)
+        if not llm_response or len(llm_response) < 10:
+            bt.logging.error("LLM response is empty.")
+            return []
+
+        llm_response = llm_response.replace("```json", "").replace("```", "").strip()
+        parsed_recs = PromptFactory.tryparse_llm(llm_response)
+        return parsed_recs
+
+    except Exception as e:
+        bt.logging.error(f"Error calling LLM: {e}")
+
+    return []
 
 
 class Miner(BaseMinerNeuron):
     """
-    Your miner neuron class. You should use this class to define your miner's behavior. In particular, you should replace the forward function with your own logic. You may also want to override the blacklist and priority functions according to your needs.
+    Main miner class which generates product recommendations based on incoming requests.
+    You are encouraged to modify this class to generate better recs using whatever method you prefer.
 
-    This class inherits from the BaseMinerNeuron class, which in turn inherits from BaseNeuron. The BaseNeuron class takes care of routine tasks such as setting up wallet, subtensor, metagraph, logging directory, parsing config, etc. You can override any of the methods in BaseNeuron if you need to customize the behavior.
-
-    This class provides reasonable default behavior for a miner such as blacklisting unrecognized hotkeys, prioritizing requests based on stake, and forwarding requests to the forward function. If you need to define custom
     """
 
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
 
-        bt.logging.info(f"\033[1;32m 🐸 Bitrecs Miner uid: {self.uid}\033[0m")
+        bt.logging.info(f"\033[1;32m 🐸 Bitrecs Miner started uid: {self.uid}\033[0m")
 
     async def forward(
         self, synapse: BitrecsRequest
@@ -55,13 +104,12 @@ class Miner(BaseMinerNeuron):
             synapse (template.protocol.BitrecsRequest): The synapse object containing the 'BitrecsRequest' data.
 
         Returns:
-            template.protocol.BitrecsRequest: The synapse object with the recs.
+            template.protocol.BitrecsRequest: The synapse object with the recs - same object modified with updated fields.
 
         """
-        bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))
-        
-        #num_results = synapse.num_results
-        results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]      
+        bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))                
+
+        #results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]      
 
         # things = [["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"], 
         #           ["result4A - rare", "result5A - common"],
@@ -69,21 +117,53 @@ class Miner(BaseMinerNeuron):
         #           ["result1C - superior", "result2C - exalted", "result3C - ornate", "result4C - rare"]]
         # results = random.choice(things)
 
-        json_context = "[]"
+        results = []
+       
+        bt.logging.info(f"User Query: {synapse.query }")
+
+        #model = "llama3.2"
+        model = "llama3.1"
+
+        server = LLM.OLLAMA_LOCAL
+        context = synapse.context
+        num_recs = synapse.num_results
+        try:
+            results2 = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)
+            bt.logging.info(f"Calling {server}")
+            bt.logging.info(f"LLM {model} Results2 count({len(results2)})")
+            bt.logging.info(f"{results2}")
+
+            #if len(results2) > 0:
+            results = results2
+
+        except Exception as e:
+            bt.logging.error(f"Error calling do_work: {e}")
+            pass
+
         utc_now = datetime.now(timezone.utc)
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
-        #synapse.num_results = num_results
+        final_results = [str(r) for r in results]
+     
+        output_synapse=BitrecsRequest(
+            name=synapse.name, 
+            axon=synapse.axon,
+            dendrite=synapse.dendrite,            
+            created_at=created_at,
+            user=synapse.user,
+            num_results=num_recs,
+            query=synapse.query,
+            context="[]",
+            site_key=synapse.site_key,
+            results=final_results,
+            models_used=[model],
+            miner_uid=str(self.uid),
+            miner_hotkey=synapse.dendrite.hotkey
+        )
         
-        synapse.results = results
-        #synapse.query = query
-        synapse.context = json_context
-        synapse.created_at = created_at
-        synapse.models_used = [""]
-        synapse.miner_hotkey = synapse.dendrite.hotkey
-        synapse.miner_uid = str(self.uid)
-        
-        return synapse
+        bt.logging.info(f"MINER FORWARD PASS RESULT -> {output_synapse}")
+
+        return output_synapse
         
 
     async def blacklist(

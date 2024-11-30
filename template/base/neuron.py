@@ -79,18 +79,18 @@ class BaseNeuron(ABC):
         bt.logging.info("Setting up bittensor objects.")
 
         # The wallet holds the cryptographic key pairs for the miner.
-        if self.config.mock:
-            self.wallet = bt.MockWallet(config=self.config)
-            self.subtensor = MockSubtensor(
-                self.config.netuid, wallet=self.wallet
-            )
-            self.metagraph = MockMetagraph(
-                self.config.netuid, subtensor=self.subtensor
-            )
-        else:
-            self.wallet = bt.wallet(config=self.config)
-            self.subtensor = bt.subtensor(config=self.config)
-            self.metagraph = self.subtensor.metagraph(self.config.netuid)
+        # if self.config.mock:
+        #     self.wallet = bt.MockWallet(config=self.config)
+        #     self.subtensor = MockSubtensor(
+        #         self.config.netuid, wallet=self.wallet
+        #     )
+        #     self.metagraph = MockMetagraph(
+        #         self.config.netuid, subtensor=self.subtensor
+        #     )
+        # else:
+        self.wallet = bt.wallet(config=self.config)
+        self.subtensor = bt.subtensor(config=self.config)
+        self.metagraph = self.subtensor.metagraph(self.config.netuid)
 
         bt.logging.info(f"Wallet: {self.wallet}")
         bt.logging.info(f"Subtensor: {self.subtensor}")
@@ -124,13 +124,11 @@ class BaseNeuron(ABC):
         self.check_registered()
 
         if self.should_sync_metagraph():
-            self.resync_metagraph()
+            self.resync_metagraph()        
         
-        bt.logging.debug("VALIDATOR should_set_weights PRE")
         if self.should_set_weights():
-            bt.logging.debug("VALIDATOR should_set_weights IS TRUE! - attemping set_weights ... ")
-            self.set_weights()
-        bt.logging.debug("VALIDATOR should_set_weights POST")
+            bt.logging.debug(f"{self.neuron_type} should_set_weights IS TRUE! - attemping set_weights ... ")
+            self.set_weights()        
 
         # Always save state.
         self.save_state()

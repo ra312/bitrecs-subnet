@@ -17,45 +17,21 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-import bittensor as bt
-from typing import List, Optional, Union, Any, Dict
-from template.protocol import Dummy
-from bittensor.subnets import SubnetsAPI
-from template.protocol import BitrecsRequest
+# import bittensor as bt
+# from typing import List, Optional, Union, Any, Dict
+# from template.protocol import Dummy
+# from bittensor.utils.subnets import SubnetsAPI
+# from template.protocol import BitrecsRequest, BitrecsResponse
 
-class DummyAPI(SubnetsAPI):
-    def __init__(self, wallet: "bt.wallet"):
-        super().__init__(wallet)
-        self.netuid = 33
-        self.name = "dummy"
-
-    def prepare_synapse(self, dummy_input: int) -> Dummy:
-        synapse.dummy_input = dummy_input
-        return synapse
-
-    def process_responses(
-        self, responses: List[Union["bt.Synapse", Any]]
-    ) -> List[int]:
-        outputs = []
-        for response in responses:
-            if response.dendrite.status_code != 200:
-                continue
-            return outputs.append(response.dummy_output)
-        return outputs
-
-
-
-# class BitrecsAPI(SubnetsAPI):
+# class DummyAPI(SubnetsAPI):
 #     def __init__(self, wallet: "bt.wallet"):
 #         super().__init__(wallet)
-#         self.netuid = 1
-#         self.name = "bitrecsapi"
+#         self.netuid = 33
+#         self.name = "dummy"
 
-#     def prepare_synapse(self, br_rec: BitrecsRequest) -> Dummy:
-#         synapse.br_rec = br_rec
-
-        
-#         return br_rec
+#     def prepare_synapse(self, dummy_input: int) -> Dummy:
+#         synapse.dummy_input = dummy_input
+#         return synapse
 
 #     def process_responses(
 #         self, responses: List[Union["bt.Synapse", Any]]
@@ -65,6 +41,29 @@ class DummyAPI(SubnetsAPI):
 #             if response.dendrite.status_code != 200:
 #                 continue
 #             return outputs.append(response.dummy_output)
+#         return outputs
+
+
+
+# class BitrecsAPI(SubnetsAPI):
+#     def __init__(self, wallet: "bt.wallet"):
+#         super().__init__(wallet)
+#         self.netuid = 1
+#         self.name = "bitrecsapi"
+
+#     def prepare_synapse(self, br_rec: BitrecsRequest) -> BitrecsRequest:
+#         br_rec.user = "Bitrecs API Request"        
+#         return br_rec
+
+#     def process_responses(
+#         self, responses: List[Union["bt.Synapse", Any]]
+#     ) -> List[int]:
+#         outputs = []
+#         for response in responses:
+#             if response.dendrite.status_code != 200:
+#                 continue
+#             #return outputs.append(response.dummy_output)
+#             return outputs.append(response)
 #         return outputs
 
 

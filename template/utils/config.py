@@ -131,6 +131,8 @@ def add_args(cls, parser):
     )
 
 
+
+
 def add_miner_args(cls, parser):
     """Add miner specific arguments to the parser."""
 
@@ -244,6 +246,20 @@ def add_validator_args(cls, parser):
         type=str,
         help="The name of the project where you are sending the new run.",
         default="opentensor-dev",
+    )
+
+    parser.add_argument(
+        "--api.enabled",
+        action="store_true",
+        help="Enables the validator API endpoint.",
+        default=False,
+    )
+
+    parser.add_argument(
+        "--api.exclusive",
+        action="store_true",
+        help="If set validator only handles API requests.",
+        default=False,
     )
 
 
