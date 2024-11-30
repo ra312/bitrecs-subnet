@@ -113,15 +113,19 @@ class Miner(BaseMinerNeuron):
 
         results = []
        
-        bt.logging.info(f"User Query: {synapse.query }")
-
-       
+        bt.logging.info(f"User Query: {synapse.query }")       
 
         #model = "llama3.2"
         #model = "llama3.1"
+        if 1==2:
+            model = "llama3.1"
+            server = LLM.OLLAMA_LOCAL
+        else:
+            model = "google/gemini-flash-1.5-8b"
+            server = LLM.OPEN_ROUTER
         
-        model = "google/gemini-flash-1.5-8b"
-        server = LLM.OPEN_ROUTER
+        # model = "google/gemini-flash-1.5-8b"
+        # server = LLM.OPEN_ROUTER
 
         context = synapse.context
         num_recs = synapse.num_results

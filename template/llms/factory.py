@@ -22,7 +22,9 @@ class LLM(Enum):
 class LLMFactory:
 
     @staticmethod
-    def query_llm(server: LLM, model: str, system_prompt="You are a helpful assistant", temp=0.1, user_prompt="") -> str:
+    def query_llm(server: LLM, model: str, 
+                  system_prompt="You are a helpful assistant", 
+                  temp=0.1, user_prompt="") -> str:
         match server:
             case LLM.OLLAMA_LOCAL:
                 return OllamaLocalInterface(model, system_prompt, temp).query(user_prompt)
@@ -46,7 +48,7 @@ class OllamaLocalInterface():
              bt.logging.error("OLLAMA_LOCAL_URL not set.")        
     
     def query(self, user_prompt):
-        llm = OllamaLocal(ollama_url=self.ollama_url, model=self.model, 
+        llm = OllamaLocal(ollama_url=self.OLLAMA_LOCAL_URL, model=self.model, 
                           system_prompt=self.system_prompt, temp=self.temp)
         return llm.ask_ollama(user_prompt)
     

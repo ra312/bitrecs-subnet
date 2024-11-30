@@ -286,7 +286,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         winner = responses[selected_rec]
                         #bt.logging.info(f"Winner: {winner}")
 
-                        winner.context = ""
+                        winner.context = "" #save bandwidth
                         synapse_with_event.output_synapse = winner
                         # Mark the synapse as processed, API will then return to the client
                         synapse_with_event.event.set()
