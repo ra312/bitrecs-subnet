@@ -86,7 +86,12 @@ def get_rewards(
     
     for r in responses:
         bt.logging.info(f"** get_rewards response: {r.miner_uid}")
-        bt.logging.info(f"** get_rewards headers: {r.to_headers()}")
+        #bt.logging.info(f"** get_rewards headers: {r.to_headers()}")
+        axon_time = r.to_headers()["bt_header_axon_process_time"]
+        dendrite_time = r.to_headers()["bt_header_dendrite_process_time"]
+        bt.logging.info(f"** get_rewards axon_time: {r.miner_uid}:{axon_time}")
+        bt.logging.info(f"** get_rewards dendrite_time: {r.miner_uid}:{dendrite_time}")
+
     
     return np.array(
         [reward(num_recs, response) for response in responses], dtype=float
