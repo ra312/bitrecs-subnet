@@ -23,7 +23,8 @@ import bittensor as bt
 from template.base.validator import BaseValidatorNeuron
 from template.validator import forward
 from template.protocol import BitrecsRequest
-
+from dotenv import load_dotenv
+load_dotenv()
 
 class Validator(BaseValidatorNeuron):
     """

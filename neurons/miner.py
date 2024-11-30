@@ -32,6 +32,7 @@ from template.llms.prompt_factory import PromptFactory
 from template.protocol import BitrecsRequest
 from template.llms.llama_local import OllamaLocal
 
+
 class LLM(Enum):
     OLLAMA_LOCAL = 1
     OPEN_ROUTER = 2
