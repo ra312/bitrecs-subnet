@@ -56,7 +56,7 @@ async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: 
         return []    
     bt.logging.info(f"do_work LLM OLLAMA_LOCAL_URL: {OLLAMA_LOCAL_URL}")
 
-    prompt = PromptFactory(user_prompt, context=context, num_recs=num_recs, load_catalog=False).prompt()
+    prompt = PromptFactory(sku=user_prompt, context=context, num_recs=num_recs, load_catalog=False).generate_prompt()
     bt.logging.info(f"do_work LLM prompt: {prompt}")
     
     llm = OllamaLocal(ollama_url=OLLAMA_LOCAL_URL, model=model, system_prompt=system_prompt, temp=0.1)
@@ -116,8 +116,7 @@ class Miner(BaseMinerNeuron):
         bt.logging.info(f"User Query: {synapse.query }")
 
         #model = "llama3.2"
-
-        model = "llama3.1:latest"
+        model = "llama3.1"
 
         server = LLM.OLLAMA_LOCAL
         context = synapse.context

@@ -73,7 +73,7 @@ class PromptFactory:
         return json.dumps(self.catalog, indent=2)
     
     
-    def prompt(self) -> str:        
+    def generate_prompt(self) -> str:        
         print("generating prompt: {}".format(self.sku))
 
         return_type1 = ExampleRecs.rt1()     
