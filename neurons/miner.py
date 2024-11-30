@@ -22,26 +22,15 @@ import time
 import typing
 import bittensor as bt
 import random
-from datetime import datetime, timezone
-
 import template
+from datetime import datetime, timezone
 from template.base.miner import BaseMinerNeuron
-
 from template.protocol import BitrecsRequest
-
 from template.llms.prompt_factory import PromptFactory
 from template.llms.llama_local import OllamaLocal
 from template.llms.factory import LLM
-
 from dotenv import load_dotenv
 load_dotenv()
-
-
-# class LLM(Enum):
-#     OLLAMA_LOCAL = 1
-#     OPEN_ROUTER = 2
-#     CHAT_GPT = 3
-#     VLLM = 4
 
 
 async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: str, system_prompt="You are a helpful assistant.") -> list:
@@ -121,13 +110,15 @@ class Miner(BaseMinerNeuron):
         """
         bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))                
 
-        results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]      
+        #results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]      
 
         # things = [["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"], 
         #           ["result4A - rare", "result5A - common"],
         #           ["result1B - superior", "result2B - exalted", "result3B - ornate"],
         #           ["result1C - superior", "result2C - exalted", "result3C - ornate", "result4C - rare"]]
         # results = random.choice(things)
+
+        results = []
        
         bt.logging.info(f"User Query: {synapse.query }")
 
