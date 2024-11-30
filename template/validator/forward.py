@@ -65,6 +65,8 @@ async def forward(self, pr: BitrecsRequest = None):
         pr (:obj:`template.protocol.BitrecsRequest`): The end user request object to be sent to the network (from API)
 
     """
+    bt.logging.info(f"VALIDATOR FORWARD  request: {pr}")
+
     #num_results = random.choice([1, 2, 3, 4, 5])  
     num_results = 0
 

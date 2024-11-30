@@ -180,14 +180,8 @@ class BaseValidatorNeuron(BaseNeuron):
             for _ in range(self.config.neuron.num_concurrent_forwards)
         ]
         await asyncio.gather(*coroutines)
-
-    # async def concurrent_forward2(self, pr: BitrecsRequest):
-    #     coroutines = [
-    #         self.forward(pr)
-    #         for _ in range(self.config.neuron.num_concurrent_forwards)
-    #     ]
-    #     return await asyncio.gather(*coroutines)
-    
+        
+   
     def select_top_result(self, original_request: BitrecsRequest, miner_results: List[BitrecsRequest]) -> BitrecsRequest:
         """Selects the top result from the list of results."""
         for r in miner_results:
