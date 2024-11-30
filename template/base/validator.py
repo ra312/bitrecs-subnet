@@ -35,7 +35,7 @@ from traceback import print_exception
 from template.base.neuron import BaseNeuron
 from template.base.utils.weight_utils import (
     process_weights_for_netuid,
-    convert_weights_and_uids_for_emit,
+    convert_weights_and_uids_for_emit, 
 )  # TODO: Replace when bittensor switches to numpy
 from template.mock import MockDendrite
 from template.utils.config import add_validator_args
@@ -45,7 +45,7 @@ from template.protocol import BitrecsRequest
 from dataclasses import dataclass
 from queue import SimpleQueue, Empty
 
-from utils.uids import check_uid_availability, get_random_uids, clamp
+from template.utils.uids import check_uid_availability, get_random_uids, clamp
 
 api_queue = SimpleQueue() # Queue of SynapseEventPair
 
@@ -286,7 +286,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         # thing = self.loop.run_until_complete(self.concurrent_forward2(synapse_with_event.input_synapse))
                         # bt.logging.info(f"thing: {thing}")
                         synapse_with_event.event.set()
-                        
+
                     else:     
                         if not api_exclusive: #Regular validator loop                
                             bt.logging.info("Processing synthetic concurrent forward")
