@@ -42,7 +42,7 @@ def does_sku_exist(sku: str, context: List[Product]) -> bool:
     if len(context) == 0:
         return False
     for product in context:
-        if product.sku.lower().strip() == sku.lower().strip():
+        if product["sku"].lower().strip() == sku.lower().strip():
             return True
     return False   
 
@@ -66,8 +66,7 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
             return 0.00        
         
         # Check each result to exist in the context
-        #["{'sku': '24-UG06', 'name': 'Affirm Water Bottle', 'price': 7.0}", 
-        #"{'sku': '24-WG084', 'name': 'Sprite Foam Yoga Brick', 'price': 5.0}", 
+        #["{'sku': '24-UG06', 'name': 'Affirm Water Bottle', 'price': 7.0}"]         
         store_catalog: list[Product] = json.loads(ground_truth.context)
         #bt.logging.info(f"** reward context: {store_catalog}")
         bt.logging.info(f"** reward response results: {response.results}")
@@ -77,7 +76,7 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
                 result = result.replace("\'", "\"")
                 product: Product = json.loads(result)
                 bt.logging.info(f"** {response.miner_uid} reward product: {product}")
-                sku = product.sku
+                sku = product["sku"]
                 # Check if sku exists in the context
                 if not does_sku_exist(sku, store_catalog):
                     bt.logging.info(f"Miner has invalid results: {response.miner_hotkey}")
@@ -94,7 +93,7 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
         return score
     except Exception as e:        
         bt.logging.info(f"Error in rewards: {e}, miner data: {response}")
-        return None
+        return 0.0
 
 
 def get_rewards(
