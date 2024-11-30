@@ -38,31 +38,25 @@ class LLM(Enum):
     CHAT_GPT = 3
 
 
-async def do_work(user_prompt: str, toggle_mode: LLM, model: str, system_prompt="You are a helpful assistant.") -> list:
+async def do_work(user_prompt: str, server: LLM, model: str, system_prompt="You are a helpful assistant.") -> list:
     """
     Do your work here. This function is called by the forward function to generate recs.
     You can use any method you prefer to generate recs    
 
     """
     bt.logging.info(f"do_work Prompt: {user_prompt}")
-    bt.logging.info(f"do_work LLM toggle: {toggle_mode}")
+    bt.logging.info(f"do_work LLM server: {server}")
     if not model:
         model = "llama3.2"
     bt.logging.info(f"do_work LLM model: {model}")
 
-    
-
-
-
     OLLAMA_LOCAL_URL = os.getenv("OLLAMA_LOCAL_URL")
     if not OLLAMA_LOCAL_URL or len(OLLAMA_LOCAL_URL) < 10:
         bt.logging.error("OLLAMA_LOCAL_URL not set.")
-        return []
-    
+        return []    
    
     llm_rec_prompt = PromptFactory(user_prompt).prompt()
     bt.logging.info(f"do_work LLM prompt: {llm_rec_prompt}")
-
     
     llm = OllamaLocal(OLLAMA_LOCAL_URL, model, system_prompt)
 
@@ -108,10 +102,8 @@ class Miner(BaseMinerNeuron):
             template.protocol.BitrecsRequest: The synapse object with the recs same object modified with updated fields.
 
         """
-        bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))
-        
-        #num_results = synapse.num_results
-        
+        bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))                
+
         results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]      
 
         # things = [["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"], 
@@ -128,13 +120,16 @@ class Miner(BaseMinerNeuron):
         
         bt.logging.info(f"Using LLM: {self.llm_toggle }")
         bt.logging.info(f"User Query: {synapse.query }")
+
+        model = "llama3.2"
+        server = LLM.OLLAMA_LOCAL
         try:
-            results2 = await do_work(user_prompt=synapse.query, toggle_mode=self.llm_toggle)
-            bt.logging.info(f"LLM Results2 count({len(results2)}) : {results2}")
+            results2 = await do_work(user_prompt=synapse.query, server=server, model=model)
+            bt.logging.info(f"LLM {model} Results2 count({len(results2)}")
+            bt.logging.info(f"{results2}")
         except Exception as e:
             bt.logging.error(f"Error calling do_work: {e}")
-            pass       
-
+            pass
 
         output_synapse=BitrecsRequest(
             name=synapse.name, 
