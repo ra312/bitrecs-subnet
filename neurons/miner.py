@@ -32,32 +32,53 @@ from template.llms.prompt_factory import PromptFactory
 from template.protocol import BitrecsRequest
 from template.llms.llama_local import OllamaLocal
 
-class LLM_TOGGLE(Enum):
+class LLM(Enum):
     OLLAMA_LOCAL = 1
     OPEN_ROUTER = 2
     CHAT_GPT = 3
 
 
-async def do_work(user_prompt: str, toggle_mode: LLM_TOGGLE) -> list:
+async def do_work(user_prompt: str, toggle_mode: LLM, model: str, system_prompt="You are a helpful assistant.") -> list:
     """
-    Call LLM to generate a response to a prompt.
+    Do your work here. This function is called by the forward function to generate recs.
+    You can use any method you prefer to generate recs    
+
     """
     bt.logging.info(f"do_work Prompt: {user_prompt}")
     bt.logging.info(f"do_work LLM toggle: {toggle_mode}")
+    if not model:
+        model = "llama3.2"
+    bt.logging.info(f"do_work LLM model: {model}")
+
+    
+
+
 
     OLLAMA_LOCAL_URL = os.getenv("OLLAMA_LOCAL_URL")
-    if not OLLAMA_LOCAL_URL:
-        raise ValueError("OLLAMA_LOCAL_URL is not set in .env file")
+    if not OLLAMA_LOCAL_URL or len(OLLAMA_LOCAL_URL) < 10:
+        bt.logging.error("OLLAMA_LOCAL_URL not set.")
+        return []
     
-    llm = OllamaLocal("http://10.0.0.40:11434/api/chat", "llama3.2", "You are a helpful assistant.")
+   
     llm_rec_prompt = PromptFactory(user_prompt).prompt()
     bt.logging.info(f"do_work LLM prompt: {llm_rec_prompt}")
 
-    llm_response = llm.ask_ollama(llm_rec_prompt)
-
-    bt.logging.info(f"do_work LLM response: {llm_response}")
-
     
+    llm = OllamaLocal(OLLAMA_LOCAL_URL, model, system_prompt)
+
+    try:
+
+        llm_response = llm.ask_ollama(llm_rec_prompt)
+        if not llm_response or len(llm_response) < 10:
+            bt.logging.error("LLM response is empty.")
+            return []
+
+        llm_response = llm_response.replace("```json", "").replace("```", "").strip()
+        parsed_recs = PromptFactory.tryparse_llm(llm_response)
+        return parsed_recs
+
+    except Exception as e:
+        bt.logging.error(f"Error calling LLM: {e}")
 
     return []
 
@@ -102,12 +123,13 @@ class Miner(BaseMinerNeuron):
         utc_now = datetime.now(timezone.utc)
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")        
 
-        self.llm_toggle = LLM_TOGGLE.OLLAMA_LOCAL
+        self.llm_toggle = LLM.OLLAMA_LOCAL
         
         bt.logging.info(f"Using LLM: {self.llm_toggle }")
         bt.logging.info(f"User Query: {synapse.query }")
 
-        results2 = await do_work(synapse.query)
+        results2 = await do_work(user_prompt=synapse.query, toggle_mode=self.llm_toggle)
+        bt.logging.info(f"LLM Results2 count({len(results2)}) : {results2}")
 
 
         output_synapse=BitrecsRequest(

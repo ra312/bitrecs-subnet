@@ -2,6 +2,8 @@ import json
 import re
 import os
 import pandas as pd
+import bittensor as bt
+
 
 
 class PromptFactory:
@@ -9,9 +11,9 @@ class PromptFactory:
         self.sku = sku
         self.context = context
         self.num_recs = num_recs
-        if self.num_recs < 1 or self.num_recs > 10:
+        if self.num_recs < 1 or self.num_recs > 20:
             raise ValueError("num_recs must be between 1 and 10")
-        self.catalog = []       
+        self.catalog = []
 
         # if load_catalog:
         #     data_folder = os.path.join(os.path.dirname(__file__), "..", "..", "data")
@@ -42,8 +44,8 @@ class PromptFactory:
             df = df.head(max_rows)
             df = df.to_dict(orient='records')
             return df
-        except Exception as e:
-            print(str(e))
+        except Exception as e:            
+            bt.logging.error(str(e))
             return []
         
 
@@ -61,7 +63,7 @@ class PromptFactory:
                     print(f"Invalid JSON: {array}")
             return []
         except Exception as e:
-            print(e)
+            bt.logging.error(str(e))
             return []
 
 
