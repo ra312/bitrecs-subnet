@@ -261,7 +261,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         #     k=clamp(min=1, max=10, x=len(available_uids))
                         # )
 
-                        chosen_uids = [1, 2, 3, 4, 5]
+                        chosen_uids = [1, 2, 3, 4, 5, 6]
                         
                         bt.logging.debug(f"len(chosen_uids): {len(chosen_uids)}")
                         bt.logging.debug(f"chosen_uids: {chosen_uids}")
