@@ -49,7 +49,7 @@ async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: 
     bt.logging.info(f"do_work Prompt: {user_prompt}")
     bt.logging.info(f"do_work LLM server: {server}")
     if not model:
-        model = "llama3.2"
+        model = "llama3.1"
     bt.logging.info(f"do_work LLM model: {model}")
 
     OLLAMA_LOCAL_URL = os.getenv("OLLAMA_LOCAL_URL")
@@ -103,7 +103,7 @@ class Miner(BaseMinerNeuron):
             synapse (template.protocol.BitrecsRequest): The synapse object containing the 'BitrecsRequest' data.
 
         Returns:
-            template.protocol.BitrecsRequest: The synapse object with the recs same object modified with updated fields.
+            template.protocol.BitrecsRequest: The synapse object with the recs - same object modified with updated fields.
 
         """
         bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))                

@@ -1,10 +1,7 @@
 import os
-from pydantic import BaseModel
 from openai import OpenAI
-import pandas as pd
 
-
-class OpenRouter(BaseModel):
+class OpenRouter():
     def __init__(self):
         self.OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
         if not self.OPENROUTER_API_KEY:

@@ -72,7 +72,7 @@ async def auth_rate_limiting_middleware(request: Request, call_next):
 
     bt.logging.info("auth_data", auth_data)
 
-    if auth_api not in  auth_data["keys"].keys():
+    if auth_api not in auth_data["keys"].keys():
         bt.logging.debug(f"Unauthorized key: {auth_api}")
         return JSONResponse(status_code=401, content={"detail": "Unauthorized",
                                                       "translated_texts": []})

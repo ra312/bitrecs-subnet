@@ -7,6 +7,10 @@ import bittensor as bt
 
 
 class PromptFactory:
+    """
+    Creates a bitrecs prompt for a given SKU and context.
+    
+    """
     def __init__(self, sku, context, num_recs=5, load_catalog=False):        
         self.sku = sku
         self.context = context
