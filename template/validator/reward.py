@@ -46,10 +46,15 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
         #"{'sku': '24-WG084', 'name': 'Sprite Foam Yoga Brick', 'price': 5.0}", 
         store_catalog: list[Product] = json.loads(ground_truth.context)       
         #bt.logging.info(f"** reward context: {store_catalog}")
+
+        bt.logging.info(f"** reward response results: {response.results}")
+
         for result in response.results:
             
             try:
-
+                if result is None or len(result) == 0:
+                    return 0.0
+                
                 product: Product = json.loads(result)
                 bt.logging.info(f"** {response.miner_uid} reward product: {product.sku}")
 
