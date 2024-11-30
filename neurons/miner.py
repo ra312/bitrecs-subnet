@@ -23,27 +23,40 @@ import typing
 import bittensor as bt
 import random
 from datetime import datetime, timezone
-from enum import Enum
 
 import template
 from template.base.miner import BaseMinerNeuron
-from template.llms.prompt_factory import PromptFactory
+
 from template.protocol import BitrecsRequest
+
+from template.llms.prompt_factory import PromptFactory
 from template.llms.llama_local import OllamaLocal
+from template.llms.factory import LLM
+
 from dotenv import load_dotenv
 load_dotenv()
 
 
-class LLM(Enum):
-    OLLAMA_LOCAL = 1
-    OPEN_ROUTER = 2
-    CHAT_GPT = 3
+# class LLM(Enum):
+#     OLLAMA_LOCAL = 1
+#     OPEN_ROUTER = 2
+#     CHAT_GPT = 3
+#     VLLM = 4
 
 
 async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: str, system_prompt="You are a helpful assistant.") -> list:
     """
-    Do your work here. This function is called by the forward function to generate recs.
-    You can use any method you prefer to generate recs    
+    Do your miner work here. This function is called by the forward function to generate recs.
+    You can use any method you prefer to generate recs. 
+    In this example, we are using a local instance of ollama.
+
+    Args:
+        user_prompt (str): The user query.
+        context (str): The context of the user query, generally this is set of products to chose from
+        num_recs (int): The number of recommendations to generate.
+        server (LLM): The LLM server type to query.
+        model (str): The LLM model to use.
+        system_prompt (str): The system prompt for the LLM.
 
     """
     bt.logging.info(f"do_work Prompt: {user_prompt}")

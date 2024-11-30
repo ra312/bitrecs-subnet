@@ -66,15 +66,16 @@ async def forward(self, pr: BitrecsRequest = None):
 
     """
     #num_results = random.choice([1, 2, 3, 4, 5])  
-    num_results = 5
+    num_results = 0
 
     if pr is not None: #API REQUEST
         next_request = pr
         num_results = pr.num_results
     else:
-        next_request = get_bitrecs_dummy_request(num_results)    
+        num_results = 5
+        next_request = get_bitrecs_dummy_request(num_results)
 
-    num_recs = next_request.num_results    
+    num_recs = next_request.num_results
     miner_uids = get_random_uids(self,  k=self.config.neuron.sample_size)
     #miner_uids = [5]
 

@@ -166,7 +166,8 @@ class ApiServer:
     
     async def get_rec(self, request: BitrecsRequest):
         bt.logging.debug(f"API get_rec request:  {request.computed_body_hash}")
-        bt.logging.debug(f"API get_rec request type:  {type(request)}")
+        bt.logging.debug(f"API get_rec request type:  {type(request)}")        
+
         try:            
             bt.logging.debug(f"API get_rec start forward")
             response = await self.forward_fn(request)
