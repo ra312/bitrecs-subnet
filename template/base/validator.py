@@ -288,7 +288,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         selected_response = self.select_top_result(api_request, responses)
                         if selected_response is None:
                             bt.logging.error("No valid result could be parsed ! skipping request")
-                            synapse_with_event.event.set()
+                            synapse_with_event.event.set()                            
                             continue
 
                         synapse_with_event.output_synapse = selected_response
@@ -313,8 +313,11 @@ class BaseValidatorNeuron(BaseNeuron):
 
                 except Exception as e:
                     bt.logging.error(f"Failed to run forward with exception: {e}")
+                    if synapse_with_event.event:
+                        synapse_with_event.event.event.set()
                     time.sleep(60)
                 finally:                   
+                 
                     if api_enabled and api_exclusive:
                         bt.logging.info(f"forward finished, ready for next request")
                         #time.sleep(10)
