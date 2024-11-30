@@ -97,6 +97,10 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
                 bt.logging.info(f"JSON ERROR: {e}, miner data: {response.miner_hotkey}")
                 return 0.0
 
+        if len(valid_items) != num_recs:
+            bt.logging.info(f"Miner has invalid number of valid_items: {response.miner_hotkey}")
+            return 0.0
+
         score = 0.80        
         bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response.miner_hotkey}")
 
@@ -134,22 +138,7 @@ def get_rewards(
     if num_recs < 1 or num_recs > 20:
         bt.logging.info(f"Invalid number of recommendations: {num_recs}")
         raise ValueError("configuration of num_recs is invalid")
-    
-    # for r in responses:
-    #     bt.logging.info(f"** get_rewards response: {r.miner_uid}")
-    #     #bt.logging.info(f"** get_rewards headers: {r.to_headers()}")
-    #     headers = r.to_headers()
-    #     axon_time = -1
-    #     dendrite_time = -1
-    #     if "bt_header_axon_process_time" in headers:
-    #         axon_time = headers["bt_header_axon_process_time"]
-    #     if "bt_header_dendrite_process_time" in headers:
-    #         dendrite_time = headers["bt_header_dendrite_process_time"]
-
-    #     bt.logging.info(f"** get_rewards axon_time: {r.miner_uid}:{axon_time}")
-    #     bt.logging.info(f"** get_rewards dendrite_time: {r.miner_uid}:{dendrite_time}")
-
-    
+        
     return np.array(
         [reward(num_recs, ground_truth, response) for response in responses], dtype=float
     )
