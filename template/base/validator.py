@@ -234,7 +234,7 @@ class BaseValidatorNeuron(BaseNeuron):
                     synapse_with_event: Optional[SynapseWithEvent] = None
                     try:
                         synapse_with_event = api_queue.get(timeout=5)
-                        bt.logging.info(f"api_queue queue found a Request {synapse_with_event}")
+                        bt.logging.info(f"api_queue queue found a Request {synapse_with_event.input_synapse.name}")
                     except Empty:
                         # No synapse from API server.
                         pass
