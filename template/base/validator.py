@@ -263,11 +263,11 @@ class BaseValidatorNeuron(BaseNeuron):
                             continue
 
                         # Send request to the miner population
-                        responses = self.dendrite(
+                        responses = self.dendrite.query(
                             chosen_axons,
                             api_request,
                             deserialize=False,
-                            timeout=10
+                            timeout=5
                         )
                         
                         bt.logging.debug(f"len(responses): {len(responses)}")
