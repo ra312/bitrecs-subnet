@@ -51,9 +51,9 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
             # Check if sku exists in the context
             if not does_sku_exist(product.sku, store_catalog):
                 bt.logging.info(f"Miner has invalid results: {response.miner_hotkey}")
-                return 0.00            
+                return 0.01
 
-        score = 1
+        score = 0.80
         
         bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response.miner_hotkey}")
 
