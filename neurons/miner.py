@@ -30,6 +30,7 @@ from template.llms.llama_local import OllamaLocal
 from template.llms.factory import LLM, LLMFactory
 from template.llms.open_router import OpenRouter
 from template.utils.uids import best_uid
+from ast import literal_eval
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -164,6 +165,9 @@ class Miner(BaseMinerNeuron):
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
         #final_results = [str(r) for r in results]
+        #results = [eval(item) for item in results]
+        
+        results = [literal_eval(item) for item in results]
      
         output_synapse=BitrecsRequest(
             name=synapse.name, 
