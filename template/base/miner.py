@@ -67,9 +67,7 @@ class BaseMinerNeuron(BaseNeuron):
             blacklist_fn=self.blacklist,
             priority_fn=self.priority,
         )
-        bt.logging.info(f"Axon created: {self.axon}")
-
-        self.llm = self.config.llm.provider
+        bt.logging.info(f"Axon created: {self.axon}")      
 
         # Instantiate runners
         self.should_exit: bool = False
