@@ -132,18 +132,8 @@ class Miner(BaseMinerNeuron):
             case _:
                 bt.logging.error("Unknown LLM server")
                 raise ValueError("Unknown LLM server")
-        bt.logging.info(f"LLM: {server} - Model: {server}")
-        #model = "llama3.2"
-        #model = "llama3.1"
-        # if 1==2:
-        #     model = "llama3.1"
-        #     server = LLM.OLLAMA_LOCAL
-        # else:
-        #     model = "google/gemini-flash-1.5-8b"
-        #     server = LLM.OPEN_ROUTER        
-        # model = "google/gemini-flash-1.5-8b"
-        # server = LLM.OPEN_ROUTER
-
+        bt.logging.info(f"LLM: {server} - Model: {model}")
+      
         context = synapse.context
         num_recs = synapse.num_results
         try:
