@@ -38,7 +38,7 @@ def is_api_data_valid(data):
     return True, "Formatting is good"
 
 
-def load_api_config():
+def load_api_config() -> Optional[dict]:
     bt.logging.trace("Loading API config")
     try:
         if not os.path.exists("template/api/api.json"):
@@ -46,13 +46,12 @@ def load_api_config():
 
         with open("template/api/api.json", 'r') as file:
             api_data = json.load(file)
-            bt.logging.trace("api_data", api_data)
-
+            #bt.logging.trace("api_data", api_data)
             valid, reason = is_api_data_valid(api_data)
             if not valid:
                 raise Exception(f"{'api/api.json'} is poorly formatted. {reason}")
             if "change-me" in api_data["keys"]:
-                bt.logging.warning("YOU ARE USING THE DEFAULT API KEY. CHANGE IT FOR SECURITY REASONS.")
+                bt.logging.error("YOU ARE USING THE DEFAULT API KEY. CHANGE IT FOR SECURITY REASONS.")
         return api_data
     except Exception as e:
         bt.logging.error("Error loading API config:", e)
