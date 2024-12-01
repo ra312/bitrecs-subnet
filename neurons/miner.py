@@ -44,7 +44,7 @@ async def do_work(user_prompt: str,
     """
     Do your miner work here. This function is called by the forward function to generate recs.
     You can use any method you prefer to generate recs. 
-      
+
     Args:
         user_prompt (str): The user query.
         context (str): The context of the user query, generally this is set of products to chose from
@@ -136,11 +136,11 @@ class Miner(BaseMinerNeuron):
             case LLM.OLLAMA_LOCAL:
                 model = "llama3.1"                
             case LLM.OPEN_ROUTER:
-                model = "google/gemini-flash-1.5-8b"                
+                model = "google/gemini-flash-1.5-8b"
             case LLM.CHAT_GPT:
-                model = "gpt-4o-mini"                
+                model = "gpt-4o-mini"
             case LLM.VLLM:
-                model = ""                
+                model = ""     
             case _:
                 bt.logging.error("Unknown LLM server")
                 raise ValueError("Unknown LLM server")

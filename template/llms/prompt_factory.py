@@ -54,7 +54,7 @@ class PromptFactory:
         
 
     @staticmethod
-    def tryparse_llm(input_str: str) -> list:
+    def tryparse_llm2(input_str: str) -> list:
         try:
             pattern = r'\[.*?\]'
             regex = re.compile(pattern, re.DOTALL)
@@ -69,6 +69,34 @@ class PromptFactory:
         except Exception as e:
             bt.logging.error(str(e))
             return []
+        
+        
+    @staticmethod
+    def tryparse_llm(input_str: str) -> list:
+        try:
+            # Match arrays enclosed in square brackets
+            pattern = r'\[.*?\]'
+            regex = re.compile(pattern, re.DOTALL)
+            matches = regex.findall(input_str)
+
+            for array in matches:
+                try:
+                    llm_result = array.strip()
+                    parsed = json.loads(llm_result)
+                    
+                    # Ensure no extra quotes around individual items
+                    if isinstance(parsed, list):
+                        parsed = [item.strip('"') if isinstance(item, str) else item for item in parsed]
+                    
+                    return parsed
+                except json.JSONDecodeError:
+                    print(f"Invalid JSON: {array}")
+            
+            return []
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return []
+
 
 
     def catalog_to_json(self) -> str:
