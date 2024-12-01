@@ -134,15 +134,14 @@ class ApiServer:
 
         self.forward_fn = forward_fn
         self.app = FastAPI()
-        #self.app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=5)
+        self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         #self.app.middleware('http')(auth_rate_limiting_middleware)
 
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
             self.app,
             host="0.0.0.0",
             port=axon_port,
-            log_level="trace" if bt.logging.__trace_on__ else "critical",
-            middlewares=[GZipMiddleware],
+            log_level="trace" if bt.logging.__trace_on__ else "critical"            
         ))
         self.router = APIRouter()
         self.router.add_api_route(
