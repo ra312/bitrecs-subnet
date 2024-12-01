@@ -82,7 +82,7 @@ async def do_work(user_prompt: str,
 class Miner(BaseMinerNeuron):
     """
     Main miner class which generates product recommendations based on incoming requests.
-    You are encouraged to modify this class to generate better recs using whatever method you prefer.
+    You are encouraged to modify this class to generate high quality recommendations using whatever method you prefer.
 
     """
 
@@ -124,20 +124,17 @@ class Miner(BaseMinerNeuron):
 
         results = []
        
-        bt.logging.info(f"User Query: {synapse.query }")       
-        match self.llm_provider:
+        bt.logging.info(f"User Query: {synapse.query }")
+        server = self.llm_provider       
+        match server:
             case LLM.OLLAMA_LOCAL:
-                model = "llama3.1"
-                server = LLM.OLLAMA_LOCAL
+                model = "llama3.1"                
             case LLM.OPEN_ROUTER:
-                model = "google/gemini-flash-1.5-8b"
-                server = LLM.OPEN_ROUTER
+                model = "google/gemini-flash-1.5-8b"                
             case LLM.CHAT_GPT:
-                model = "gpt-3.5-turbo"
-                server = LLM.CHAT_GPT
+                model = "gpt-3.5-turbo"                
             case LLM.VLLM:
-                model = ""
-                server = LLM.VLLM
+                model = ""                
             case _:
                 bt.logging.error("Unknown LLM server")
                 raise ValueError("Unknown LLM server")
@@ -148,7 +145,7 @@ class Miner(BaseMinerNeuron):
         try:
 
             results = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)            
-            bt.logging.info(f"LLM {model} Results2 count({len(results)})")
+            bt.logging.info(f"LLM {model} - Results: count ({len(results)})")
             
         except Exception as e:            
             bt.logging.error(f"\033[31mFATAL ERROR calling do_work: {e!r} \033[0m")
