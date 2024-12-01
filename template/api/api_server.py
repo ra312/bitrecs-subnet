@@ -141,7 +141,7 @@ class ApiServer:
             self.app,
             host="0.0.0.0",
             port=axon_port,
-            log_level="trace" if bt.logging.__trace_on__ else "critical"            
+            log_level="trace" if bt.logging.__trace_on__ else "critical"
         ))
         self.router = APIRouter()
         self.router.add_api_route(
