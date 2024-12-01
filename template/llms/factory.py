@@ -1,5 +1,3 @@
-
-
 import os
 import sys
 import time
@@ -12,6 +10,7 @@ from enum import Enum
 from template.llms.llama_local import OllamaLocal
 from template.llms.open_router import OpenRouter
 from template.llms.chat_gpt import ChatGPT
+
 
 class LLM(Enum):
     OLLAMA_LOCAL = 1

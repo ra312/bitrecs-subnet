@@ -24,7 +24,7 @@ class OllamaLocal():
             return base64.b64encode(file.read()).decode("utf-8")
 
     def ask_ollama(self, prompt):
-        print("ask_ollama: {}".format(prompt))
+        #print("ask_ollama: {}".format(prompt))
         data = {
             "model": self.model,
             "messages": [
@@ -131,7 +131,7 @@ class OllamaLocal():
         return self.call_ollama(data)
 
     def call_ollama(self, data):
-        print("called llama ")
+        #print("called llama ")
         response = requests.post(self.ollama_url, json=data)
         # print(response)
         print(response.status_code)
