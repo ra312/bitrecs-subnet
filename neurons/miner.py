@@ -90,11 +90,15 @@ class Miner(BaseMinerNeuron):
 
         bt.logging.info(f"\033[1;32m 🐸 Bitrecs Miner started uid: {self.uid}\033[0m")
 
-        self.llm = self.config.llm.provider
-        provider = LLMFactory.try_get_enum(self.llm)
-        bt.logging.info(f"\033[1;35m Miner LLM Provider: [{self.llm}]\033[0m")
-        self.llm_provider = provider
-        
+        try:
+            self.llm = self.config.llm.provider
+            provider = LLMFactory.try_get_enum(self.llm)
+            bt.logging.info(f"\033[1;35m Miner LLM Provider: [{self.llm}]\033[0m")
+            self.llm_provider = provider
+        except ValueError as ve:
+            bt.logging.error(f"Invalid LLM provider: {ve}")
+            sys.exit()
+
 
     async def forward(
         self, synapse: BitrecsRequest
