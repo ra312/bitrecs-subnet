@@ -161,7 +161,7 @@ class ApiServer:
             for item in response.results:                
                 item = item.rstrip('"').lstrip('"')
                 bt.logging.trace(f"API get_rec item: {item}")     
-                thing = json.loads(item)           
+                thing = json.dumps(item)
                 final_recs.append(thing)
             
             #results = [json.loads(item.replace('"', '')) for item in response.results]
