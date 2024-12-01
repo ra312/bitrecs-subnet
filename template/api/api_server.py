@@ -87,13 +87,6 @@ async def api_key_validator(request, call_next) -> Response:
         return JSONResponse(status_code=401, content={"detail": "Invalid API key request"})
 
     response: Response = await call_next(request)
-
-    # bt.logging.debug(f"response: {response}")
-    # if response.status_code == 200:
-    #     with sql.get_db_connection() as conn:
-    #         sql.update_requests_and_credits(conn, api_key_info, credits_required)
-    #         sql.log_request(conn, api_key_info, request.url.path, credits_required)
-    #         conn.commit()
     return response
 
 
