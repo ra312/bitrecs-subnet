@@ -122,14 +122,14 @@ class ApiServer:
     router: APIRouter
     forward_fn: ForwardFn
     #tunnel: Optional[ngrok.NgrokTunnel]
-    ngrok_domain: Optional[str]
+    #ngrok_domain: Optional[str]
 
     def __init__(
             self, 
             axon_port: int,
             forward_fn: ForwardFn,
             api_json: str,            
-            ngrok_domain: Optional[str]
+            #ngrok_domain: Optional[str]
     ):
 
         self.forward_fn = forward_fn
@@ -156,7 +156,7 @@ class ApiServer:
        
         self.app.include_router(self.router)
         self.api_json = api_json
-        self.ngrok_domain = ngrok_domain
+        #self.ngrok_domain = ngrok_domain
         self.tunnel = None
         bt.logging.info(f"\033[1;32m API Server initialized \033[0m")
 
