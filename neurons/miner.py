@@ -102,7 +102,7 @@ class Miner(BaseMinerNeuron):
 
         best_performing_uid = best_uid(self.metagraph)        
         if self.uid == best_performing_uid:
-            bt.logging.info(f"\033[1;32m 🐸You are the BEST performing UID: {best_performing_uid} - keep it up!\033[0m")
+            bt.logging.info(f"\033[1;32m 🐸You are the BEST performing UID in the subnet, keep it up!\033[0m")
 
 
     async def forward(
