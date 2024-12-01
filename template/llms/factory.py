@@ -11,6 +11,7 @@ from enum import Enum
 
 from template.llms.llama_local import OllamaLocal
 from template.llms.open_router import OpenRouter
+from template.llms.chat_gpt import ChatGPT
 
 class LLM(Enum):
     OLLAMA_LOCAL = 1
@@ -85,9 +86,14 @@ class ChatGPTInterface():
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
-    
+        self.CHATGPT_API_KEY = os.getenv("CHATGPT_API_KEY")
+        if not self.CHATGPT_API_KEY:            
+            raise ValueError("CHATGPT_API_KEY is not set in .env file")        
+        
     def query(self, user_prompt):
-        return ""
+        router = ChatGPT(self.CHATGPT_API_KEY)
+        return router.call_chat_gpt(user_prompt, self.model)
+    
     
 class vLLMInterface():
     def __init__(self, model, system_prompt, temp):
