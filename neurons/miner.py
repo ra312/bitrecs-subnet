@@ -132,7 +132,7 @@ class Miner(BaseMinerNeuron):
             case LLM.OPEN_ROUTER:
                 model = "google/gemini-flash-1.5-8b"                
             case LLM.CHAT_GPT:
-                model = "gpt-3.5-turbo"                
+                model = "gpt-4o-mini"                
             case LLM.VLLM:
                 model = ""                
             case _:

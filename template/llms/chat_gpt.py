@@ -2,12 +2,15 @@ import os
 from openai import OpenAI
 
 class ChatGPT:
-    def __init__(self, key):
+    def __init__(self, key, model="gpt-4o-mini", system_prompt="You are a helpful AI assistant.", temp=0.0):
         self.CHATGPT_API_KEY = key
         if not self.CHATGPT_API_KEY:
             raise ValueError("CHATGPT_API_KEY is not set in .env file")
+        self.model = model
+        self.system_prompt = system_prompt
+        self.temp = temp
 
-    def call_chat_gpt(self, prompt, model="gpt-4o-mini"):
+    def call_chat_gpt(self, prompt):
         if not prompt or len(prompt) < 10:
             raise ValueError()
 
@@ -17,8 +20,8 @@ class ChatGPT:
             extra_headers={
                 "HTTP-Referer": "https://bitrecs.ai",
                 "X-Title": "bitrecs"
-            },
-            model=model,
+            }, 
+            model=self.model,
             messages=[
             {
                 "role": "user",

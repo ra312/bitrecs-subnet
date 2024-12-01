@@ -34,7 +34,7 @@ class LLMFactory:
             case LLM.CHAT_GPT:
                 return ChatGPTInterface(model, system_prompt, temp).query(user_prompt)
             case LLM.VLLM:
-                return vLLMInterface(model, system_prompt, temp).query(user_prompt)
+                return VllmInterface(model, system_prompt, temp).query(user_prompt)
             case _:
                 raise ValueError("Unknown LLM server")
             
@@ -54,7 +54,7 @@ class LLMFactory:
                 raise ValueError("Unknown LLM server")
         
         
-class OllamaLocalInterface():
+class OllamaLocalInterface:
     def __init__(self, model, system_prompt, temp):
         self.model = model
         self.system_prompt = system_prompt
@@ -63,12 +63,12 @@ class OllamaLocalInterface():
         if not self.OLLAMA_LOCAL_URL:
              bt.logging.error("OLLAMA_LOCAL_URL not set.")        
     
-    def query(self, user_prompt):
+    def query(self, user_prompt) -> str:
         llm = OllamaLocal(ollama_url=self.OLLAMA_LOCAL_URL, model=self.model, 
                           system_prompt=self.system_prompt, temp=self.temp)
         return llm.ask_ollama(user_prompt)
     
-class OpenRouterInterface():
+class OpenRouterInterface:
     def __init__(self, model, system_prompt, temp):
         self.model = model
         self.system_prompt = system_prompt
@@ -77,11 +77,12 @@ class OpenRouterInterface():
         if not self.OPENROUTER_API_KEY:
             raise ValueError("OPENROUTER_API_KEY is not set in .env file")
     
-    def query(self, user_prompt):
-        router = OpenRouter()
-        return router.call_open_router(user_prompt, self.model)
+    def query(self, user_prompt) -> str:
+        router = OpenRouter(self.OPENROUTER_API_KEY, model=self.model, 
+                            system_prompt=self.system_prompt, temp=self.temp)
+        return router.call_open_router(user_prompt)
     
-class ChatGPTInterface():
+class ChatGPTInterface:
     def __init__(self, model, system_prompt, temp):
         self.model = model
         self.system_prompt = system_prompt
@@ -90,16 +91,17 @@ class ChatGPTInterface():
         if not self.CHATGPT_API_KEY:            
             raise ValueError("CHATGPT_API_KEY is not set in .env file")        
         
-    def query(self, user_prompt):
-        router = ChatGPT(self.CHATGPT_API_KEY)
+    def query(self, user_prompt) -> str:
+        router = ChatGPT(self.CHATGPT_API_KEY, model=self.model, 
+                         system_prompt=self.system_prompt, temp=self.temp)
         return router.call_chat_gpt(user_prompt, self.model)
     
     
-class vLLMInterface():
+class VllmInterface:
     def __init__(self, model, system_prompt, temp):
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
     
-    def query(self, user_prompt):
+    def query(self, user_prompt) -> str:
         return ""
