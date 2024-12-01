@@ -196,7 +196,8 @@ class ApiServer:
 
         self.forward_fn = forward_fn
         self.app = FastAPI()
-        self.app.add_middleware(api_key_validator)
+        
+        self.app.middleware('http')(api_key_validator)
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         #self.app.middleware('http')(auth_rate_limiting_middleware)
 
