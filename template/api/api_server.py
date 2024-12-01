@@ -6,10 +6,10 @@ import traceback
 import bittensor as bt
 
 from typing import Callable, Awaitable, List, Optional
-from bittensor.core.axon import FastAPIThreadedServer
-from fastapi import  APIRouter
+from fastapi import FastAPI, Request, APIRouter
 from fastapi.responses import JSONResponse
-from fastapi import FastAPI, Request
+from fastapi.middleware.gzip import GZipMiddleware
+from bittensor.core.axon import FastAPIThreadedServer
 from template.protocol import BitrecsRequest
 #from pyngrok import ngrok
 
@@ -134,6 +134,7 @@ class ApiServer:
 
         self.forward_fn = forward_fn
         self.app = FastAPI()
+        self.app.add_middleware(GZipMiddleware, minimum_size=1000, compress_level=5)
         #self.app.middleware('http')(auth_rate_limiting_middleware)
 
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
