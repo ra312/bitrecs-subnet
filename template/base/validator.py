@@ -133,7 +133,7 @@ class BaseValidatorNeuron(BaseNeuron):
             api_server = ApiServer(
                 axon_port=self.config.axon.port,
                 forward_fn=api_forward,
-                api_json=self.config.api_json                
+                api_json=self.config.api_json,                
             )
             api_server.start()            
             bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: {api_server.fast_server.config.host} on Axon: {api_server.fast_server.config.port} \033[0m")
