@@ -134,7 +134,7 @@ class ApiServer:
 
         self.forward_fn = forward_fn
         self.app = FastAPI()
-        self.app.add_middleware(GZipMiddleware, minimum_size=1000, compress_level=5)
+        self.app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=5)
         #self.app.middleware('http')(auth_rate_limiting_middleware)
 
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
