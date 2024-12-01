@@ -144,7 +144,7 @@ class Miner(BaseMinerNeuron):
             raise ValueError("Test Error")
         except Exception as e:
             #bt.logging.error(f"FATAL ERROR calling do_work: {e}")
-            bt.logging.error("\033[31mFATAL ERROR calling do_work:\033[0m \033[1;33m{e!r}\033[0m")
+            bt.logging.error("\033[31mFATAL ERROR calling do_work: {e!r} \033[0m")
             pass
 
         utc_now = datetime.now(timezone.utc)
