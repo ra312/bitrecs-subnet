@@ -165,9 +165,9 @@ class Miner(BaseMinerNeuron):
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
         #final_results = [str(r) for r in results]
-        #results = [eval(item) for item in results]
-        
-        results = [literal_eval(item) for item in results]
+        results = [eval(item) for item in results]
+
+        #results = [literal_eval(item) for item in results]
      
         output_synapse=BitrecsRequest(
             name=synapse.name, 
