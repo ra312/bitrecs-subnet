@@ -17,7 +17,7 @@ auth_data = dict()
 request_counts = {}
 
 
-def is_api_data_valid(data):
+def is_api_data_valid(data) -> tuple[bool, str]:
     if not isinstance(data, dict):
         return False, "Not a dictionary"
 
@@ -95,9 +95,7 @@ class ApiServer:
     app: FastAPI
     fast_server: FastAPIThreadedServer
     router: APIRouter
-    forward_fn: ForwardFn
-    #tunnel: Optional[ngrok.NgrokTunnel]
-    #ngrok_domain: Optional[str]
+    forward_fn: ForwardFn  
 
     def __init__(self, axon_port: int, forward_fn: ForwardFn, api_json: str):
         self.forward_fn = forward_fn
