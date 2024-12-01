@@ -44,8 +44,7 @@ async def do_work(user_prompt: str,
     """
     Do your miner work here. This function is called by the forward function to generate recs.
     You can use any method you prefer to generate recs. 
-    In this example, we are using a local instance of ollama.
-
+      
     Args:
         user_prompt (str): The user query.
         context (str): The context of the user query, generally this is set of products to chose from
