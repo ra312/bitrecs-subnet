@@ -90,10 +90,11 @@ class Miner(BaseMinerNeuron):
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
 
-        bt.logging.info(f"\033[1;32m 🐸 Bitrecs Miner started uid: {self.uid}\033[0m")                
+        bt.logging.info(f"\033[1;32m 🐸 Bitrecs Miner started uid: {self.uid}\033[0m")
 
-        LLMFactory.try_get_enum(self.llm)
+        provider = LLMFactory.try_get_enum(self.llm)
         bt.logging.info(f"\033[1;35m Miner LLM Provider: [{self.llm}]\033[0m")
+        self.llm_provider = provider
 
     async def forward(
         self, synapse: BitrecsRequest
@@ -108,29 +109,38 @@ class Miner(BaseMinerNeuron):
             template.protocol.BitrecsRequest: The synapse object with the recs - same object modified with updated fields.
 
         """
-        bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))                
+        bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))
 
-        #results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]      
-
-        # things = [["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"], 
-        #           ["result4A - rare", "result5A - common"],
-        #           ["result1B - superior", "result2B - exalted", "result3B - ornate"],
-        #           ["result1C - superior", "result2C - exalted", "result3C - ornate", "result4C - rare"]]
-        # results = random.choice(things)
+        #results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]
 
         results = []
        
         bt.logging.info(f"User Query: {synapse.query }")       
-
+        match self.llm_provider:
+            case LLM.OLLAMA_LOCAL:
+                model = "llama3.1"
+                server = LLM.OLLAMA_LOCAL
+            case LLM.OPEN_ROUTER:
+                model = "google/gemini-flash-1.5-8b"
+                server = LLM.OPEN_ROUTER
+            case LLM.CHAT_GPT:
+                model = "gpt-3.5-turbo"
+                server = LLM.CHAT_GPT
+            case LLM.VLLM:
+                model = ""
+                server = LLM.VLLM
+            case _:
+                bt.logging.error("Unknown LLM server")
+                raise ValueError("Unknown LLM server")
+        bt.logging.info(f"LLM: {server} - Model: {server}")
         #model = "llama3.2"
         #model = "llama3.1"
-        if 1==2:
-            model = "llama3.1"
-            server = LLM.OLLAMA_LOCAL
-        else:
-            model = "google/gemini-flash-1.5-8b"
-            server = LLM.OPEN_ROUTER
-        
+        # if 1==2:
+        #     model = "llama3.1"
+        #     server = LLM.OLLAMA_LOCAL
+        # else:
+        #     model = "google/gemini-flash-1.5-8b"
+        #     server = LLM.OPEN_ROUTER        
         # model = "google/gemini-flash-1.5-8b"
         # server = LLM.OPEN_ROUTER
 
@@ -139,13 +149,14 @@ class Miner(BaseMinerNeuron):
         try:
 
             results2 = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)
-            bt.logging.info(f"Calling {server}")
+            #bt.logging.info(f"Calling {server}")
             bt.logging.info(f"LLM {model} Results2 count({len(results2)})")
-            bt.logging.info(f"{results2}")            
+            #bt.logging.info(f"{results2}")
             results = results2
 
         except Exception as e:
-            bt.logging.error(f"Error calling do_work: {e}")
+            #bt.logging.error(f"FATAL ERROR calling do_work: {e}")
+            bt.logging.error("\033[31mFATAL ERROR calling do_work:\033[0m \033[1;33m{e!r}\033[0m")
             pass
 
         utc_now = datetime.now(timezone.utc)

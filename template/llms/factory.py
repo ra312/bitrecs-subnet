@@ -39,8 +39,7 @@ class LLMFactory:
             
     @staticmethod
     def try_get_enum(value: str) -> LLM:
-        bt.logging.info(f"Trying to get enum for {value}")
-
+        #bt.logging.info(f"Trying to get enum for {value}")
         match value.upper():
             case "OLLAMA_LOCAL":
                 return LLM.OLLAMA_LOCAL
