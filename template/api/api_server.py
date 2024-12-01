@@ -157,8 +157,12 @@ class ApiServer:
             # miner_public_key: str
             # reasoning: str
             bt.logging.debug(f"API get_rec response: {response.results}")
+            final_recs = []
+            for item in response.results:
+                item = item.replace('"', '')
+                final_recs.append(json.loads(item))
             
-            results = [json.loads(item.replace('"', '')) for item in response.results]
+            #results = [json.loads(item.replace('"', '')) for item in response.results]
 
             bitrecs_rec = {
                     "user": response.user, 
@@ -167,7 +171,7 @@ class ApiServer:
                     "status_text": "Success",
                     "response_text": "Success text",
                     "created_at": response.created_at,
-                    "results": results,
+                    "results": final_recs,
                     "models_used": response.models_used,
                     "catalog_size": "0",
                     "miner_uid": response.miner_uid,
