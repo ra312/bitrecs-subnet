@@ -72,8 +72,8 @@ async def api_forward(synapse: BitrecsRequest) -> BitrecsRequest:
             site_key="",
             results=[""],
             models_used=[""],
-            miner_uid=synapse.miner_uid,
-            miner_hotkey=synapse.miner_hotkey
+            miner_uid="",
+            miner_hotkey=""
         )
     )
     api_queue.put(synapse_with_event)
