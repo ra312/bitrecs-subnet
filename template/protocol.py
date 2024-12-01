@@ -30,7 +30,7 @@ class BitrecsRequest(bt.Synapse):
     query: str | None
     context: str | None
     site_key: str | None
-    results: List[str] | None
-    models_used: List[str] | None
+    results: list | None
+    models_used: list | None
     miner_uid: str | None
     miner_hotkey: str | None
