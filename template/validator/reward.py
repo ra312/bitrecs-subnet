@@ -80,25 +80,25 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
             try:             
                 result = result.replace("\'", "\"")
                 product: Product = json.loads(result)
-                bt.logging.info(f"** {response.miner_uid} reward product: {product}")
+                bt.logging.trace(f"{response.miner_uid} response product: {product}")
                 sku = product["sku"]
                 if sku in valid_items:
-                    bt.logging.info(f"Miner has duplicate results: {response.miner_hotkey}")
+                    bt.logging.warning(f"Miner has duplicate results: {response.miner_hotkey}")
                     return 0.0               
                 
                 # Check if sku exists in the context
                 if not does_sku_exist(sku, store_catalog):
-                    bt.logging.info(f"Miner has invalid results: {response.miner_hotkey}")
-                    return 0.01
+                    bt.logging.warning(f"Miner has invalid results: {response.miner_hotkey}")
+                    return 0.00
                 
                 valid_items.add(sku)
 
             except Exception as e:
-                bt.logging.info(f"JSON ERROR: {e}, miner data: {response.miner_hotkey}")
+                bt.logging.error(f"JSON ERROR: {e}, miner data: {response.miner_hotkey}")
                 return 0.0
 
         if len(valid_items) != num_recs:
-            bt.logging.info(f"Miner has invalid number of valid_items: {response.miner_hotkey}")
+            bt.logging.warning(f"Miner has invalid number of valid_items: {response.miner_hotkey}")
             return 0.0
 
         score = 0.80        
@@ -115,7 +115,7 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
 
         return score
     except Exception as e:        
-        bt.logging.info(f"Error in rewards: {e}, miner data: {response}")
+        bt.logging.error(f"Error in rewards: {e}, miner data: {response}")
         return 0.0
 
 
@@ -136,7 +136,7 @@ def get_rewards(
     """
 
     if num_recs < 1 or num_recs > 20:
-        bt.logging.info(f"Invalid number of recommendations: {num_recs}")
+        bt.logging.error(f"Invalid number of recommendations: {num_recs}")
         raise ValueError("configuration of num_recs is invalid")
         
     return np.array(

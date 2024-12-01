@@ -28,26 +28,23 @@ import traceback
 import anyio.to_thread
 from typing import List, Union, Optional
 from traceback import print_exception
-
 from template.base.neuron import BaseNeuron
 from template.base.utils.weight_utils import (
     process_weights_for_netuid,
     convert_weights_and_uids_for_emit, 
 )
-
 from template.utils.config import add_validator_args
-
 from template.api.api_server import ApiServer
 from template.protocol import BitrecsRequest
 from dataclasses import dataclass
 from queue import SimpleQueue, Empty
-
 from template.utils.uids import check_uid_availability, get_random_uids
 from template.validator.reward import get_rewards
 from dotenv import load_dotenv
 load_dotenv()
 
 api_queue = SimpleQueue() # Queue of SynapseEventPair
+
 
 @dataclass
 class SynapseWithEvent:
@@ -71,8 +68,8 @@ async def api_forward(synapse: BitrecsRequest) -> BitrecsRequest:
             user="",
             num_results=synapse.num_results,
             query=synapse.query,
-            context=synapse.context,
-            site_key=synapse.site_key,
+            context="",
+            site_key="",
             results=[""],
             models_used=[""],
             miner_uid=synapse.miner_uid,
@@ -257,11 +254,12 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.trace(f"chosen_axons: {chosen_axons}")
 
                         api_request = synapse_with_event.input_synapse
+                        #TODO validate request
 
 
                         number_of_recs_desired = api_request.num_results
 
-                        if number_of_recs_desired > 20:
+                        if number_of_recs_desired < 1 or number_of_recs_desired > 20:
                             bt.logging.error("Number of recommendations should be less than 20")
                             synapse_with_event.event.set()
                             continue
@@ -339,7 +337,7 @@ class BaseValidatorNeuron(BaseNeuron):
         # In case of unforeseen errors, the validator will log the error and continue operations.
         except Exception as err:
             bt.logging.error(f"Error during validation: {str(err)}")
-            bt.logging.debug(traceback.format_exc(err))
+            bt.logging.error(traceback.format_exc(err))
                      
 
     def run_in_background_thread(self):

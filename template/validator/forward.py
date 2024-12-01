@@ -71,6 +71,7 @@ async def forward(self, pr: BitrecsRequest = None):
     num_results = 0
 
     if pr is not None: #API REQUEST
+        raise NotImplementedError("API requests not implemented yet")
         next_request = pr
         num_results = pr.num_results
     else:

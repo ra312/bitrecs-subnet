@@ -34,7 +34,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: str, system_prompt="You are a helpful assistant.") -> typing.List[str]:
+async def do_work(user_prompt: str, 
+                  context: str, 
+                  num_recs, 
+                  server: LLM, 
+                  model: str, 
+                  system_prompt="You are a helpful assistant.") -> typing.List[str]:
     """
     Do your miner work here. This function is called by the forward function to generate recs.
     You can use any method you prefer to generate recs. 
@@ -59,8 +64,7 @@ async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: 
     prompt = factory.generate_prompt()    
     system_prompt = "You are a helpful assistant."
     
-    try:
-        #llm_response = llm.ask_ollama(prompt)
+    try:        
         llm_response = LLMFactory.query_llm(server=server, model=model, system_prompt=system_prompt, temp=0.1, user_prompt=prompt)
         if not llm_response or len(llm_response) < 10:
             bt.logging.error("LLM response is empty.")
