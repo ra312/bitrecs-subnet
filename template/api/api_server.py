@@ -140,8 +140,8 @@ class ApiServer:
         try:            
             bt.logging.debug(f"API get_rec start forward")
             response = await self.forward_fn(request)
-            bt.logging.debug(f"API get_rec response: {response}")
-            bt.logging.debug(f"API get_rec response type: {type(response)}")
+            #bt.logging.debug(f"API get_rec response: {response}")
+            #bt.logging.debug(f"API get_rec response type: {type(response)}")
 
           #class ProductRecResponse:
             # user: str
@@ -160,9 +160,12 @@ class ApiServer:
             final_recs = []
             for item in response.results:                
                 item = item.rstrip('"').lstrip('"')
+                bt.logging.trace(f"API get_rec item: {item}")                
                 final_recs.append(item)
             
             #results = [json.loads(item.replace('"', '')) for item in response.results]
+
+            bt.logging.trace(f"API get_rec final_recs: {final_recs}")
 
             bitrecs_rec = {
                     "user": response.user, 
