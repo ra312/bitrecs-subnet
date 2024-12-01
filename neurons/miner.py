@@ -163,7 +163,7 @@ class Miner(BaseMinerNeuron):
         utc_now = datetime.now(timezone.utc)
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
-        final_results = [str(r) for r in results]
+        #final_results = [str(r) for r in results]
      
         output_synapse=BitrecsRequest(
             name=synapse.name, 
@@ -175,7 +175,7 @@ class Miner(BaseMinerNeuron):
             query=synapse.query,
             context="[]",
             site_key=synapse.site_key,
-            results=final_results,
+            results=results,
             models_used=[model],
             miner_uid=str(self.uid),
             miner_hotkey=synapse.dendrite.hotkey
