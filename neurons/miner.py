@@ -90,9 +90,10 @@ class Miner(BaseMinerNeuron):
     def __init__(self, config=None):
         super(Miner, self).__init__(config=config)
 
-        bt.logging.info(f"\033[1;32m 🐸 Bitrecs Miner started uid: {self.uid}\033[0m")
-         #bt.logging.info(f"Miner LLM Provider: {self.llm}")
-        bt.logging.info(f"\033[1;35m Minner LLM Provider: {self.llm}\033[0m")
+        bt.logging.info(f"\033[1;32m 🐸 Bitrecs Miner started uid: {self.uid}\033[0m")                
+
+        LLMFactory.try_get_enum(self.llm)
+        bt.logging.info(f"\033[1;35m Miner LLM Provider: [{self.llm}]\033[0m")
 
     async def forward(
         self, synapse: BitrecsRequest

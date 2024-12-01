@@ -36,6 +36,20 @@ class LLMFactory:
                 return vLLMInterface(model, system_prompt, temp).query(user_prompt)
             case _:
                 raise ValueError("Unknown LLM server")
+            
+    @staticmethod
+    def try_get_enum(value: str) -> LLM:
+        match value.capitalize():
+            case "OLLAMA_LOCAL":
+                return LLM.OLLAMA_LOCAL
+            case "OPEN_ROUTER":
+                return LLM.OPEN_ROUTER
+            case "CHAT_GPT":
+                return LLM.CHAT_GPT
+            case "VLLM":
+                return LLM.VLLM
+            case _:
+                raise ValueError("Unknown LLM server")
         
         
 class OllamaLocalInterface():

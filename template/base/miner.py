@@ -69,7 +69,7 @@ class BaseMinerNeuron(BaseNeuron):
         )
         bt.logging.info(f"Axon created: {self.axon}")
 
-        self.llm = self.config.llm.provider       
+        self.llm = self.config.llm.provider
 
         # Instantiate runners
         self.should_exit: bool = False
