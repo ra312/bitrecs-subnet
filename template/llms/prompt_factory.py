@@ -16,7 +16,7 @@ class PromptFactory:
         self.context = context
         self.num_recs = num_recs
         if self.num_recs < 1 or self.num_recs > 20:
-            raise ValueError("num_recs must be between 1 and 10")
+            raise ValueError("num_recs must be between 1 and 20")
         self.catalog = []
 
         # if load_catalog:

@@ -26,8 +26,6 @@ import bittensor as bt
 import time
 import traceback
 import anyio.to_thread
-import random
-
 from typing import List, Union, Optional
 from traceback import print_exception
 
@@ -35,7 +33,7 @@ from template.base.neuron import BaseNeuron
 from template.base.utils.weight_utils import (
     process_weights_for_netuid,
     convert_weights_and_uids_for_emit, 
-)  # TODO: Replace when bittensor switches to numpy
+)
 
 from template.utils.config import add_validator_args
 
@@ -44,15 +42,12 @@ from template.protocol import BitrecsRequest
 from dataclasses import dataclass
 from queue import SimpleQueue, Empty
 
-from template.utils.uids import check_uid_availability, get_random_uids, clamp
+from template.utils.uids import check_uid_availability, get_random_uids
 from template.validator.reward import get_rewards
 from dotenv import load_dotenv
 load_dotenv()
 
-
-
 api_queue = SimpleQueue() # Queue of SynapseEventPair
-
 
 @dataclass
 class SynapseWithEvent:
@@ -73,13 +68,13 @@ async def api_forward(synapse: BitrecsRequest) -> BitrecsRequest:
         output_synapse=BitrecsRequest(
             name=synapse.name,                     
             created_at=synapse.created_at,
-            user=synapse.user,
+            user="",
             num_results=synapse.num_results,
             query=synapse.query,
             context=synapse.context,
             site_key=synapse.site_key,
-            results=synapse.results,
-            models_used=synapse.models_used,
+            results=[""],
+            models_used=[""],
             miner_uid=synapse.miner_uid,
             miner_hotkey=synapse.miner_hotkey
         )
@@ -180,17 +175,15 @@ class BaseValidatorNeuron(BaseNeuron):
             for _ in range(self.config.neuron.num_concurrent_forwards)
         ]
         await asyncio.gather(*coroutines)
-        
-   
-    # def select_top_result(self, original_request: BitrecsRequest, miner_results: List[BitrecsRequest]) -> BitrecsRequest:
-    #     """Selects the top result from the list of results."""
-    #     for r in miner_results:
-    #         #bt.logging.info(f"select_top_result Result: {r}")
-    #         if len(r.results) == original_request.num_results:
-    #             bt.logging.info(f"select_top_result TOP RESULT: {r}")
-    #             return r
-    #     return None
 
+
+    # def validate_request_item(item: SynapseWithEvent) -> bool:
+    #     """Checks request item for validity."""
+    #     if not isinstance(item, SynapseWithEvent):
+    #         bt.logging.error(f"Invalid request item: {item}")
+    #         return False       
+
+    #     return True
 
     def run(self):
         """
@@ -225,11 +218,11 @@ class BaseValidatorNeuron(BaseNeuron):
                     api_exclusive = self.config.api.exclusive
 
                     bt.logging.info(f"api_enabled: {api_enabled}")
-                    bt.logging.info(f"api_exclusive: {api_exclusive}")
+                    bt.logging.info(f"api_exclusive: {api_exclusive}")               
 
                     synapse_with_event: Optional[SynapseWithEvent] = None
                     try:
-                        synapse_with_event = api_queue.get(timeout=5)
+                        synapse_with_event = api_queue.get(timeout=5)                        
                         bt.logging.info(f"api_queue queue found a Request {synapse_with_event.input_synapse.name}")
                     except Empty:
                         # No synapse from API server.
@@ -238,17 +231,19 @@ class BaseValidatorNeuron(BaseNeuron):
                     if synapse_with_event is not None and api_enabled: #API request
                         bt.logging.info("** Processing synapse from API server **")
 
+                        self.validate_request_item(synapse_with_event)
+
                         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
                         #available_uids = get_random_uids(self, k=8)
-                        bt.logging.debug(f"available_uids: {available_uids}")
+                        bt.logging.trace(f"available_uids: {available_uids}")                        
                      
                         chosen_uids = [0, 1, 2, 3, 4, 5, 6, 7]
                         #chosen_uids = [0]
                         #chosen_uids = available_uids
                         #np.append(chosen_uids, [1])                        
                         
-                        bt.logging.debug(f"len(chosen_uids): {len(chosen_uids)}")
-                        bt.logging.debug(f"chosen_uids: {chosen_uids}")
+                        bt.logging.trace(f"len(chosen_uids): {len(chosen_uids)}")
+                        bt.logging.trace(f"chosen_uids: {chosen_uids}")
 
                         chosen_axons = [self.metagraph.axons[uid] for uid in chosen_uids]
                         bt.logging.trace(f"chosen_axons: {chosen_axons}")
@@ -256,8 +251,8 @@ class BaseValidatorNeuron(BaseNeuron):
                         api_request = synapse_with_event.input_synapse
                         number_of_recs_desired = api_request.num_results
 
-                        if number_of_recs_desired > 10:
-                            bt.logging.error("Number of recommendations should be less than 10")
+                        if number_of_recs_desired > 20:
+                            bt.logging.error("Number of recommendations should be less than 20")
                             synapse_with_event.event.set()
                             continue
 
@@ -269,12 +264,12 @@ class BaseValidatorNeuron(BaseNeuron):
                             timeout=10
                         )
                         
-                        bt.logging.debug(f"len(responses): {len(responses)}")
+                        bt.logging.trace(f"len(responses): {len(responses)}")
 
                         # Adjust the scores based on responses from miners.
-                        rewards = get_rewards(num_recs=number_of_recs_desired, 
+                        rewards = get_rewards(num_recs=number_of_recs_desired,
                                               ground_truth=api_request,
-                                              responses=responses)                        
+                                              responses=responses)
                         
                         if not len(chosen_uids) == len(responses) == len(rewards):
                             bt.logging.error("MISMATCH in lengths of chosen_uids, responses and rewards")
@@ -290,7 +285,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         # Mark the synapse as processed, API will then return to the client
                         synapse_with_event.event.set()
 
-                        bt.logging.info(f"Scored responses: {rewards}")    
+                        bt.logging.info(f"Scored responses: {rewards}")
                         self.update_scores(rewards, chosen_uids)
 
                         #TODO ranking and scoring
