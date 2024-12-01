@@ -158,9 +158,9 @@ class ApiServer:
             # reasoning: str
             bt.logging.debug(f"API get_rec response: {response.results}")
             final_recs = []
-            for item in response.results:
-                item = item.replace('"', '')
-                final_recs.append(json.loads(item))
+            for item in response.results:                
+                item = item.rstrip('"').lstrip('"')
+                final_recs.append(item)
             
             #results = [json.loads(item.replace('"', '')) for item in response.results]
 
