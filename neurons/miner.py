@@ -138,12 +138,10 @@ class Miner(BaseMinerNeuron):
         num_recs = synapse.num_results
         try:
 
-            results2 = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)
+            results = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)
             #bt.logging.info(f"Calling {server}")
-            bt.logging.info(f"LLM {model} Results2 count({len(results2)})")
-            #bt.logging.info(f"{results2}")
-            results = results2
-
+            bt.logging.info(f"LLM {model} Results2 count({len(results)})")
+            raise ValueError("Test Error")
         except Exception as e:
             #bt.logging.error(f"FATAL ERROR calling do_work: {e}")
             bt.logging.error("\033[31mFATAL ERROR calling do_work:\033[0m \033[1;33m{e!r}\033[0m")
