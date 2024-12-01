@@ -185,6 +185,15 @@ class BaseValidatorNeuron(BaseNeuron):
 
     #     return True
 
+    def validate_br_request(self, synapse: BitrecsRequest) -> bool:
+        """Checks request item for validity."""
+        if not isinstance(synapse, BitrecsRequest):
+            bt.logging.error(f"Invalid request item: {synapse}")
+            return False       
+
+        return True
+
+
     def run(self):
         """
         Initiates and manages the main loop for the validator on the Bitrecs subnet
@@ -218,7 +227,7 @@ class BaseValidatorNeuron(BaseNeuron):
                     api_exclusive = self.config.api.exclusive
 
                     bt.logging.info(f"api_enabled: {api_enabled}")
-                    bt.logging.info(f"api_exclusive: {api_exclusive}")               
+                    bt.logging.info(f"api_exclusive: {api_exclusive}")
 
                     synapse_with_event: Optional[SynapseWithEvent] = None
                     try:
@@ -231,8 +240,8 @@ class BaseValidatorNeuron(BaseNeuron):
                     if synapse_with_event is not None and api_enabled: #API request
                         bt.logging.info("** Processing synapse from API server **")
 
-                        self.validate_request_item(synapse_with_event)
-
+                        #self.validate_request_item(synapse_with_event)
+                
                         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
                         #available_uids = get_random_uids(self, k=8)
                         bt.logging.trace(f"available_uids: {available_uids}")                        
@@ -249,6 +258,8 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.trace(f"chosen_axons: {chosen_axons}")
 
                         api_request = synapse_with_event.input_synapse
+
+
                         number_of_recs_desired = api_request.num_results
 
                         if number_of_recs_desired > 20:
@@ -261,7 +272,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             chosen_axons,
                             api_request,
                             deserialize=False,
-                            timeout=10
+                            timeout=10 
                         )
                         
                         bt.logging.trace(f"len(responses): {len(responses)}")
@@ -287,13 +298,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
                         bt.logging.info(f"Scored responses: {rewards}")
                         self.update_scores(rewards, chosen_uids)
-
-                        #TODO ranking and scoring
-                        # selected_response = self.select_top_result(api_request, responses)
-                        # if selected_response is None:
-                        #     bt.logging.error("No valid result could be parsed ! skipping request")
-                        #     synapse_with_event.event.set()                            
-                        #     continue
+                        
 
                     else:     
                         if not api_exclusive: #Regular validator loop                
