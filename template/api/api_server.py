@@ -158,9 +158,9 @@ class ApiServer:
             # reasoning: str
             bt.logging.debug(f"API get_rec response: {response.results}")
             
-            results = [json.loads(item.replace("'", '"')) for item in response.results]
+            results = [json.loads(item.replace('"', '')) for item in response.results]
 
-            rec = {
+            bitrecs_rec = {
                     "user": response.user, 
                     "original_query": response.query,
                     "status_code": "200",
@@ -175,7 +175,7 @@ class ApiServer:
                     "reasoning": "testing"
             }
 
-            return JSONResponse(status_code=200, content=rec)
+            return JSONResponse(status_code=200, content=bitrecs_rec)
 
         except Exception as e:
             bt.logging.error(f"API get_rec error:  {e}")
