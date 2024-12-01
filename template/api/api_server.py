@@ -157,6 +157,8 @@ class ApiServer:
             # miner_public_key: str
             # reasoning: str
             bt.logging.debug(f"API get_rec response: {response.results}")
+            
+            results = [json.loads(item.replace("'", '"')) for item in response.results]
 
             rec = {
                     "user": response.user, 
@@ -165,7 +167,7 @@ class ApiServer:
                     "status_text": "Success",
                     "response_text": "Success text",
                     "created_at": response.created_at,
-                    "results": response.results,
+                    "results": results,
                     "models_used": response.models_used,
                     "catalog_size": "0",
                     "miner_uid": response.miner_uid,
