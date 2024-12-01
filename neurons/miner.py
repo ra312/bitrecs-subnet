@@ -100,8 +100,9 @@ class Miner(BaseMinerNeuron):
             bt.logging.error(f"Invalid LLM provider: {ve}")
             sys.exit()
 
-        best_performing_uid = best_uid(self.metagraph)
-        bt.logging.info(f"Best performing UID: {best_performing_uid}")
+        best_performing_uid = best_uid(self.metagraph)        
+        if self.uid == best_performing_uid:
+            bt.logging.info(f"\033[1;32m 🐸You are the BEST performing UID: {best_performing_uid} - keep it up!\033[0m")
 
 
     async def forward(
