@@ -44,7 +44,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 api_queue = SimpleQueue() # Queue of SynapseEventPair
-
+MAX_DENDRITE_TIMEOUT = 10
 
 @dataclass
 class SynapseWithEvent:
@@ -268,7 +268,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             chosen_axons,
                             api_request,
                             deserialize=False,
-                            timeout=15
+                            timeout=MAX_DENDRITE_TIMEOUT
                         )
                         
                         bt.logging.trace(f"len(responses): {len(responses)}")
