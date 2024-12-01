@@ -53,22 +53,22 @@ class PromptFactory:
             return []
         
 
-    @staticmethod
-    def tryparse_llm2(input_str: str) -> list:
-        try:
-            pattern = r'\[.*?\]'
-            regex = re.compile(pattern, re.DOTALL)
-            match = regex.findall(input_str)        
-            for array in match:
-                try:
-                    llm_result = array.strip()
-                    return json.loads(llm_result)
-                except json.JSONDecodeError:
-                    print(f"Invalid JSON: {array}")
-            return []
-        except Exception as e:
-            bt.logging.error(str(e))
-            return []
+    # @staticmethod
+    # def tryparse_llm2(input_str: str) -> list:
+    #     try:
+    #         pattern = r'\[.*?\]'
+    #         regex = re.compile(pattern, re.DOTALL)
+    #         match = regex.findall(input_str)        
+    #         for array in match:
+    #             try:
+    #                 llm_result = array.strip()
+    #                 return json.loads(llm_result)
+    #             except json.JSONDecodeError:
+    #                 print(f"Invalid JSON: {array}")
+    #         return []
+    #     except Exception as e:
+    #         bt.logging.error(str(e))
+    #         return []
         
         
     @staticmethod
