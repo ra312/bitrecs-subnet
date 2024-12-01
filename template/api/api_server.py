@@ -5,8 +5,9 @@ import uvicorn
 import traceback
 import bittensor as bt
 
-from typing import Callable, Awaitable, List, Optional
-from fastapi import FastAPI, Request, APIRouter
+
+from typing import Callable, Awaitable, List, Optional, Any
+from fastapi import FastAPI, Request, APIRouter, Response
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from bittensor.core.axon import FastAPIThreadedServer
@@ -116,6 +117,67 @@ async def auth_rate_limiting_middleware(request: Request, call_next):
 
 #     return tunnel
 
+
+def _get_api_key(request: Request) -> Any:
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return None
+    if auth_header.startswith("Bearer "):
+        return auth_header.split(" ")[1]
+
+    return auth_header
+
+
+#@app.middleware("http")
+async def api_key_validator(request, call_next) -> Response:
+    if request.url.path in ["/favicon.ico"]:
+        return await call_next(request)
+
+    api_key = _get_api_key(request)
+    if not api_key:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "API key is missing"},
+        )
+
+    # with sql.get_db_connection() as conn:
+    #     api_key_info = sql.get_api_key_info(conn, api_key)
+    api_key_info = load_api_config()    
+
+    if api_key_info is None:
+        return JSONResponse(status_code=401, content={"detail": "Invalid API key"})
+
+    #credits_required = 1  # TODO: make this non-constant in the future???? (i.e. dependent on number of pools)????
+
+    # Now check credits
+    # if api_key_info[sql.BALANCE] is not None and api_key_info[sql.BALANCE] <= credits_required:
+    #     return JSONResponse(
+    #         status_code=HTTP_429_TOO_MANY_REQUESTS,
+    #         content={"detail": "Insufficient credits - sorry!"},
+    #     )
+
+    # # Now check rate limiting
+    # with sql.get_db_connection() as conn:
+    #     rate_limit_exceeded = sql.rate_limit_exceeded(conn, api_key_info)
+    #     if rate_limit_exceeded:
+    #         return JSONResponse(
+    #             status_code=HTTP_429_TOO_MANY_REQUESTS,
+    #             content={"detail": "Rate limit exceeded - sorry!"},
+    #         )
+
+    response: Response = await call_next(request)
+
+    # bt.logging.debug(f"response: {response}")
+    # if response.status_code == 200:
+    #     with sql.get_db_connection() as conn:
+    #         sql.update_requests_and_credits(conn, api_key_info, credits_required)
+    #         sql.log_request(conn, api_key_info, request.url.path, credits_required)
+    #         conn.commit()
+    return response
+
+
+
+
 class ApiServer:
     app: FastAPI
     fast_server: FastAPIThreadedServer
@@ -134,6 +196,7 @@ class ApiServer:
 
         self.forward_fn = forward_fn
         self.app = FastAPI()
+        self.app.add_middleware(api_key_validator)
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         #self.app.middleware('http')(auth_rate_limiting_middleware)
 
@@ -210,95 +273,6 @@ class ApiServer:
             bt.logging.error(f"API get_rec error:  {e}")
             return JSONResponse(status_code=500,
                                 content={"detail": "error", "status_code": 500})
-        
-
-    # async def translate(self, request: Translate):
-
-    #     if (request.source_lang, request.target_lang) in self.lang_pairs:
-    #         source_lang = request.source_lang
-    #         bt.logging.trace(
-    #             f"Detected in lang_pairs "
-    #         )
-    #     elif request.source_lang == "auto":
-    #         source_lang, warning = self._detect_lang(request.source_texts, request.target_lang)
-    #         if not warning:
-    #             bt.logging.trace(
-    #                 f"Source lang: classified as {source_lang}"
-    #             )
-    #         else:
-    #             bt.logging.trace(
-    #                 f"Source lang: {warning}.  Classified as {source_lang}"
-    #             )
-    #     else:
-    #         return JSONResponse(
-    #             status_code=400,
-    #             content={
-    #                 "detail": "Invalid source_lang. Please provide a language code or set it to /'auto'",
-    #                 "translated_texts": []
-    #             })
-
-    #     # Recreate the synapse with the source_lang.
-    #     request = Translate(
-    #         source_lang=source_lang,
-    #         target_lang=request.target_lang,
-    #         source_texts=request.source_texts,
-    #         translated_texts=[],
-    #     )
-
-    #     request_lang_pair = (source_lang, request.target_lang)
-
-    #     if request_lang_pair not in self.lang_pairs:
-    #         return JSONResponse(
-    #             status_code=400, 
-    #             content={
-    #                 "detail": "Invalid language pair", 
-    #                 "translated_texts": []
-    #             }
-    #         )
-
-    #     for source_text in request.source_texts:
-    #         if len(source_text) > self.max_char :
-    #             return JSONResponse(
-    #                 status_code=400, 
-    #                 content={
-    #                     "detail": (
-    #                         "Source text is too long. "
-    #                         f"Must be under {self.max_char} characters"
-    #                     ), 
-    #                     "translated_texts": []
-    #                 }
-    #             )
-
-    #     for translated_text in request.translated_texts:
-    #         # also check the length of the translated text for good measure.
-    #         if len(translated_text) > self.max_char:
-    #             return JSONResponse(
-    #                 status_code=400, 
-    #                 content={
-    #                     "detail": (
-    #                         "Translated text is too long. "
-    #                         f"Must be under {self.max_char} characters"
-    #                     ), 
-    #                     "translated_texts": []
-    #                 }
-    #             )
-
-    #     if len(request.source_texts) > 2:
-    #         return JSONResponse(
-    #             status_code=400,
-    #             content={
-    #                 "detail": (
-    #                     "Batch size for source texts is too large. "
-    #                     "Please set it to <= 2"
-    #                 ), 
-    #                 "translated_texts": []
-    #             }
-    #         )
-
-    #     response = await self.forward_fn(request)
-    #     bt.logging.debug(f"API: response.translated_texts {response.translated_texts}")
-    #     return JSONResponse(status_code=200,
-    #                         content={"detail": "success", "translated_texts": response.translated_texts})
 
     def start(self):
         self.fast_server.start()
