@@ -4,20 +4,18 @@ import time
 import uvicorn
 import traceback
 import bittensor as bt
-
-
 from typing import Callable, Awaitable, List, Optional, Any
 from fastapi import FastAPI, Request, APIRouter, Response
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from bittensor.core.axon import FastAPIThreadedServer
 from template.protocol import BitrecsRequest
-#from pyngrok import ngrok
 
 ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 
 auth_data = dict()
 request_counts = {}
+
 
 def is_api_data_valid(data):
     if not isinstance(data, dict):
@@ -41,8 +39,7 @@ def is_api_data_valid(data):
 
 
 def load_api_config():
-    bt.logging.debug("Loading API config")
-
+    bt.logging.trace("Loading API config")
     try:
         if not os.path.exists("template/api/api.json"):
             raise Exception(f"{'template/api/api.json'} does not exist")
@@ -53,7 +50,7 @@ def load_api_config():
 
             valid, reason = is_api_data_valid(api_data)
             if not valid:
-                raise Exception(f"{'neurons/api.json'} is poorly formatted. {reason}")
+                raise Exception(f"{'api/api.json'} is poorly formatted. {reason}")
             if "change-me" in api_data["keys"]:
                 bt.logging.warning("YOU ARE USING THE DEFAULT API KEY. CHANGE IT FOR SECURITY REASONS.")
         return api_data
@@ -62,73 +59,15 @@ def load_api_config():
         traceback.print_exc()
 
 
-async def auth_rate_limiting_middleware(request: Request, call_next):
-    # Check if API key is valid
-    # TODO use an official "auth key" header 
-    # such that programs such as web browsers
-    # know to hide this info from JavaScript and other environments.
-    auth_api = request.headers.get('auth')
-    auth_data = load_api_config()
-    time_window = 60
-
-    bt.logging.info("auth_data", auth_data)
-
-    if auth_api not in auth_data["keys"].keys():
-        bt.logging.debug(f"Unauthorized key: {auth_api}")
-        return JSONResponse(status_code=401, content={"detail": "Unauthorized",
-                                                      "translated_texts": []})
-
-    requests_per_min = auth_data["keys"][auth_api]["requests_per_min"]
-
-    # Rate limiting
-    current_time = time.time()
-    if auth_api in request_counts:
-        requests, start_time = request_counts[auth_api]
-
-        if current_time - start_time > time_window:
-            # start a new time period
-            request_counts[auth_api] = (1, current_time)
-        elif requests < requests_per_min:
-            # same time period
-            request_counts[auth_api] = (requests + 1, start_time)
-        else:
-            bt.logging.debug(f"Rate limit exceeded for key: {auth_api}")
-            return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded", "translated_texts": []})
-    else:
-        request_counts[auth_api] = (1, current_time)
-
-    response = await call_next(request)
-    return response
-
-# def connect_ngrok_tunnel(local_port: int, domain: str) -> ngrok.NgrokTunnel:
-#     auth_token = os.environ.get('NGROK_AUTH_TOKEN', None)
-#     if auth_token is not None:
-#         ngrok.set_auth_token(auth_token)
-
-#     tunnel = ngrok.connect(
-#         addr=str(local_port),
-#         proto="http",
-#         # Domain is required.
-#         domain=domain
-#     )
-#     bt.logging.info(
-#         f"API is available over NGROK at {tunnel.public_url}"
-#     )
-
-#     return tunnel
-
-
 def _get_api_key(request: Request) -> Any:
     auth_header = request.headers.get("Authorization")
     if not auth_header:
         return None
     if auth_header.startswith("Bearer "):
         return auth_header.split(" ")[1]
-
     return auth_header
 
 
-#@app.middleware("http")
 async def api_key_validator(request, call_next) -> Response:
     if request.url.path in ["/favicon.ico"]:
         return await call_next(request)
@@ -137,33 +76,15 @@ async def api_key_validator(request, call_next) -> Response:
     if not api_key:
         return JSONResponse(
             status_code=400,
-            content={"detail": "API key is missing"},
+            content={"detail": "API key is missing"}
         )
 
-    # with sql.get_db_connection() as conn:
-    #     api_key_info = sql.get_api_key_info(conn, api_key)
-    api_key_info = load_api_config()    
-
+    api_key_info = load_api_config()
     if api_key_info is None:
-        return JSONResponse(status_code=401, content={"detail": "Invalid API key"})
-
-    #credits_required = 1  # TODO: make this non-constant in the future???? (i.e. dependent on number of pools)????
-
-    # Now check credits
-    # if api_key_info[sql.BALANCE] is not None and api_key_info[sql.BALANCE] <= credits_required:
-    #     return JSONResponse(
-    #         status_code=HTTP_429_TOO_MANY_REQUESTS,
-    #         content={"detail": "Insufficient credits - sorry!"},
-    #     )
-
-    # # Now check rate limiting
-    # with sql.get_db_connection() as conn:
-    #     rate_limit_exceeded = sql.rate_limit_exceeded(conn, api_key_info)
-    #     if rate_limit_exceeded:
-    #         return JSONResponse(
-    #             status_code=HTTP_429_TOO_MANY_REQUESTS,
-    #             content={"detail": "Rate limit exceeded - sorry!"},
-    #         )
+        return JSONResponse(status_code=401, content={"detail": "Invalid API key config"})
+    
+    if api_key not in api_key_info["keys"]:
+        return JSONResponse(status_code=401, content={"detail": "Invalid API key request"})
 
     response: Response = await call_next(request)
 
@@ -186,17 +107,9 @@ class ApiServer:
     #tunnel: Optional[ngrok.NgrokTunnel]
     #ngrok_domain: Optional[str]
 
-    def __init__(
-            self, 
-            axon_port: int,
-            forward_fn: ForwardFn,
-            api_json: str,            
-            #ngrok_domain: Optional[str]
-    ):
-
+    def __init__(self, axon_port: int, forward_fn: ForwardFn, api_json: str):
         self.forward_fn = forward_fn
-        self.app = FastAPI()
-        
+        self.app = FastAPI()        
         self.app.middleware('http')(api_key_validator)
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         #self.app.middleware('http')(auth_rate_limiting_middleware)
@@ -207,6 +120,7 @@ class ApiServer:
             port=axon_port,
             log_level="trace" if bt.logging.__trace_on__ else "critical"
         ))
+
         self.router = APIRouter()
         self.router.add_api_route(
             "/ping", 
@@ -221,7 +135,7 @@ class ApiServer:
        
         self.app.include_router(self.router)
         self.api_json = api_json
-        #self.ngrok_domain = ngrok_domain
+
         self.tunnel = None
         bt.logging.info(f"\033[1;32m API Server initialized \033[0m")
 
