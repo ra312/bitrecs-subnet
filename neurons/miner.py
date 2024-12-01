@@ -165,7 +165,11 @@ class Miner(BaseMinerNeuron):
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
         #final_results = [str(r) for r in results]
-        results = [eval(item) for item in results]
+        #results = [eval(item) for item in results]
+        final_results = []
+        for item in results:
+            item = item.rstrip('"').lstrip('"')
+            final_results.append(item)
 
         #results = [literal_eval(item) for item in results]
      
