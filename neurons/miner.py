@@ -29,6 +29,7 @@ from template.llms.prompt_factory import PromptFactory
 from template.llms.llama_local import OllamaLocal
 from template.llms.factory import LLM, LLMFactory
 from template.llms.open_router import OpenRouter
+from template.utils.uids import best_uid
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -98,6 +99,9 @@ class Miner(BaseMinerNeuron):
         except ValueError as ve:
             bt.logging.error(f"Invalid LLM provider: {ve}")
             sys.exit()
+
+        best_performing_uid = best_uid(self.metagraph)
+        bt.logging.info(f"Best performing UID: {best_performing_uid}")
 
 
     async def forward(

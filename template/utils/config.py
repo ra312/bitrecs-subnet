@@ -174,7 +174,7 @@ def add_miner_args(cls, parser):
     parser.add_argument(
         "--llm.provider",
         type=str,
-        default="OPEN_ROUTER",
+        default="OPEN_ROUTER", #OLLAMA_LOCAL, OPEN_ROUTER, CHAT_GPT, VLLM
         help="Which LLM to use for recs.",
     )
 
