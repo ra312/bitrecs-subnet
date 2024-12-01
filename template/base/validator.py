@@ -256,7 +256,6 @@ class BaseValidatorNeuron(BaseNeuron):
                         api_request = synapse_with_event.input_synapse
                         #TODO validate request
 
-
                         number_of_recs_desired = api_request.num_results
 
                         if number_of_recs_desired < 1 or number_of_recs_desired > 20:
@@ -269,7 +268,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             chosen_axons,
                             api_request,
                             deserialize=False,
-                            timeout=10 
+                            timeout=15
                         )
                         
                         bt.logging.trace(f"len(responses): {len(responses)}")
