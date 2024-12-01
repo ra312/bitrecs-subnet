@@ -94,7 +94,7 @@ class ChatGPTInterface:
     def query(self, user_prompt) -> str:
         router = ChatGPT(self.CHATGPT_API_KEY, model=self.model, 
                          system_prompt=self.system_prompt, temp=self.temp)
-        return router.call_chat_gpt(user_prompt, self.model)
+        return router.call_chat_gpt(user_prompt)
     
     
 class VllmInterface:
