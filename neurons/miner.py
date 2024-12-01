@@ -55,9 +55,7 @@ async def do_work(user_prompt: str,
 
     """
     bt.logging.info(f"do_work Prompt: {user_prompt}")
-    bt.logging.info(f"do_work LLM server: {server}")
-    if not model:
-        model = "llama3.1"
+    bt.logging.info(f"do_work LLM server: {server}")  
     bt.logging.info(f"do_work LLM model: {model}")
 
     factory = PromptFactory(sku=user_prompt, context=context, num_recs=num_recs, load_catalog=False)
@@ -138,12 +136,10 @@ class Miner(BaseMinerNeuron):
         num_recs = synapse.num_results
         try:
 
-            results = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)
-            #bt.logging.info(f"Calling {server}")
+            results = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)            
             bt.logging.info(f"LLM {model} Results2 count({len(results)})")
-            raise ValueError("Test Error")
-        except Exception as e:
-            #bt.logging.error(f"FATAL ERROR calling do_work: {e}")
+            
+        except Exception as e:            
             bt.logging.error(f"\033[31mFATAL ERROR calling do_work: {e!r} \033[0m")
             pass
 
