@@ -156,7 +156,8 @@ class ApiServer:
             # miner_uid: str
             # miner_public_key: str
             # reasoning: str
-            
+            bt.logging.debug(f"API get_rec response: {response.results}")
+
             rec = {
                     "user": response.user, 
                     "original_query": response.query,
