@@ -223,13 +223,12 @@ class BaseValidatorNeuron(BaseNeuron):
                     api_enabled = self.config.api.enabled
                     api_exclusive = self.config.api.exclusive
 
-                    bt.logging.info(f"api_enabled: {api_enabled}")
-                    bt.logging.info(f"api_exclusive: {api_exclusive}")
+                    bt.logging.info(f"api_enabled: {api_enabled} | api_exclusive {api_exclusive}")
 
                     synapse_with_event: Optional[SynapseWithEvent] = None
                     try:
                         synapse_with_event = api_queue.get(timeout=5)                        
-                        bt.logging.info(f"api_queue queue found a Request {synapse_with_event.input_synapse.name}")
+                        bt.logging.info(f"NEW API REQUEST {synapse_with_event.input_synapse.name}")
                     except Empty:
                         # No synapse from API server.
                         pass
@@ -241,12 +240,13 @@ class BaseValidatorNeuron(BaseNeuron):
                 
                         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
                         #available_uids = get_random_uids(self, k=8)
-                        bt.logging.trace(f"available_uids: {available_uids}")                        
+                        bt.logging.trace(f"available_uids: {available_uids}")
                      
                         chosen_uids = [0, 1, 2, 3, 4, 5, 6, 7, 8]
                         #chosen_uids = [0]
                         #chosen_uids = available_uids
-                        #np.append(chosen_uids, [1])                        
+                        #np.append(chosen_uids, [1])
+                                
                         
                         bt.logging.trace(f"len(chosen_uids): {len(chosen_uids)}")
                         bt.logging.trace(f"chosen_uids: {chosen_uids}")
@@ -285,11 +285,11 @@ class BaseValidatorNeuron(BaseNeuron):
                             continue
                             
                         selected_rec = rewards.argmax()
-                        winner = responses[selected_rec]
-                        #bt.logging.info(f"Winner: {winner}")
+                        elected = responses[selected_rec]
+                        #bt.logging.info(f"Selected: {elected}")
 
-                        winner.context = "" #save bandwidth
-                        synapse_with_event.output_synapse = winner
+                        elected.context = "" #save bandwidth
+                        synapse_with_event.output_synapse = elected
                         # Mark the synapse as processed, API will then return to the client
                         synapse_with_event.event.set()
 
@@ -591,7 +591,7 @@ class BaseValidatorNeuron(BaseNeuron):
         #          hotkeys=self.hotkeys)
         # logger.info("Saving validator state end.")
         write_timestamp(time.time())
-        pass
+                
 
     def load_state(self):
         """Loads the state of the validator from a file."""
