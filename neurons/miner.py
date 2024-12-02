@@ -305,6 +305,10 @@ class Miner(BaseMinerNeuron):
 # This is the main function, which runs the miner.
 if __name__ == "__main__":
     with Miner() as miner:
+        start_time = time.time()
         while True:
             bt.logging.info(f"Miner running... {time.time()}")
+            elapsed_time = int(time.time() - start_time)
+            if elapsed_time % 30 == 0:
+                print(f"Miner is configured for {miner.llm_provider} ")
             time.sleep(15)
