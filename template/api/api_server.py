@@ -145,9 +145,7 @@ class ApiServer:
             total_time = et - st            
             final_recs = []            
             # Remove single quotes from the string and convert items to JSON objects
-            #final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
-            
-            final_recs =  response.results
+            final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
             #bt.logging.trace(f"API get_rec final_recs: {final_recs}")
             response_text = "Bitrecs Took {:.2f} seconds to process request".format(total_time)
 
@@ -165,6 +163,7 @@ class ApiServer:
                     "miner_hotkey": response.miner_hotkey,
                     "reasoning": "testing"
             }
+
             #bt.logging.debug(f"API get_rec JSONResponse bitrecs_rec: {bitrecs_rec}")
             return JSONResponse(status_code=200, content=bitrecs_rec)
 
