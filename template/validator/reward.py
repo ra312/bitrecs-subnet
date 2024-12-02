@@ -179,7 +179,7 @@ def get_rewards(
         return np.zeros(len(responses), dtype=float)
         
     return np.array(
-        [reward(num_recs, ground_truth, response) for response in responses], dtype=float
+        [reward(num_recs, store_catalog, response) for response in responses], dtype=float
     )
 
 

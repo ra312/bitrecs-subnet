@@ -292,7 +292,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         if len(elected.results) == 0:
                             bt.logging.error("FATAL - Elected response has no results")
                             synapse_with_event.event.set()
-                            continue
+                            continue          
 
                         elected.context = "" #save bandwidth
                         synapse_with_event.output_synapse = elected
