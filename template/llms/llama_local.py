@@ -6,7 +6,7 @@ import requests
 
 
 class OllamaLocal():
-    def __init__(self, ollama_url: str, model: str, system_prompt: str, temp=0.1):
+    def __init__(self, ollama_url: str, model: str, system_prompt: str, temp=0.0):
         if not ollama_url:
             raise Exception
         self.ollama_url = ollama_url

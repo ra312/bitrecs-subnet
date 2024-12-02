@@ -38,8 +38,7 @@ class LLMFactory:
                 raise ValueError("Unknown LLM server")
             
     @staticmethod
-    def try_get_enum(value: str) -> LLM:
-        #bt.logging.info(f"Trying to get enum for {value}")
+    def try_get_enum(value: str) -> LLM:        
         match value.upper():
             case "OLLAMA_LOCAL":
                 return LLM.OLLAMA_LOCAL
@@ -67,6 +66,7 @@ class OllamaLocalInterface:
                           system_prompt=self.system_prompt, temp=self.temp)
         return llm.ask_ollama(user_prompt)
     
+    
 class OpenRouterInterface:
     def __init__(self, model, system_prompt, temp):
         self.model = model
@@ -80,6 +80,7 @@ class OpenRouterInterface:
         router = OpenRouter(self.OPENROUTER_API_KEY, model=self.model, 
                             system_prompt=self.system_prompt, temp=self.temp)
         return router.call_open_router(user_prompt)
+    
     
 class ChatGPTInterface:
     def __init__(self, model, system_prompt, temp):
