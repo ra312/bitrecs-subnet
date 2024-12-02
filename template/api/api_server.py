@@ -170,7 +170,6 @@ class ApiServer:
             }
 
             #bt.logging.debug(f"API get_rec JSONResponse bitrecs_rec: {bitrecs_rec}")
-
             return JSONResponse(status_code=200, content=bitrecs_rec)
 
         except Exception as e:
