@@ -54,7 +54,7 @@ class PromptFactory:
         
 
     @staticmethod
-    def tryparse_llm2(input_str: str) -> list:
+    def tryparse_llm(input_str: str) -> list:
         try:
             pattern = r'\[.*?\]'
             regex = re.compile(pattern, re.DOTALL)
