@@ -81,13 +81,13 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
             count += 1
         except json.decoder.JSONDecodeError as e:            
             bt.logging.trace(f"JSON JSONDecodeError ERROR: {e}")
-            continue
+            break
         except jsonschema.exceptions.ValidationError as e:            
             bt.logging.trace(f"JSON ValidationError ERROR: {e}")
-            continue
+            break
         except Exception as e:            
             bt.logging.trace(f"JSON Exception ERROR: {e}")
-            continue
+            break
 
     return count == len(results)
 
