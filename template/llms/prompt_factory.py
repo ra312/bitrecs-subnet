@@ -125,12 +125,13 @@ class PromptFactory:
             2) Find recommended products in the <context> provided and make a list of {} recommendations that compliment the query.
             3) The products recommended should be products a customer would buy before, along with, or after they have purchased the product from <query>.
             4) Return recommendations in a JSON array.
-            5) Double check the potential return data structure for empty fields, invalid values or errors.
-            6) Never explain yourself, no small talk, just return the final data in the correct array format. 
-            7) Your final response should only be an array of recommendations in JSON format.
-            8) Never say 'Based on the provided query' or 'I have determined'. 
-            9) Never explain yourself.
-            10) Return in JSON.
+            5) The order of the recommendations is important. The first recommendation should be the most relevant to the query.
+            6) Double check the potential return data structure for empty fields, invalid values or errors.
+            7) Never explain yourself, no small talk, just return the final data in the correct array format. 
+            8) Your final response should only be an array of recommendations in JSON format.
+            9) Never say 'Based on the provided query' or 'I have determined'. 
+            10) Never explain yourself.
+            11) Return in JSON.
             
         """.format(self.num_recs)
 
