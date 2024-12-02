@@ -163,6 +163,7 @@ def get_rewards(
 
     Args:
     - num_recs (int): The number of results expected per miner response.
+    - ground_truth (BitrecsRequest): The original ground truth which contains the catalog and query
     - responses (List[float]): A list of responses from the miner.
 
     Returns:

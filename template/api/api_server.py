@@ -142,7 +142,14 @@ class ApiServer:
             st = time.time()
             response = await self.forward_fn(request)
             et = time.time()
-            total_time = et - st            
+            total_time = et - st
+
+            if len(response.results) == 0:
+                bt.logging.error(f"API get_rec response has no results")
+                return JSONResponse(status_code=500,
+                                    content={"detail": "error", "status_code": 500})
+
+
             final_recs = []            
             # Remove single quotes from the string and convert items to JSON objects
             final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
