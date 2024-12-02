@@ -288,7 +288,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             
                         selected_rec = rewards.argmax()
                         elected = responses[selected_rec]
-                        #bt.logging.info(f"Selected: {elected}")
+                        bt.logging.info(f"FINAL RESULT AFTER SCORING: {elected}")
 
                         elected.context = "" #save bandwidth
                         synapse_with_event.output_synapse = elected
