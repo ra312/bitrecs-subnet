@@ -252,7 +252,8 @@ class BaseValidatorNeuron(BaseNeuron):
                         #available_uids = get_random_uids(self, k=8)
                         bt.logging.trace(f"available_uids: {available_uids}")
 
-                        chosen_uids = available_uids.tolist().extend(0)
+                        chosen_uids = available_uids.tolist().append(0)
+                                                
                         #chosen_uids = [0, 1, 2, 3, 4, 5, 6, 7, 8]
                         #chosen_uids = [0]
                         #chosen_uids = available_uids
