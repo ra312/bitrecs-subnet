@@ -70,10 +70,8 @@ async def do_work(user_prompt: str,
             return []
 
         llm_response = llm_response.replace("```json", "").replace("```", "").strip()
-        parsed_recs = PromptFactory.tryparse_llm(llm_response)
-        
-        bt.logging.trace(f"LLM response: {parsed_recs}")
-
+        parsed_recs = PromptFactory.tryparse_llm(llm_response)        
+        #bt.logging.trace(f"LLM response: {parsed_recs}")
         return parsed_recs
 
     except Exception as e:
