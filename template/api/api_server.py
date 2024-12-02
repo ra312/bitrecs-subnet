@@ -139,27 +139,22 @@ class ApiServer:
 
         try:            
             bt.logging.debug(f"API get_rec start forward")
+            st = time.time()
             response = await self.forward_fn(request)
-            #bt.logging.debug(f"API get_rec response:  {response}")
-            final_recs = []
-
-            # for item in response.results:                
-            #     item = item.rstrip('"').lstrip('"')
-            #     bt.logging.trace(f"API get_rec item: {item}")     
-            #     thing = json.dumps(item)
-            #     final_recs.append(thing)
-            
-            #results = [json.loads(item.replace('"', '')) for item in response.results]
-            
+            et = time.time()
+            total_time = et - st            
+            final_recs = []            
+            # Remove single quotes from the string and convert items to JSON objects
             final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
             #bt.logging.trace(f"API get_rec final_recs: {final_recs}")
+            response_text = "Bitrecs Took {:.2f} seconds to process request".format(total_time)
 
             bitrecs_rec = {
                     "user": response.user, 
                     "original_query": response.query,
                     "status_code": "200",
-                    "status_text": "OK",
-                    "response_text": "Success text",
+                    "status_text": "OK", #front end widgets expects this do not change
+                    "response_text": response_text,
                     "created_at": response.created_at,
                     "results": final_recs,
                     "models_used": response.models_used,
@@ -168,7 +163,6 @@ class ApiServer:
                     "miner_hotkey": response.miner_hotkey,
                     "reasoning": "testing"
             }
-
             #bt.logging.debug(f"API get_rec JSONResponse bitrecs_rec: {bitrecs_rec}")
             return JSONResponse(status_code=200, content=bitrecs_rec)
 
