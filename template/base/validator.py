@@ -228,7 +228,6 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     api_enabled = self.config.api.enabled
                     api_exclusive = self.config.api.exclusive
-
                     bt.logging.info(f"api_enabled: {api_enabled} | api_exclusive {api_exclusive}")
 
                     synapse_with_event: Optional[SynapseWithEvent] = None
@@ -242,7 +241,7 @@ class BaseValidatorNeuron(BaseNeuron):
                     if synapse_with_event is not None and api_enabled: #API request
                         bt.logging.info("** Processing synapse from API server **")
 
-                        # Validate the input synampse
+                        # Validate the input synapse
                         if not self.validate_br_request(synapse_with_event.input_synapse):
                             bt.logging.error("Request failed Validation, skipped.")
                             synapse_with_event.event.set()
@@ -253,18 +252,15 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.trace(f"available_uids: {available_uids}")
 
                         chosen_uids : list[int] = available_uids.tolist()                        
-                        chosen_uids.append(1) #add self uid
+                        chosen_uids.append(1) #add local miner for now 
                         #chosen_uids = [0, 1, 2, 3, 4, 5, 6, 7, 8]                        
-                        
-                        bt.logging.trace(f"len(chosen_uids): {len(chosen_uids)}")
                         bt.logging.trace(f"chosen_uids: {chosen_uids}")
 
                         chosen_axons = [self.metagraph.axons[uid] for uid in chosen_uids]
                         #bt.logging.trace(f"chosen_axons: {chosen_axons}")
 
                         api_request = synapse_with_event.input_synapse
-                        number_of_recs_desired = api_request.num_results                 
-
+                        number_of_recs_desired = api_request.num_results
                         # Send request to the miner population
                         responses = self.dendrite.query(
                             chosen_axons,
@@ -272,7 +268,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             deserialize=False,
                             timeout=MAX_DENDRITE_TIMEOUT
                         )
-                        
+
                         bt.logging.trace(f"Miners responded with {len(responses)} responses")
 
                         # Adjust the scores based on responses from miners.
@@ -290,8 +286,9 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.info(f"FINAL RESULT AFTER SCORING: {elected}")
                         if len(elected.results) == 0:
                             bt.logging.error("FATAL - Elected response has no results")
+                            #TODO this causes empty results back to the client resulting in poor UX fix in API?
                             synapse_with_event.event.set()
-                            continue          
+                            continue
 
                         elected.context = "" #save bandwidth
                         synapse_with_event.output_synapse = elected
@@ -299,9 +296,9 @@ class BaseValidatorNeuron(BaseNeuron):
                         synapse_with_event.event.set()
 
                         bt.logging.info(f"Scored responses: {rewards}")
-                        self.update_scores(rewards, chosen_uids)                        
+                        self.update_scores(rewards, chosen_uids) 
 
-                    else:     
+                    else:
                         if not api_exclusive: #Regular validator loop                
                             bt.logging.info("Processing synthetic concurrent forward")
                             self.loop.run_until_complete(self.concurrent_forward())
