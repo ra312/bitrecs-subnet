@@ -1,5 +1,3 @@
-
-
 import os
 import sys
 import time
@@ -11,6 +9,8 @@ from enum import Enum
 
 from template.llms.llama_local import OllamaLocal
 from template.llms.open_router import OpenRouter
+from template.llms.chat_gpt import ChatGPT
+
 
 class LLM(Enum):
     OLLAMA_LOCAL = 1
@@ -21,52 +21,86 @@ class LLM(Enum):
 
 class LLMFactory:
 
-    def query_llm(self, server: LLM, model: str, system_prompt="You are a helpful assistant", temp=0.1, user_prompt="") -> str:
+    @staticmethod
+    def query_llm(server: LLM, model: str, 
+                  system_prompt="You are a helpful assistant", 
+                  temp=0.1, user_prompt="") -> str:
         match server:
             case LLM.OLLAMA_LOCAL:
-                return OllamaLocal(model, system_prompt, temp).query(user_prompt)
+                return OllamaLocalInterface(model, system_prompt, temp).query(user_prompt)
             case LLM.OPEN_ROUTER:
-                return OpenRouter(model, system_prompt, temp).query(user_prompt)
+                return OpenRouterInterface(model, system_prompt, temp).query(user_prompt)
             case LLM.CHAT_GPT:
-                return ChatGPT(model, system_prompt, temp).query(user_prompt)
+                return ChatGPTInterface(model, system_prompt, temp).query(user_prompt)
             case LLM.VLLM:
-                return vLLM(model, system_prompt, temp).query(user_prompt)
+                return VllmInterface(model, system_prompt, temp).query(user_prompt)
+            case _:
+                raise ValueError("Unknown LLM server")
+            
+    @staticmethod
+    def try_get_enum(value: str) -> LLM:
+        #bt.logging.info(f"Trying to get enum for {value}")
+        match value.upper():
+            case "OLLAMA_LOCAL":
+                return LLM.OLLAMA_LOCAL
+            case "OPEN_ROUTER":
+                return LLM.OPEN_ROUTER
+            case "CHAT_GPT":
+                return LLM.CHAT_GPT
+            case "VLLM":
+                return LLM.VLLM
             case _:
                 raise ValueError("Unknown LLM server")
         
         
-class OllamaLocal():
+class OllamaLocalInterface:
+    def __init__(self, model, system_prompt, temp):
+        self.model = model
+        self.system_prompt = system_prompt
+        self.temp = temp        
+        self.OLLAMA_LOCAL_URL = os.getenv("OLLAMA_LOCAL_URL")
+        if not self.OLLAMA_LOCAL_URL:
+             bt.logging.error("OLLAMA_LOCAL_URL not set.")        
+    
+    def query(self, user_prompt) -> str:
+        llm = OllamaLocal(ollama_url=self.OLLAMA_LOCAL_URL, model=self.model, 
+                          system_prompt=self.system_prompt, temp=self.temp)
+        return llm.ask_ollama(user_prompt)
+    
+class OpenRouterInterface:
+    def __init__(self, model, system_prompt, temp):
+        self.model = model
+        self.system_prompt = system_prompt
+        self.temp = temp
+        self.OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+        if not self.OPENROUTER_API_KEY:
+            raise ValueError("OPENROUTER_API_KEY is not set in .env file")
+    
+    def query(self, user_prompt) -> str:
+        router = OpenRouter(self.OPENROUTER_API_KEY, model=self.model, 
+                            system_prompt=self.system_prompt, temp=self.temp)
+        return router.call_open_router(user_prompt)
+    
+class ChatGPTInterface:
+    def __init__(self, model, system_prompt, temp):
+        self.model = model
+        self.system_prompt = system_prompt
+        self.temp = temp
+        self.CHATGPT_API_KEY = os.getenv("CHATGPT_API_KEY")
+        if not self.CHATGPT_API_KEY:            
+            raise ValueError("CHATGPT_API_KEY is not set in .env file")        
+        
+    def query(self, user_prompt) -> str:
+        router = ChatGPT(self.CHATGPT_API_KEY, model=self.model, 
+                         system_prompt=self.system_prompt, temp=self.temp)
+        return router.call_chat_gpt(user_prompt)
+    
+    
+class VllmInterface:
     def __init__(self, model, system_prompt, temp):
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
     
-    def query(self, user_prompt):
-        return ""
-    
-class OpenRouter():
-    def __init__(self, model, system_prompt, temp):
-        self.model = model
-        self.system_prompt = system_prompt
-        self.temp = temp
-    
-    def query(self, user_prompt):
-        return ""
-    
-class ChatGPT():
-    def __init__(self, model, system_prompt, temp):
-        self.model = model
-        self.system_prompt = system_prompt
-        self.temp = temp
-    
-    def query(self, user_prompt):
-        return ""
-    
-class vLLM():
-    def __init__(self, model, system_prompt, temp):
-        self.model = model
-        self.system_prompt = system_prompt
-        self.temp = temp
-    
-    def query(self, user_prompt):
+    def query(self, user_prompt) -> str:
         return ""

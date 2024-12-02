@@ -171,6 +171,15 @@ def add_miner_args(cls, parser):
         help="Wandb entity to log to.",
     )
 
+    parser.add_argument(
+        "--llm.provider",
+        type=str,
+        default="OPEN_ROUTER", #OLLAMA_LOCAL, OPEN_ROUTER, CHAT_GPT, VLLM
+        help="Which LLM to use for recs.",
+    )
+
+
+
 
 def add_validator_args(cls, parser):
     """Add validator specific arguments to the parser."""
@@ -200,7 +209,7 @@ def add_validator_args(cls, parser):
         "--neuron.sample_size",
         type=int,
         help="The number of miners to query in a single step.",
-        default=50,
+        default=8,
     )
 
     parser.add_argument(

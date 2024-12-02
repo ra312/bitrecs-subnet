@@ -27,16 +27,24 @@ from template.base.miner import BaseMinerNeuron
 from template.protocol import BitrecsRequest
 from template.llms.prompt_factory import PromptFactory
 from template.llms.llama_local import OllamaLocal
-from template.llms.factory import LLM
+from template.llms.factory import LLM, LLMFactory
+from template.llms.open_router import OpenRouter
+from template.utils.uids import best_uid
+from ast import literal_eval
+
 from dotenv import load_dotenv
 load_dotenv()
 
 
-async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: str, system_prompt="You are a helpful assistant.") -> typing.List[str]:
+async def do_work(user_prompt: str, 
+                  context: str, 
+                  num_recs, 
+                  server: LLM, 
+                  model: str, 
+                  system_prompt="You are a helpful assistant.") -> typing.List[str]:
     """
     Do your miner work here. This function is called by the forward function to generate recs.
     You can use any method you prefer to generate recs. 
-    In this example, we are using a local instance of ollama.
 
     Args:
         user_prompt (str): The user query.
@@ -48,32 +56,22 @@ async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: 
 
     """
     bt.logging.info(f"do_work Prompt: {user_prompt}")
-    bt.logging.info(f"do_work LLM server: {server}")
-    if not model:
-        model = "llama3.1"
+    bt.logging.info(f"do_work LLM server: {server}")  
     bt.logging.info(f"do_work LLM model: {model}")
 
-    OLLAMA_LOCAL_URL = os.getenv("OLLAMA_LOCAL_URL")
-    if not OLLAMA_LOCAL_URL or len(OLLAMA_LOCAL_URL) < 10:
-        bt.logging.error("OLLAMA_LOCAL_URL not set.")
-        return []    
-    bt.logging.info(f"do_work LLM OLLAMA_LOCAL_URL: {OLLAMA_LOCAL_URL}")
-
     factory = PromptFactory(sku=user_prompt, context=context, num_recs=num_recs, load_catalog=False)
-    prompt = factory.generate_prompt()
-    bt.logging.info(f"do_work LLM prompt: {prompt}")
+    prompt = factory.generate_prompt()    
+    system_prompt = "You are a helpful assistant."
     
-    llm = OllamaLocal(ollama_url=OLLAMA_LOCAL_URL, model=model, system_prompt=system_prompt, temp=0.1)
-
-    try:
-
-        llm_response = llm.ask_ollama(prompt)
+    try:        
+        llm_response = LLMFactory.query_llm(server=server, model=model, system_prompt=system_prompt, temp=0.1, user_prompt=prompt)
         if not llm_response or len(llm_response) < 10:
             bt.logging.error("LLM response is empty.")
             return []
 
         llm_response = llm_response.replace("```json", "").replace("```", "").strip()
-        parsed_recs = PromptFactory.tryparse_llm(llm_response)
+        parsed_recs = PromptFactory.tryparse_llm(llm_response)        
+        #bt.logging.trace(f"LLM response: {parsed_recs}")
         return parsed_recs
 
     except Exception as e:
@@ -85,7 +83,14 @@ async def do_work(user_prompt: str, context: str, num_recs, server: LLM, model: 
 class Miner(BaseMinerNeuron):
     """
     Main miner class which generates product recommendations based on incoming requests.
-    You are encouraged to modify this class to generate better recs using whatever method you prefer.
+    You are encouraged to modify this class to generate high quality recommendations using whatever method you prefer.
+
+    Default: By default this miner uses OPEN_ROUTER and google/gemini-flash-1.5-8b to generate recommendations.
+    
+    You can override this by setting the --llm.provider argument in the config.
+    For example, --llm.provider OLLAMA_LOCAL will use the local ollama instance to generate recommendations.
+
+    Note: check your .env file for the appropriate API key settings for the LLM provider configured.
 
     """
 
@@ -93,6 +98,20 @@ class Miner(BaseMinerNeuron):
         super(Miner, self).__init__(config=config)
 
         bt.logging.info(f"\033[1;32m 🐸 Bitrecs Miner started uid: {self.uid}\033[0m")
+
+        try:
+            self.llm = self.config.llm.provider
+            provider = LLMFactory.try_get_enum(self.llm)
+            bt.logging.info(f"\033[1;35m Miner LLM Provider: [{self.llm}]\033[0m")
+            self.llm_provider = provider
+        except ValueError as ve:
+            bt.logging.error(f"Invalid LLM provider: {ve}")
+            sys.exit()
+
+        best_performing_uid = best_uid(self.metagraph)        
+        if self.uid == best_performing_uid:
+            bt.logging.info(f"\033[1;32m 🐸 You are the BEST performing miner in the subnet, keep it up!\033[0m")
+
 
     async def forward(
         self, synapse: BitrecsRequest
@@ -107,43 +126,50 @@ class Miner(BaseMinerNeuron):
             template.protocol.BitrecsRequest: The synapse object with the recs - same object modified with updated fields.
 
         """
-        bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))                
+        bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))
 
-        #results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]      
-
-        # things = [["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"], 
-        #           ["result4A - rare", "result5A - common"],
-        #           ["result1B - superior", "result2B - exalted", "result3B - ornate"],
-        #           ["result1C - superior", "result2C - exalted", "result3C - ornate", "result4C - rare"]]
-        # results = random.choice(things)
+        #results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]
 
         results = []
        
         bt.logging.info(f"User Query: {synapse.query }")
-
-        #model = "llama3.2"
-        model = "llama3.1"
-
-        server = LLM.OLLAMA_LOCAL
+        server = self.llm_provider       
+        match server:
+            case LLM.OLLAMA_LOCAL:
+                model = "llama3.1"                
+            case LLM.OPEN_ROUTER:
+                model = "google/gemini-flash-1.5-8b"
+            case LLM.CHAT_GPT:
+                model = "gpt-4o-mini"
+            case LLM.VLLM:
+                model = ""     
+            case _:
+                bt.logging.error("Unknown LLM server")
+                raise ValueError("Unknown LLM server")
+        bt.logging.info(f"LLM: {server} - Model: {model}")
+      
         context = synapse.context
         num_recs = synapse.num_results
         try:
-            results2 = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)
-            bt.logging.info(f"Calling {server}")
-            bt.logging.info(f"LLM {model} Results2 count({len(results2)})")
-            bt.logging.info(f"{results2}")
 
-            #if len(results2) > 0:
-            results = results2
-
-        except Exception as e:
-            bt.logging.error(f"Error calling do_work: {e}")
+            results = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)            
+            bt.logging.info(f"LLM {model} - Results: count ({len(results)})")
+            
+        except Exception as e:            
+            bt.logging.error(f"\033[31mFATAL ERROR calling do_work: {e!r} \033[0m")
             pass
 
         utc_now = datetime.now(timezone.utc)
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
-        final_results = [str(r) for r in results]
+        final_results = []
+        results = [str(r) for r in results]
+        for r in results:
+            r = r.rstrip('"').lstrip('"')
+            final_results.append(r)
+
+        #results = [eval(item) for item in results]
+        #results = [literal_eval(item) for item in results]
      
         output_synapse=BitrecsRequest(
             name=synapse.name, 

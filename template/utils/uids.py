@@ -69,3 +69,7 @@ def clamp(min: int, max: int, x: int) -> int:
     if x>max:
         return max
     return x
+
+def best_uid(metagraph: bt.metagraph) -> int:
+    """Returns the best performing UID in the metagraph."""
+    return max(range(metagraph.n), key=lambda uid: metagraph.I[uid].item())

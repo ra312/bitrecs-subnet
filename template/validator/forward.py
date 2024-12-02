@@ -47,8 +47,8 @@ def get_bitrecs_dummy_request(num_results) -> BitrecsRequest:
                        created_at=created_at, 
                        num_results=num_results, 
                        site_key="site1", 
-                       results=[], 
-                       models_used=[], 
+                       results=[""], 
+                       models_used=[""], 
                        miner_hotkey="", 
                        miner_uid="")
     return p
@@ -65,10 +65,13 @@ async def forward(self, pr: BitrecsRequest = None):
         pr (:obj:`template.protocol.BitrecsRequest`): The end user request object to be sent to the network (from API)
 
     """
+    bt.logging.info(f"VALIDATOR FORWARD Forwarding request: {pr}")
+
     #num_results = random.choice([1, 2, 3, 4, 5])  
     num_results = 0
 
     if pr is not None: #API REQUEST
+        raise NotImplementedError("API requests not implemented yet")
         next_request = pr
         num_results = pr.num_results
     else:
@@ -84,23 +87,21 @@ async def forward(self, pr: BitrecsRequest = None):
 
     # The dendrite client queries the network.
     responses = await self.dendrite(        
-        axons=[self.metagraph.axons[uid] for uid in miner_uids],        
-        #synapse=Dummy(dummy_input=self.step),
-        synapse=next_request,
-        # All responses have the deserialize function called on them before returning.
-        # You are encouraged to define your own deserialization function.
+        axons=[self.metagraph.axons[uid] for uid in miner_uids],
+        synapse=next_request,        
         deserialize=False,
     )
     end_time = time.time()
     wall_time = end_time - start_time
     bt.logging.info(f"forward Wall time: {wall_time}")
-
-    # Log the results for monitoring purposes.
+    
     bt.logging.info(f"Received {len(responses)} responses: {responses}")
     
     # Adjust the scores based on responses from miners.
-    rewards = get_rewards(num_recs=num_recs, responses=responses)
-    #assert len(miner_uids) == len(responses) == len(rewards)
+    rewards = get_rewards(num_recs=num_recs, 
+                          ground_truth=next_request,
+                           responses=responses)    
+    
     if not len(miner_uids) == len(responses) == len(rewards):
         bt.logging.error(f"MISMATCH Error in rewards: {rewards}, responses: {responses}, miner_uids: {miner_uids}")
 

@@ -4,21 +4,20 @@ import time
 import uvicorn
 import traceback
 import bittensor as bt
-
-from typing import Callable, Awaitable, List, Optional
-from bittensor.core.axon import FastAPIThreadedServer
-from fastapi import  APIRouter
+from typing import Callable, Awaitable, List, Optional, Any
+from fastapi import FastAPI, Request, APIRouter, Response
 from fastapi.responses import JSONResponse
-from fastapi import FastAPI, Request
+from fastapi.middleware.gzip import GZipMiddleware
+from bittensor.core.axon import FastAPIThreadedServer
 from template.protocol import BitrecsRequest
-#from pyngrok import ngrok
 
 ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 
 auth_data = dict()
 request_counts = {}
 
-def is_api_data_valid(data):
+
+def is_api_data_valid(data) -> tuple[bool, str]:
     if not isinstance(data, dict):
         return False, "Not a dictionary"
 
@@ -39,101 +38,70 @@ def is_api_data_valid(data):
     return True, "Formatting is good"
 
 
-def load_api_config():
-    bt.logging.debug("Loading API config")
-
+def load_api_config() -> Optional[dict]:
+    bt.logging.trace("Loading API config")
     try:
         if not os.path.exists("template/api/api.json"):
             raise Exception(f"{'template/api/api.json'} does not exist")
 
         with open("template/api/api.json", 'r') as file:
             api_data = json.load(file)
-            bt.logging.trace("api_data", api_data)
-
+            #bt.logging.trace("api_data", api_data)
             valid, reason = is_api_data_valid(api_data)
             if not valid:
-                raise Exception(f"{'neurons/api.json'} is poorly formatted. {reason}")
+                raise Exception(f"{'api/api.json'} is poorly formatted. {reason}")
             if "change-me" in api_data["keys"]:
-                bt.logging.warning("YOU ARE USING THE DEFAULT API KEY. CHANGE IT FOR SECURITY REASONS.")
+                bt.logging.error("YOU ARE USING THE DEFAULT API KEY. CHANGE IT FOR SECURITY REASONS.")
         return api_data
     except Exception as e:
         bt.logging.error("Error loading API config:", e)
         traceback.print_exc()
 
 
-async def auth_rate_limiting_middleware(request: Request, call_next):
-    # Check if API key is valid
-    # TODO use an official "auth key" header 
-    # such that programs such as web browsers
-    # know to hide this info from JavaScript and other environments.
-    auth_api = request.headers.get('auth')
-    auth_data = load_api_config()
-    time_window = 60
+def _get_api_key(request: Request) -> Any:
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return None
+    if auth_header.startswith("Bearer "):
+        return auth_header.split(" ")[1]
+    return auth_header
 
-    bt.logging.info("auth_data", auth_data)
 
-    if auth_api not in auth_data["keys"].keys():
-        bt.logging.debug(f"Unauthorized key: {auth_api}")
-        return JSONResponse(status_code=401, content={"detail": "Unauthorized",
-                                                      "translated_texts": []})
+async def api_key_validator(request, call_next) -> Response:
+    if request.url.path in ["/favicon.ico"]:
+        return await call_next(request)
 
-    requests_per_min = auth_data["keys"][auth_api]["requests_per_min"]
+    api_key = _get_api_key(request)
+    if not api_key:
+        return JSONResponse(
+            status_code=400,
+            content={"detail": "API key is missing"}
+        )
 
-    # Rate limiting
-    current_time = time.time()
-    if auth_api in request_counts:
-        requests, start_time = request_counts[auth_api]
+    api_key_info = load_api_config()
+    if api_key_info is None:
+        return JSONResponse(status_code=401, content={"detail": "Invalid API key config"})
+    
+    if api_key not in api_key_info["keys"]:
+        return JSONResponse(status_code=401, content={"detail": "Invalid API key request"})
 
-        if current_time - start_time > time_window:
-            # start a new time period
-            request_counts[auth_api] = (1, current_time)
-        elif requests < requests_per_min:
-            # same time period
-            request_counts[auth_api] = (requests + 1, start_time)
-        else:
-            bt.logging.debug(f"Rate limit exceeded for key: {auth_api}")
-            return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded", "translated_texts": []})
-    else:
-        request_counts[auth_api] = (1, current_time)
-
-    response = await call_next(request)
+    response: Response = await call_next(request)
     return response
 
-# def connect_ngrok_tunnel(local_port: int, domain: str) -> ngrok.NgrokTunnel:
-#     auth_token = os.environ.get('NGROK_AUTH_TOKEN', None)
-#     if auth_token is not None:
-#         ngrok.set_auth_token(auth_token)
 
-#     tunnel = ngrok.connect(
-#         addr=str(local_port),
-#         proto="http",
-#         # Domain is required.
-#         domain=domain
-#     )
-#     bt.logging.info(
-#         f"API is available over NGROK at {tunnel.public_url}"
-#     )
 
-#     return tunnel
 
 class ApiServer:
     app: FastAPI
     fast_server: FastAPIThreadedServer
     router: APIRouter
-    forward_fn: ForwardFn
-    #tunnel: Optional[ngrok.NgrokTunnel]
-    ngrok_domain: Optional[str]
+    forward_fn: ForwardFn  
 
-    def __init__(
-            self, 
-            axon_port: int,
-            forward_fn: ForwardFn,
-            api_json: str,            
-            ngrok_domain: Optional[str]
-    ):
-
+    def __init__(self, axon_port: int, forward_fn: ForwardFn, api_json: str):
         self.forward_fn = forward_fn
-        self.app = FastAPI()
+        self.app = FastAPI()        
+        self.app.middleware('http')(api_key_validator)
+        self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         #self.app.middleware('http')(auth_rate_limiting_middleware)
 
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
@@ -142,6 +110,7 @@ class ApiServer:
             port=axon_port,
             log_level="trace" if bt.logging.__trace_on__ else "critical"
         ))
+
         self.router = APIRouter()
         self.router.add_api_route(
             "/ping", 
@@ -156,7 +125,7 @@ class ApiServer:
        
         self.app.include_router(self.router)
         self.api_json = api_json
-        self.ngrok_domain = ngrok_domain
+
         self.tunnel = None
         bt.logging.info(f"\033[1;32m API Server initialized \033[0m")
 
@@ -170,134 +139,37 @@ class ApiServer:
 
         try:            
             bt.logging.debug(f"API get_rec start forward")
+            st = time.time()
             response = await self.forward_fn(request)
-            bt.logging.debug(f"API get_rec response: {response}")
-            bt.logging.debug(f"API get_rec response type: {type(response)}")
+            et = time.time()
+            total_time = et - st            
+            final_recs = []            
+            # Remove single quotes from the string and convert items to JSON objects
+            final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
+            #bt.logging.trace(f"API get_rec final_recs: {final_recs}")
+            response_text = "Bitrecs Took {:.2f} seconds to process request".format(total_time)
 
-          #class ProductRecResponse:
-            # user: str
-            # original_query: str    
-            # status_code: int
-            # status_text: str
-            # response_text: str
-            # created_at: str
-            # results: List[str]
-            # models_used: List[str]
-            # catalog_size: int
-            # miner_uid: str
-            # miner_public_key: str
-            # reasoning: str
-            
-            rec = {
+            bitrecs_rec = {
                     "user": response.user, 
                     "original_query": response.query,
                     "status_code": "200",
-                    "status_text": "Success",
-                    "response_text": "Success text",
+                    "status_text": "OK", #front end widgets expects this do not change
+                    "response_text": response_text,
                     "created_at": response.created_at,
-                    "results": response.results,
+                    "results": final_recs,
                     "models_used": response.models_used,
                     "catalog_size": "0",
                     "miner_uid": response.miner_uid,
                     "miner_hotkey": response.miner_hotkey,
                     "reasoning": "testing"
             }
-
-            return JSONResponse(status_code=200, content=rec)
+            #bt.logging.debug(f"API get_rec JSONResponse bitrecs_rec: {bitrecs_rec}")
+            return JSONResponse(status_code=200, content=bitrecs_rec)
 
         except Exception as e:
             bt.logging.error(f"API get_rec error:  {e}")
             return JSONResponse(status_code=500,
                                 content={"detail": "error", "status_code": 500})
-        
-
-    # async def translate(self, request: Translate):
-
-    #     if (request.source_lang, request.target_lang) in self.lang_pairs:
-    #         source_lang = request.source_lang
-    #         bt.logging.trace(
-    #             f"Detected in lang_pairs "
-    #         )
-    #     elif request.source_lang == "auto":
-    #         source_lang, warning = self._detect_lang(request.source_texts, request.target_lang)
-    #         if not warning:
-    #             bt.logging.trace(
-    #                 f"Source lang: classified as {source_lang}"
-    #             )
-    #         else:
-    #             bt.logging.trace(
-    #                 f"Source lang: {warning}.  Classified as {source_lang}"
-    #             )
-    #     else:
-    #         return JSONResponse(
-    #             status_code=400,
-    #             content={
-    #                 "detail": "Invalid source_lang. Please provide a language code or set it to /'auto'",
-    #                 "translated_texts": []
-    #             })
-
-    #     # Recreate the synapse with the source_lang.
-    #     request = Translate(
-    #         source_lang=source_lang,
-    #         target_lang=request.target_lang,
-    #         source_texts=request.source_texts,
-    #         translated_texts=[],
-    #     )
-
-    #     request_lang_pair = (source_lang, request.target_lang)
-
-    #     if request_lang_pair not in self.lang_pairs:
-    #         return JSONResponse(
-    #             status_code=400, 
-    #             content={
-    #                 "detail": "Invalid language pair", 
-    #                 "translated_texts": []
-    #             }
-    #         )
-
-    #     for source_text in request.source_texts:
-    #         if len(source_text) > self.max_char :
-    #             return JSONResponse(
-    #                 status_code=400, 
-    #                 content={
-    #                     "detail": (
-    #                         "Source text is too long. "
-    #                         f"Must be under {self.max_char} characters"
-    #                     ), 
-    #                     "translated_texts": []
-    #                 }
-    #             )
-
-    #     for translated_text in request.translated_texts:
-    #         # also check the length of the translated text for good measure.
-    #         if len(translated_text) > self.max_char:
-    #             return JSONResponse(
-    #                 status_code=400, 
-    #                 content={
-    #                     "detail": (
-    #                         "Translated text is too long. "
-    #                         f"Must be under {self.max_char} characters"
-    #                     ), 
-    #                     "translated_texts": []
-    #                 }
-    #             )
-
-    #     if len(request.source_texts) > 2:
-    #         return JSONResponse(
-    #             status_code=400,
-    #             content={
-    #                 "detail": (
-    #                     "Batch size for source texts is too large. "
-    #                     "Please set it to <= 2"
-    #                 ), 
-    #                 "translated_texts": []
-    #             }
-    #         )
-
-    #     response = await self.forward_fn(request)
-    #     bt.logging.debug(f"API: response.translated_texts {response.translated_texts}")
-    #     return JSONResponse(status_code=200,
-    #                         content={"detail": "success", "translated_texts": response.translated_texts})
 
     def start(self):
         self.fast_server.start()
