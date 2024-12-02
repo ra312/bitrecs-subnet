@@ -48,6 +48,8 @@ class Validator(BaseValidatorNeuron):
         - Generating the query
         - Querying the miners
         - Getting the responses
+        - Selecting a top candidate from the responses
+        - Return top candidate to the client
         - Rewarding the miners
         - Updating the scores
         """                
