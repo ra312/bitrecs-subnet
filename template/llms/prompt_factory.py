@@ -123,8 +123,8 @@ class PromptFactory:
             
             1) Observe the user <query>.
             2) Find recommended products in the <context> provided and make a list of {} recommendations that compliment the query.
-            3) The products recommended should be products a customer would buy after they have purchased the product from <query>.
-            4) Return recommendations in a JSON array similar to the Example Result Format.
+            3) The products recommended should be products a customer would buy before, along with, or after they have purchased the product from <query>.
+            4) Return recommendations in a JSON array.
             5) Double check the potential return data structure for empty fields, invalid values or errors.
             6) Never explain yourself, no small talk, just return the final data in the correct array format. 
             7) Your final response should only be an array of recommendations in JSON format.
