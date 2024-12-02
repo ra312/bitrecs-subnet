@@ -213,7 +213,7 @@ class BaseValidatorNeuron(BaseNeuron):
         
         bt.logging.info(f"Validator starting at block: {self.block}")
 
-        bt.logging.info(f"Validator SAMPLE SIZE: {self.config.neuron.sample_size}")       
+        bt.logging.info(f"Validator SAMPLE SIZE: {self.config.neuron.sample_size}")
 
         # This loop maintains the validator's operations until intentionally stopped.
         try:
@@ -437,7 +437,6 @@ class BaseValidatorNeuron(BaseNeuron):
         
         # Process the raw weights to final_weights via subtensor limitations.
         try:
-
             (
                 processed_weight_uids,
                 processed_weights,
@@ -591,7 +590,7 @@ class BaseValidatorNeuron(BaseNeuron):
         #          hotkeys=self.hotkeys)
         # logger.info("Saving validator state end.")
         write_timestamp(time.time())
-                
+
 
     def load_state(self):
         """Loads the state of the validator from a file."""

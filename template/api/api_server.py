@@ -158,7 +158,7 @@ class ApiServer:
                     "user": response.user, 
                     "original_query": response.query,
                     "status_code": "200",
-                    "status_text": "Success",
+                    "status_text": "OK",
                     "response_text": "Success text",
                     "created_at": response.created_at,
                     "results": final_recs,
