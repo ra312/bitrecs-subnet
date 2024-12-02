@@ -40,6 +40,7 @@ from dataclasses import dataclass
 from queue import SimpleQueue, Empty
 from template.utils.uids import check_uid_availability, get_random_uids
 from template.validator.reward import get_rewards
+from template.utils.logging import write_timestamp
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -582,6 +583,7 @@ class BaseValidatorNeuron(BaseNeuron):
         #          scores=self.scores,
         #          hotkeys=self.hotkeys)
         # logger.info("Saving validator state end.")
+        write_timestamp(time.time())
         pass
 
     def load_state(self):
