@@ -140,24 +140,9 @@ class ApiServer:
         try:            
             bt.logging.debug(f"API get_rec start forward")
             response = await self.forward_fn(request)
-            #bt.logging.debug(f"API get_rec response: {response}")
-            #bt.logging.debug(f"API get_rec response type: {type(response)}")
-
-          #class ProductRecResponse:
-            # user: str
-            # original_query: str    
-            # status_code: int
-            # status_text: str
-            # response_text: str
-            # created_at: str
-            # results: List[str]
-            # models_used: List[str]
-            # catalog_size: int
-            # miner_uid: str
-            # miner_public_key: str
-            # reasoning: str
-            bt.logging.debug(f"API get_rec response: {response.results}")
+            #bt.logging.debug(f"API get_rec response:  {response}")
             final_recs = []
+
             # for item in response.results:                
             #     item = item.rstrip('"').lstrip('"')
             #     bt.logging.trace(f"API get_rec item: {item}")     
@@ -165,9 +150,9 @@ class ApiServer:
             #     final_recs.append(thing)
             
             #results = [json.loads(item.replace('"', '')) for item in response.results]
+            
             final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
-
-            bt.logging.trace(f"API get_rec final_recs: {final_recs}")
+            #bt.logging.trace(f"API get_rec final_recs: {final_recs}")
 
             bitrecs_rec = {
                     "user": response.user, 
@@ -184,7 +169,7 @@ class ApiServer:
                     "reasoning": "testing"
             }
 
-            bt.logging.debug(f"API get_rec JSONResponse bitrecs_rec: {bitrecs_rec}")
+            #bt.logging.debug(f"API get_rec JSONResponse bitrecs_rec: {bitrecs_rec}")
 
             return JSONResponse(status_code=200, content=bitrecs_rec)
 
