@@ -22,6 +22,7 @@ import time
 import typing
 import bittensor as bt
 import template
+import json_repair
 from datetime import datetime, timezone
 from template.base.miner import BaseMinerNeuron
 from template.protocol import BitrecsRequest
@@ -164,9 +165,19 @@ class Miner(BaseMinerNeuron):
 
         final_results = []
         results = [str(r) for r in results]
-        for r in results:
-            r = r.rstrip('"').lstrip('"')
-            final_results.append(r)
+        # for r in results:
+        #     r = r.rstrip('"').lstrip('"')
+        #     final_results.append(r)
+        
+        for idx in results:
+            #print(idx)      
+            fixed1 = json_repair.repair_json(idx, logging=False)  
+            print(f"fixed: {fixed1}")
+            product = json_repair.loads(fixed1)
+            #fixed = json_repair.loads(idx, logging=False)
+            #print(fixed)
+            final_results.append(product)
+
 
         #results = [eval(item) for item in results]
         #results = [literal_eval(item) for item in results]
