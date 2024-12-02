@@ -25,27 +25,20 @@ import json_repair
 from template.protocol import BitrecsRequest
 from template.llms.prompt_factory import PromptFactory
 from typing import List
-from dataclasses import dataclass
+from template.commerce.product import Product
 
 ALPHA_TIME_DECAY = 0.05
+MIN_CATALOG_SIZE = 10
 
-
-@dataclass
-class Product:
-    sku: str
-    name: str
-    price: float
-
-
-def does_sku_exist(sku: str, context: List[Product]) -> bool:
+def does_sku_exist(sku: str, store_catalog: List[Product]) -> bool:
     """
     Check if sku exists in the context
     """
-    if not sku or not context:
+    if not sku or not store_catalog:
         return False
-    if len(context) == 0:
+    if len(store_catalog) == 0:
         return False
-    for product in context:
+    for product in store_catalog:
         if product["sku"].lower().strip() == sku.lower().strip():
             return True
     return False
@@ -92,7 +85,7 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
     return count == len(results)
 
 
-def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest) -> float:
+def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest) -> float:
     """
     Score the Miner's response to the BitrecsRequest 
 
@@ -111,10 +104,6 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
         score = 0.0
         if len(response.results) != num_recs:            
             return 0.0
-
-        # Load original catalog from ground truth
-        store_catalog: list[Product] = json.loads(ground_truth.context)        
-        #bt.logging.trace(f"** reward response results: {response.results}")
 
         if not validate_result_schema(num_recs, response.results):
             bt.logging.error(f"Miner has invalid schema results: {response.miner_hotkey}")
@@ -183,6 +172,11 @@ def get_rewards(
     if num_recs < 1 or num_recs > 20:
         bt.logging.error(f"Invalid number of recommendations: {num_recs}")
         raise ValueError("configuration of num_recs is invalid")
+    
+    store_catalog: list[Product] = Product.try_parse_context(ground_truth.context)
+    if len(store_catalog) < MIN_CATALOG_SIZE:
+        bt.logging.error(f"Invalid catalog size: {len(store_catalog)}")
+        raise ValueError("configuration of store_catalog is invalid")
         
     return np.array(
         [reward(num_recs, ground_truth, response) for response in responses], dtype=float
