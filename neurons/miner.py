@@ -90,7 +90,7 @@ class Miner(BaseMinerNeuron):
     You can override this by setting the --llm.provider argument in the config.
     For example, --llm.provider OLLAMA_LOCAL will use the local ollama instance to generate recommendations.
 
-    Note: check your .env file for the appropriate API key settings for the LLM provider configured.
+    Note: check your .env file for the appropriate API key settings and urls for the LLM provider configured.
 
     """
 
@@ -163,10 +163,10 @@ class Miner(BaseMinerNeuron):
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
         final_results = []
-        results = [str(r) for r in results]
-        for r in results:
-            r = r.rstrip('"').lstrip('"')
-            final_results.append(r)
+        final_results = [str(r).rstrip('"').lstrip('"') for r in results]
+        # for r in results:
+        #     r = r.rstrip('"').lstrip('"')
+        #     final_results.append(r)
 
         #results = [eval(item) for item in results]
         #results = [literal_eval(item) for item in results]
