@@ -166,10 +166,7 @@ class Miner(BaseMinerNeuron):
         results = [str(r) for r in results]
         for r in results:
             r = r.rstrip('"').lstrip('"')
-            final_results.append(r)           
-
-        #results = [eval(item) for item in results]
-        #results = [literal_eval(item) for item in results]
+            final_results.append(r)
      
         output_synapse=BitrecsRequest(
             name=synapse.name, 

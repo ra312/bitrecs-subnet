@@ -1,7 +1,6 @@
 # The MIT License (MIT)
 # Copyright © 2023 Yuma Rao
-# TODO(developer): Set your name
-# Copyright © 2023 <your name>
+# Copyright © 2024 Bitrecs
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the “Software”), to deal in the Software without restriction, including without limitation
@@ -21,6 +20,8 @@ import time
 import json
 import numpy as np
 import bittensor as bt
+import jsonschema
+import json_repair
 from template.protocol import BitrecsRequest
 from template.llms.prompt_factory import PromptFactory
 from typing import List
@@ -46,7 +47,48 @@ def does_sku_exist(sku: str, context: List[Product]) -> bool:
     for product in context:
         if product["sku"].lower().strip() == sku.lower().strip():
             return True
-    return False   
+    return False
+   
+
+def validate_result_schema(num_recs: int, results: list) -> bool:
+    if num_recs < 1 or num_recs > 20:
+        return False
+    if len(results) != num_recs:
+        return False
+    
+    schema = {
+        "type": "object",
+        "properties": {
+            "sku": {"type": "string"},
+            "name": {"type": "string"},
+            "price": {"type": "string"}
+        },
+        "required": ["sku", "name", "price"]
+    }
+
+    count = 0
+    for item in results:
+        try:
+            #fixed1 = json_repair.repair_json(item, logging=False)  
+            #thing = json.loads(item.replace("'", '"'))
+            thing = json_repair.loads(item)
+            #thing = json.loads(fixed1)
+            validated = jsonschema.validate(thing, schema)
+            #print(validated)
+            #print(thing)
+            count += 1
+        except json.decoder.JSONDecodeError as e:
+            print(e)
+            continue
+        except jsonschema.exceptions.ValidationError as e:
+            print(e)
+            continue
+        except Exception as e:
+            print(e)
+            continue
+
+    return count == len(results)
+
 
 
 def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest) -> float:
@@ -75,8 +117,12 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
         #bt.logging.info(f"** reward context: {store_catalog}")
         bt.logging.info(f"** reward response results: {response.results}")
 
+        if not validate_result_schema(num_recs, response.results):
+            bt.logging.error(f"Miner has invalid schema results: {response.miner_hotkey}")
+            return 0.00
+
         valid_items = set()
-        for result in response.results:            
+        for result in response.results:
             try:             
                 result = result.replace("\'", "\"")
                 product: Product = json.loads(result)

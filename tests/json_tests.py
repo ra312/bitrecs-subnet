@@ -1,6 +1,6 @@
 import json
 import json_repair
-
+import jsonschema
 
 def test_parsing():
     single_rec = "{'sku': '24-UG01', 'name': 'Quest Lumaflex&trade; Band', 'price': '19'}"
@@ -61,7 +61,54 @@ def test_parsing2():
 
     assert len(results) == len(final)
 
+def test_schema_validation():
+    results =  ["{'sku': '24-WG088', 'name': 'Sprite Foam Roller'}",
+                 "{'sku': '24-WG084', 'name': 'Sprite Foam Yoga Brick'}",
+                   "{'sku': '24-UG01', 'name': 'Quest Lumaflex&trade; Band'}", 
+                   '{\'sku\': \'24-UG05\', \'name\': "Go-Get\'r Pushup Grips"}', 
+                   "{'sku': '24-UG02', 'name': 'Pursuit Lumaflex&trade; Tone Band'}", 
+                   "{'sku': '24-UG07', 'name': 'Dual Handle Cardio Ball'}"]
+    
+    results1 =  ["{'sku': '24-UG03', 'name': 'Harmony Lumaflex&trade; Strength Band Kit', 'price': '22'}", 
+                "{'sku': '24-WG088', 'name': 'Sprite Foam Roller', 'price': '19'}",
+                  "{'sku': '24-MB04', 'name': 'Strive Shoulder Pack', 'price': '32'}", 
+                  "{'sku': '24-UG01', 'name': 'Quest Lumaflex&trade; Band', 'price': '19'}", 
+                  '{\'sku\': \'24-UG05\', \'name\': "Go-Get\'r Pushup Grips", \'price\': \'19\'}', 
+                  "{'sku': '24-WG084', 'name': 'Sprite Foam Yoga Brick', 'price': '5'}"]
+    
+    schema = {
+        "type": "object",
+        "properties": {
+            "sku": {"type": "string"},
+            "name": {"type": "string"},
+            "price": {"type": "string"}
+        },
+        "required": ["sku", "name", "price"]
+    }
+
+    count = 0
+    for item in results:
+        try:
+            #fixed1 = json_repair.repair_json(item, logging=False)  
+            #thing = json.loads(item.replace("'", '"'))
+            thing = json_repair.loads(item)
+            #thing = json.loads(fixed1)
+            validated = jsonschema.validate(thing, schema)
+            #print(validated)
+            #print(thing)
+            count += 1
+        except json.decoder.JSONDecodeError as e:
+            print(e)
+            continue
+        except jsonschema.exceptions.ValidationError as e:
+            print(e)
+            continue
+
+    assert count == len(results1)
+
+
 if __name__ == "__main__":
     #test_parsing()
-    test_parsing2()
+    #test_parsing2()
+    test_schema_validation()
     print("JSON Tests done.")
