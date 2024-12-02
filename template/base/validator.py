@@ -47,6 +47,7 @@ load_dotenv()
 api_queue = SimpleQueue() # Queue of SynapseEventPair
 MAX_DENDRITE_TIMEOUT = 10
 MIN_QUERY_LENGTH = 3
+MAX_RECS_PER_REQUEST = 20
 
 @dataclass
 class SynapseWithEvent:
@@ -191,6 +192,12 @@ class BaseValidatorNeuron(BaseNeuron):
         if len(synapse.models_used) != 0:
             bt.logging.error(f"Models used is not empty!: {synapse}")
             return False
+        if synapse.site_key is None or synapse.site_key == "":
+            bt.logging.error(f"Site key is empty!: {synapse}")
+            return False
+        if synapse.num_results < 1 or synapse.num_results > MAX_RECS_PER_REQUEST:
+            bt.logging.error(f"Number of recommendations should be less than {MAX_RECS_PER_REQUEST}!: {synapse}")
+            return False
         return True
 
 
@@ -266,7 +273,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
                         number_of_recs_desired = api_request.num_results
 
-                        if number_of_recs_desired < 1 or number_of_recs_desired > 20:
+                        if number_of_recs_desired < 1 or number_of_recs_desired > MAX_RECS_PER_REQUEST:
                             bt.logging.error("Number of recommendations should be less than 20")
                             synapse_with_event.event.set()
                             continue
