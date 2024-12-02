@@ -171,12 +171,12 @@ def get_rewards(
 
     if num_recs < 1 or num_recs > 20:
         bt.logging.error(f"Invalid number of recommendations: {num_recs}")
-        raise ValueError("configuration of num_recs is invalid")
+        return np.zeros(len(responses), dtype=float)        
     
     store_catalog: list[Product] = Product.try_parse_context(ground_truth.context)
     if len(store_catalog) < MIN_CATALOG_SIZE:
         bt.logging.error(f"Invalid catalog size: {len(store_catalog)}")
-        raise ValueError("configuration of store_catalog is invalid")
+        return np.zeros(len(responses), dtype=float)
         
     return np.array(
         [reward(num_recs, ground_truth, response) for response in responses], dtype=float
