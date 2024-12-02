@@ -73,23 +73,20 @@ async def api_key_validator(request, call_next) -> Response:
 
     api_key = _get_api_key(request)
     if not api_key:
-        return JSONResponse(
-            status_code=400,
-            content={"detail": "API key is missing"}
-        )
+        bt.logging.error(f"ERROR - Request has no Authorization {request.client.host}")
+        return JSONResponse(status_code=400, content={"detail": "Authorization is missing"})
 
     api_key_info = load_api_config()
     if api_key_info is None:
+        bt.logging.error(f"ERROR - MISSING API request key {request.client.host}")
         return JSONResponse(status_code=401, content={"detail": "Invalid API key config"})
     
     if api_key not in api_key_info["keys"]:
-        bt.logging.error(f"ERROR - Receiving INVALID API REQUEST KEY {request.client.host}")
-        
+        bt.logging.error(f"ERROR - INVALID API request key {request.client.host}")        
         return JSONResponse(status_code=401, content={"detail": "Invalid API key request"})
 
     response: Response = await call_next(request)
     return response
-
 
 
 
