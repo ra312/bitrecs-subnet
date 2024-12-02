@@ -289,6 +289,10 @@ class BaseValidatorNeuron(BaseNeuron):
                         selected_rec = rewards.argmax()
                         elected = responses[selected_rec]
                         bt.logging.info(f"FINAL RESULT AFTER SCORING: {elected}")
+                        if len(elected.results) == 0:
+                            bt.logging.error("FATAL - Elected response has no results")
+                            synapse_with_event.event.set()
+                            continue          
 
                         elected.context = "" #save bandwidth
                         synapse_with_event.output_synapse = elected
