@@ -20,6 +20,7 @@ import os
 import sys
 import time
 import typing
+import json
 import bittensor as bt
 import template
 from datetime import datetime, timezone
@@ -163,7 +164,8 @@ class Miner(BaseMinerNeuron):
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
         final_results = []
-        final_results = [str(r).rstrip('"').lstrip('"') for r in results]
+        #final_results = [str(r).rstrip('"').lstrip('"') for r in results]
+        final_results = [json.loads(idx.replace("'", '"')) for idx in results]
         # for r in results:
         #     r = r.rstrip('"').lstrip('"')
         #     final_results.append(r)
