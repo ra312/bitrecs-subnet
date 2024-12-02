@@ -310,5 +310,5 @@ if __name__ == "__main__":
             bt.logging.info(f"Miner running... {time.time()}")
             elapsed_time = int(time.time() - start_time)
             if elapsed_time % 30 == 0:
-                print(f"Miner is configured for {miner.llm_provider} ")
+                bt.logging.info(f"Miner is configured for {miner.llm_provider}")                
             time.sleep(15)
