@@ -119,7 +119,7 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
             try:             
                 result = result.replace("\'", "\"")
                 product: Product = json.loads(result)
-                bt.logging.trace(f"{response.miner_uid} response product: {product}")
+                #bt.logging.trace(f"{response.miner_uid} response product: {product}")
                 sku = product["sku"]
                 if sku in valid_items:
                     bt.logging.warning(f"Miner has duplicate results: {response.miner_hotkey}")
@@ -149,7 +149,7 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
             dendrite_time = headers["bt_header_dendrite_process_time"] #0.000132  1.2
             score = score - ALPHA_TIME_DECAY * float(dendrite_time)
         else:
-            bt.loggin.error(f"Error in reward: dendrite_time not found in headers")
+            bt.logging.error(f"Error in reward: dendrite_time not found in headers")
             return 0.0
 
         return score
@@ -181,6 +181,5 @@ def get_rewards(
     return np.array(
         [reward(num_recs, ground_truth, response) for response in responses], dtype=float
     )
-    
 
 
