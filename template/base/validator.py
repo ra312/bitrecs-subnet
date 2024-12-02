@@ -212,7 +212,6 @@ class BaseValidatorNeuron(BaseNeuron):
         4. Runs a loop that generates synthetic requests and forwards them to the network.
 
         """
-
         # Check that validator is registered on the network.
         self.sync()
         
@@ -222,10 +221,7 @@ class BaseValidatorNeuron(BaseNeuron):
             f"Axon: {self.axon}"
         
         bt.logging.info(f"Validator starting at block: {self.block}")
-
-        bt.logging.info(f"Validator SAMPLE SIZE: {self.config.neuron.sample_size}")
-
-        # This loop maintains the validator's operations until intentionally stopped.
+        bt.logging.info(f"Validator SAMPLE SIZE: {self.config.neuron.sample_size}")        
         try:
             while True:
                 try:
@@ -248,7 +244,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
                         # Validate the input synampse
                         if not self.validate_br_request(synapse_with_event.input_synapse):
-                            bt.logging.error("Invalid synapse request")
+                            bt.logging.error("Request failed Validation, skipped.")
                             synapse_with_event.event.set()
                             continue
                 
@@ -259,8 +255,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         chosen_uids = [0, 1, 2, 3, 4, 5, 6, 7, 8]
                         #chosen_uids = [0]
                         #chosen_uids = available_uids
-                        #np.append(chosen_uids, [1])
-                                
+                        #np.append(chosen_uids, [1])                                
                         
                         bt.logging.trace(f"len(chosen_uids): {len(chosen_uids)}")
                         bt.logging.trace(f"chosen_uids: {chosen_uids}")
@@ -269,14 +264,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.trace(f"chosen_axons: {chosen_axons}")
 
                         api_request = synapse_with_event.input_synapse
-                        #TODO validate request
-
-                        number_of_recs_desired = api_request.num_results
-
-                        if number_of_recs_desired < 1 or number_of_recs_desired > MAX_RECS_PER_REQUEST:
-                            bt.logging.error("Number of recommendations should be less than 20")
-                            synapse_with_event.event.set()
-                            continue
+                        number_of_recs_desired = api_request.num_results                 
 
                         # Send request to the miner population
                         responses = self.dendrite.query(
@@ -286,7 +274,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             timeout=MAX_DENDRITE_TIMEOUT
                         )
                         
-                        bt.logging.trace(f"len(responses): {len(responses)}")
+                        bt.logging.trace(f"Miners responded with {len(responses)} responses")
 
                         # Adjust the scores based on responses from miners.
                         rewards = get_rewards(num_recs=number_of_recs_desired,
@@ -308,8 +296,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         synapse_with_event.event.set()
 
                         bt.logging.info(f"Scored responses: {rewards}")
-                        self.update_scores(rewards, chosen_uids)
-                        
+                        self.update_scores(rewards, chosen_uids)                        
 
                     else:     
                         if not api_exclusive: #Regular validator loop                
@@ -332,11 +319,9 @@ class BaseValidatorNeuron(BaseNeuron):
                     if synapse_with_event and synapse_with_event.event:
                         synapse_with_event.event.set()
                     time.sleep(60)
-                finally:                   
-                 
+                finally:
                     if api_enabled and api_exclusive:
-                        bt.logging.info(f"forward finished, ready for next request")
-                        #time.sleep(10)
+                        bt.logging.info(f"forward finished, ready for next request")                        
                         pass
                     else:
                         bt.logging.info(f"forward finished, sleep for {10} seconds")
