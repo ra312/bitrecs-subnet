@@ -27,14 +27,13 @@ from template.llms.prompt_factory import PromptFactory
 from typing import List
 from dataclasses import dataclass
 
+ALPHA_TIME_DECAY = 0.05
+
 @dataclass
 class Product:
     sku: str
     name: str
     price: float
-
-ALPHA_TIME_DECAY = 0.05
-
 
 def does_sku_exist(sku: str, context: List[Product]) -> bool:
     """
@@ -68,23 +67,20 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
 
     count = 0
     for item in results:
-        try:
-            #fixed1 = json_repair.repair_json(item, logging=False)  
-            #thing = json.loads(item.replace("'", '"'))
-            thing = json_repair.loads(item)
-            #thing = json.loads(fixed1)
+        try:            
+            thing = json_repair.loads(item)            
             validated = jsonschema.validate(thing, schema)
-            #print(validated)
-            #print(thing)
+            if validated is not None:
+                return False            
             count += 1
-        except json.decoder.JSONDecodeError as e:
-            print(e)
+        except json.decoder.JSONDecodeError as e:            
+            bt.logging.trace(f"JSON JSONDecodeError ERROR: {e}")
             continue
-        except jsonschema.exceptions.ValidationError as e:
-            print(e)
+        except jsonschema.exceptions.ValidationError as e:            
+            bt.logging.trace(f"JSON ValidationError ERROR: {e}")
             continue
-        except Exception as e:
-            print(e)
+        except Exception as e:            
+            bt.logging.trace(f"JSON Exception ERROR: {e}")
             continue
 
     return count == len(results)
@@ -101,25 +97,22 @@ def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest
 
     Returns:
     - float: The reward value for the miner.
-    """
+    """    
     
-    print("*************** REWARD *************************")
-    # TODO check format of response as they are from LLMs
+    bt.logging.trace("*************** VALIDATOR REWARD *************************")
 
     try:
-        score = 0.00
+        score = 0.0
         if len(response.results) != num_recs:            
-            return 0.00      
+            return 0.0
 
-        # Check each result to exist in the context
-        #["{'sku': '24-UG06', 'name': 'Affirm Water Bottle', 'price': 7.0}"]         
-        store_catalog: list[Product] = json.loads(ground_truth.context)
-        #bt.logging.info(f"** reward context: {store_catalog}")
-        bt.logging.info(f"** reward response results: {response.results}")
+        # Load original catalog from ground truth
+        store_catalog: list[Product] = json.loads(ground_truth.context)        
+        #bt.logging.trace(f"** reward response results: {response.results}")
 
         if not validate_result_schema(num_recs, response.results):
             bt.logging.error(f"Miner has invalid schema results: {response.miner_hotkey}")
-            return 0.00
+            return 0.0
 
         valid_items = set()
         for result in response.results:
