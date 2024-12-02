@@ -29,11 +29,13 @@ from dataclasses import dataclass
 
 ALPHA_TIME_DECAY = 0.05
 
+
 @dataclass
 class Product:
     sku: str
     name: str
     price: float
+
 
 def does_sku_exist(sku: str, context: List[Product]) -> bool:
     """
@@ -50,9 +52,13 @@ def does_sku_exist(sku: str, context: List[Product]) -> bool:
    
 
 def validate_result_schema(num_recs: int, results: list) -> bool:
+    """
+    Ensure results from Miner match the required schema
+    """
     if num_recs < 1 or num_recs > 20:
         return False
     if len(results) != num_recs:
+        bt.logging.error("Error validate_result_schema mismatch")
         return False
     
     schema = {
@@ -86,14 +92,14 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
     return count == len(results)
 
 
-
 def reward(num_recs: int, ground_truth: BitrecsRequest, response: BitrecsRequest) -> float:
     """
-    Reward the miner response to the BitrecsRequest 
+    Score the Miner's response to the BitrecsRequest 
 
-    Nubmer of recommendations should match the requested number of recommendations   
+    Nubmer of recommendations should match the requested number of recommendations
+    Recommendations must exist in the original catalog
     Unique recommendations in the response is expected
-    Malformed json or bad skus are penalized
+    Malformed JSON or invliad skus will result in a 0.0 reward
 
     Returns:
     - float: The reward value for the miner.

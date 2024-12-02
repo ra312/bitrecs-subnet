@@ -46,6 +46,7 @@ load_dotenv()
 
 api_queue = SimpleQueue() # Queue of SynapseEventPair
 MAX_DENDRITE_TIMEOUT = 10
+MIN_QUERY_LENGTH = 3
 
 @dataclass
 class SynapseWithEvent:
@@ -81,7 +82,6 @@ async def api_forward(synapse: BitrecsRequest) -> BitrecsRequest:
     # Wait until the main thread marks this synapse as processed.
     await anyio.to_thread.run_sync(synapse_with_event.event.wait)
     return synapse_with_event.output_synapse
-
 
 
 class BaseValidatorNeuron(BaseNeuron):
@@ -174,20 +174,23 @@ class BaseValidatorNeuron(BaseNeuron):
         await asyncio.gather(*coroutines)
 
 
-    # def validate_request_item(item: SynapseWithEvent) -> bool:
-    #     """Checks request item for validity."""
-    #     if not isinstance(item, SynapseWithEvent):
-    #         bt.logging.error(f"Invalid request item: {item}")
-    #         return False       
-
-    #     return True
-
     def validate_br_request(self, synapse: BitrecsRequest) -> bool:
         """Checks request item for validity."""
         if not isinstance(synapse, BitrecsRequest):
-            bt.logging.error(f"Invalid request item: {synapse}")
-            return False       
-
+            bt.logging.error(f"Invalid synapse item: {synapse}")
+            return False
+        if len(synapse.query) < MIN_QUERY_LENGTH:
+            bt.logging.error(f"Invalid synampse Query!: {synapse}")
+            return False
+        if len(synapse.results) != 0:
+            bt.logging.error(f"Results it not empty!: {synapse}")
+            return False
+        if synapse.context is None or synapse.context == "":
+            bt.logging.error(f"Context is empty!: {synapse}")
+            return False
+        if len(synapse.models_used) != 0:
+            bt.logging.error(f"Models used is not empty!: {synapse}")
+            return False
         return True
 
 
@@ -236,7 +239,11 @@ class BaseValidatorNeuron(BaseNeuron):
                     if synapse_with_event is not None and api_enabled: #API request
                         bt.logging.info("** Processing synapse from API server **")
 
-                        #self.validate_request_item(synapse_with_event)
+                        # Validate the input synampse
+                        if not self.validate_br_request(synapse_with_event.input_synapse):
+                            bt.logging.error("Invalid synapse request")
+                            synapse_with_event.event.set()
+                            continue
                 
                         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
                         #available_uids = get_random_uids(self, k=8)
