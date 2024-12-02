@@ -83,6 +83,8 @@ async def api_key_validator(request, call_next) -> Response:
         return JSONResponse(status_code=401, content={"detail": "Invalid API key config"})
     
     if api_key not in api_key_info["keys"]:
+        bt.logging.error(f"ERROR - Receiving INVALID API REQUEST KEY {request.client.host}")
+        
         return JSONResponse(status_code=401, content={"detail": "Invalid API key request"})
 
     response: Response = await call_next(request)
