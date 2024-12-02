@@ -118,21 +118,36 @@ class PromptFactory:
             {}        
             """.format(return_type1)
 
+        #   prompt += """
+        #     # FINAL INSTRUCTIONS
+            
+        #     1) Observe the user <query>.
+        #     2) Find recommended products in the <context> provided and make a list of {} recommendations that compliment the query.
+        #     3) The products recommended should be products a customer would buy before, along with, or after they have purchased the product from <query>.
+        #     4) Return recommendations in a JSON array.
+        #     5) The order of the recommendations is important. The first few recommendations should be the most relevant to the query.
+        #     6) Be diverse in your recommendations. Do not recommend the same product multiple times or from the same class of products.
+        #     7) Double check the potential return data structure for empty fields, invalid values or errors.
+        #     8) Never explain yourself, no small talk, just return the final data in the correct array format. 
+        #     9) Your final response should only be an array of recommendations in JSON format.
+        #     10) Never say 'Based on the provided query' or 'I have determined'. 
+        #     11) Never explain yourself.
+        #     12) Return in JSON.
+
         prompt += """
             # FINAL INSTRUCTIONS
             
             1) Observe the user <query>.
             2) Find recommended products in the <context> provided and make a list of {} recommendations that compliment the query.
-            3) The products recommended should be products a customer would buy before, along with, or after they have purchased the product from <query>.
+            3) The products recommended should be products a customer would buy after they have purchased the product from <query>.
             4) Return recommendations in a JSON array.
-            5) The order of the recommendations is important. The first few recommendations should be the most relevant to the query.
-            6) Be diverse in your recommendations. Do not recommend the same product multiple times or from the same class of products.
-            7) Double check the potential return data structure for empty fields, invalid values or errors.
-            8) Never explain yourself, no small talk, just return the final data in the correct array format. 
-            9) Your final response should only be an array of recommendations in JSON format.
-            10) Never say 'Based on the provided query' or 'I have determined'. 
-            11) Never explain yourself.
-            12) Return in JSON.
+            5) The order of the recommendations is important. The first recommendation should be the most relevant to the query.
+            6) Double check the potential return data structure for empty fields, invalid values or errors.
+            7) Never explain yourself, no small talk, just return the final data in the correct array format. 
+            8) Your final response should only be an array of recommendations in JSON format.
+            9) Never say 'Based on the provided query' or 'I have determined'. 
+            10) Never explain yourself.
+            11) Return in JSON.
             
         """.format(self.num_recs)
 
