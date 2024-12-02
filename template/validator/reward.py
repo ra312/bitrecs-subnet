@@ -106,7 +106,7 @@ def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest
             return 0.0
 
         if not validate_result_schema(num_recs, response.results):
-            bt.logging.error(f"Miner has invalid schema results: {response.miner_hotkey}")
+            bt.logging.error(f"Miner {response.miner_uid} has invalid schema results: {response.miner_hotkey}")
             return 0.0
 
         valid_items = set()
@@ -117,12 +117,12 @@ def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest
                 #bt.logging.trace(f"{response.miner_uid} response product: {product}")
                 sku = product["sku"]
                 if sku in valid_items:
-                    bt.logging.warning(f"Miner has duplicate results: {response.miner_hotkey}")
+                    bt.logging.warning(f"Miner {response.miner_uid} has duplicate results: {response.miner_hotkey}")
                     return 0.0               
                 
                 # Check if sku exists in the context
                 if not does_sku_exist(sku, store_catalog):
-                    bt.logging.warning(f"Miner has invalid results: {response.miner_hotkey}")
+                    bt.logging.warning(f"Miner {response.miner_uid} has invalid results: {response.miner_hotkey}")
                     return 0.00
                 
                 valid_items.add(sku)
@@ -132,7 +132,7 @@ def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest
                 return 0.0
 
         if len(valid_items) != num_recs:
-            bt.logging.warning(f"Miner has invalid number of valid_items: {response.miner_hotkey}")
+            bt.logging.warning(f"Miner {response.miner_uid} has invalid number of valid_items: {response.miner_hotkey}")
             return 0.0
 
         score = 0.80        
