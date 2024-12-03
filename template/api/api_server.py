@@ -91,6 +91,34 @@ async def api_key_validator(request, call_next) -> Response:
     return response
 
 
+async def hmac_validator(request: Request, 
+                       x_signature: str = Header(...),
+                        x_timestamp: str = Header(...)):
+        
+    bt.logging.trace(f"API verify_request request: {request}")
+    bt.logging.trace(f"API verify_request x_signature: {x_signature}")
+    bt.logging.trace(f"API verify_request x_timestamp: {x_timestamp}")
+
+    body = await request.json()
+    body_str = json.dumps(body, sort_keys=True)
+    
+    # Recreate string that was signed
+    string_to_sign = f"{x_timestamp}.{body_str}"
+
+    SECRET_KEY = "change-me"
+    # Calculate expected signature
+    expected_signature = hmac.new(
+        SECRET_KEY.encode('utf-8'),
+        string_to_sign.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    
+    # Verify signature
+    if not hmac.compare_digest(x_signature, expected_signature):
+        raise HTTPException(status_code=401, detail="Invalid signature")
+
+
+
 
 class ApiServer:
     app: FastAPI
@@ -102,6 +130,7 @@ class ApiServer:
         self.forward_fn = forward_fn
         self.app = FastAPI()        
         self.app.middleware('http')(api_key_validator)
+        self.app.middleware('http')(hmac_validator)
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         #self.app.middleware('http')(auth_rate_limiting_middleware)
 
@@ -140,7 +169,7 @@ class ApiServer:
 
         try:
 
-            await self.verify_request(request)
+            #await verify_request(request)
 
             bt.logging.debug(f"API generate_product_rec start forward")
             st = time.time()
@@ -203,7 +232,7 @@ class ApiServer:
         #     )
         #     self.tunnel = None
     
-    async def verify_request(self, request: Request, 
+    async def verify_request(request: Request, 
                        x_signature: str = Header(...),
                         x_timestamp: str = Header(...)):
         
