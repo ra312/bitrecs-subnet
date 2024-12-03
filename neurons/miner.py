@@ -160,17 +160,21 @@ class Miner(BaseMinerNeuron):
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
         final_results = []
+
+        # Process each string to clean and convert to a dictionary        
+        for item in results:
+            # Clean up the string
+            cleaned_item = item.replace("\\'", "'")  # Fix escaped single quotes
+            # Safely evaluate the string into a dictionary
+            dictionary_item = ast.literal_eval(cleaned_item)
+            final_results.append(dictionary_item)
+        
         #results = [str(r) for r in results]
         # for r in results:
         #     r = r.rstrip('"').lstrip('"')
         #     final_results.append(r)
         #processed_data = []
-
-        for item in results:
-            # Convert the string into a dictionary safely
-            cleaned_item = ast.literal_eval(item.replace("\\'", "'"))
-            final_results.append(cleaned_item)
-     
+      
         output_synapse=BitrecsRequest(
             name=synapse.name, 
             axon=synapse.axon,
