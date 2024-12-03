@@ -41,7 +41,7 @@ async def do_work(user_prompt: str,
     """
     Do your miner work here. 
     This function is called by the forward function to generate recs.
-    You can use any method you prefer to generate recs. 
+    You can use any method you prefer to generate recommendations.
 
     Args:
         user_prompt (str): The user query (generally the SKU they are browsing)
@@ -107,14 +107,12 @@ class Miner(BaseMinerNeuron):
             self.model = ""
         except ValueError as ve:
             bt.logging.error(f"Invalid LLM provider: {ve}")
-            sys.exit()
-
-        best_performing_uid = best_uid(self.metagraph)        
-        if self.uid == best_performing_uid:
-            bt.logging.info(f"\033[1;32m 🐸 You are the BEST performing miner in the subnet, keep it up!\033[0m")
+            sys.exit()      
 
         if self.llm_provider == LLM.VLLM:
             bt.logging.info(f"\033[1;35m Please ensure vLLM Server is running\033[0m")
+        elif self.llm_provider == LLM.OLLAMA_LOCAL:
+            bt.logging.info(f"\033[1;35m Please ensure Ollama Local Server is running\033[0m")
 
         bt.logging.info(f"\033[1;35m Miner is warming up\033[0m")
         warmup_result = self.warmup()
@@ -124,6 +122,10 @@ class Miner(BaseMinerNeuron):
         if not self.model:
             bt.logging.error(f"\033[31mMiner model not set. Exiting.\033[0m")
             sys.exit()
+
+        best_performing_uid = best_uid(self.metagraph)        
+        if self.uid == best_performing_uid:
+            bt.logging.info(f"\033[1;32m 🐸 You are the BEST performing miner in the subnet, keep it up!\033[0m")
 
 
     async def forward(
@@ -141,45 +143,15 @@ class Miner(BaseMinerNeuron):
         """
         bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))
 
-        #results =["result1 - superior", "result2 - exalted", "result3 - ornate", "result4 - rare", "result5 - common"]
-
         results = []
-       
-        bt.logging.info(f"User Query: {synapse.query }")
-        server = self.llm_provider
-        # match server:
-        #     case LLM.OLLAMA_LOCAL:
-        #         model = "llama3.2:3b-instruct-q8_0" #best
-        #         #model = "llama3.1" //great
-
-        #         #model = "nemotron:latest" #slow
-        #         #model = "llama3.1:70b" #slow
-        #         #model = "llama3.1:70b-instruct-q4_0" #slow
-        #         #model = "qwen2.5:32b" #invalid results
-        #         #model = "qwen2.5:32b-instruct" #inaccurate
-        #         #model = "qwq" #slow
-        #         #model = "mistral-nemo" #inaccurate
-        #     case LLM.OPEN_ROUTER:
-        #         #model = "google/gemini-flash-1.5-8b"
-        #         model = "meta-llama/llama-3.1-70b-instruct:free"
-        #     case LLM.CHAT_GPT:
-        #         model = "gpt-4o-mini"
-        #     case LLM.VLLM:
-        #         model = "NousResearch/Meta-Llama-3-8B-Instruct"
-        #         #model = "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF"
-        #     case _:
-        #         bt.logging.error("Unknown LLM server")
-        #         raise ValueError("Unknown LLM server")
-        # bt.logging.info(f"LLM: {server} - Model: {model}")
-      
+        model = self.model
+        server = self.llm_provider      
         context = synapse.context
         num_recs = synapse.num_results
         try:
-
-            results = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=self.model)            
+            results = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)            
             bt.logging.info(f"LLM {self.model} - Results: count ({len(results)})")
-            
-        except Exception as e:            
+        except Exception as e:
             bt.logging.error(f"\033[31mFATAL ERROR calling do_work: {e!r} \033[0m")
             pass
 
@@ -325,10 +297,14 @@ class Miner(BaseMinerNeuron):
 
 
     def warmup(self):
+        """
+        On startup, try querying the LLM to ensure it is working and loaded into memory.        
+
+        """
         match self.llm_provider:
             case LLM.OLLAMA_LOCAL:
                 model = "llama3.2:3b-instruct-q8_0" #best
-                #model = "llama3.1" //great
+                #model = "llama3.1" #great
 
                 #model = "nemotron:latest" #slow
                 #model = "llama3.1:70b" #slow
@@ -355,9 +331,9 @@ class Miner(BaseMinerNeuron):
                                  model=model, 
                                  system_prompt="You are a helpful assistant", 
                                  temp=0.1, user_prompt="Tell me a joke")
-            bt.logging.info(f"LLM {model} - Warmup Result: {result}")
+            bt.logging.info(f"Warmup SUCCESS: {model} - Result: {result}")
             self.model = model
-            return True            
+            return True
         except Exception as e:            
             bt.logging.error(f"\033[31mFATAL ERROR calling warmup: {e!r} \033[0m")
         return False

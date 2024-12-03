@@ -283,18 +283,18 @@ class BaseValidatorNeuron(BaseNeuron):
                             
                         selected_rec = rewards.argmax()
                         elected = responses[selected_rec]
-                        
+                        elected.context = "" #save bandwidth
+
                         bt.logging.info("SCORING DONE")
                         bt.logging.info(f"WINNING MINER: {elected.miner_uid}")
                         bt.logging.info(f"WINNING RESULT: {elected}")
-
+                        
                         if len(elected.results) == 0:
                             bt.logging.error("FATAL - Elected response has no results")
                             #TODO this causes empty results back to the client resulting in poor UX fix in API?
                             synapse_with_event.event.set()
                             continue
-
-                        elected.context = "" #save bandwidth
+                        
                         synapse_with_event.output_synapse = elected
                         # Mark the synapse as processed, API will then return to the client
                         synapse_with_event.event.set()
