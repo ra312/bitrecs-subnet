@@ -1,4 +1,5 @@
 import bittensor as bt
+import requests
 from openai import OpenAI
 
 class vLLM:
@@ -13,7 +14,20 @@ class vLLM:
         self.temp = temp
 
 
-    def call_vllm(self, user_prompt):        
+    def call_vllm(self, user_prompt):
+        headers = {
+            "Authorization": "Bearer {}".format(self.key)
+        }
+        data = {
+            "prompt": "{}".format(user_prompt),
+            "max_tokens": 50
+        }
+        response = requests.post("http://127.0.0.1:8000/v1/completions", json=data, headers=headers)
+        print(response.json())
+        return response.json()["choices"][0]["text"]
+                
+    
+    def call_vllm2(self, user_prompt):        
         openai_api_key = self.key
         openai_api_base = "http://localhost:8000/v1"
         client = OpenAI(
@@ -29,4 +43,5 @@ class vLLM:
         except Exception as e:
             bt.logging.error("Error calling vLLM: {}".format(e))
             raise e
+
         
