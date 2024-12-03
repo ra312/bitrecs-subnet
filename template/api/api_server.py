@@ -6,7 +6,7 @@ import traceback
 import bittensor as bt
 import hmac
 import hashlib
-from typing import Callable, Awaitable, List, Optional, Any
+from typing import Callable, Dict, List, Optional, Any
 from fastapi import FastAPI, HTTPException, Request, APIRouter, Response, Header
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
@@ -91,21 +91,20 @@ async def api_key_validator(request, call_next) -> Response:
     return response
 
 
-async def hmac_validator(request: Request, 
-                       x_signature: str = Header(...),
-                        x_timestamp: str = Header(...)):
-        
-    bt.logging.trace(f"API verify_request request: {request}")
-    bt.logging.trace(f"API verify_request x_signature: {x_signature}")
-    bt.logging.trace(f"API verify_request x_timestamp: {x_timestamp}")
-
+async def verify_request(request: Request, x_signature: str, x_timestamp: str) -> Dict[str, Any]:
+    """
+    Internal function to verify HMAC signature of incoming requests.
+    Returns the validated request body if signature is valid.
+    Raises HTTPException if validation fails.
+    """
     body = await request.json()
     body_str = json.dumps(body, sort_keys=True)
     
     # Recreate string that was signed
     string_to_sign = f"{x_timestamp}.{body_str}"
-
+    
     SECRET_KEY = "change-me"
+
     # Calculate expected signature
     expected_signature = hmac.new(
         SECRET_KEY.encode('utf-8'),
@@ -116,8 +115,8 @@ async def hmac_validator(request: Request,
     # Verify signature
     if not hmac.compare_digest(x_signature, expected_signature):
         raise HTTPException(status_code=401, detail="Invalid signature")
-
-
+        
+    return body
 
 
 class ApiServer:
@@ -130,7 +129,7 @@ class ApiServer:
         self.forward_fn = forward_fn
         self.app = FastAPI()        
         self.app.middleware('http')(api_key_validator)
-        self.app.middleware('http')(hmac_validator)
+        #self.app.middleware('http')(hmac_validator)
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         #self.app.middleware('http')(auth_rate_limiting_middleware)
 
@@ -147,9 +146,10 @@ class ApiServer:
             self.ping,            
             methods=["GET"],
         )
+
         self.router.add_api_route(
             "/rec", 
-            self.generate_product_rec,            
+            self.generate_product_rec,
             methods=["POST"]  
         )
        
@@ -168,8 +168,9 @@ class ApiServer:
         bt.logging.debug(f"API generate_product_rec request type:  {type(request)}")
 
         try:
-
+            
             #await verify_request(request)
+            bt.logging.debug(f"API generate_product_rec request: {request}")
 
             bt.logging.debug(f"API generate_product_rec start forward")
             st = time.time()
