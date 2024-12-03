@@ -141,7 +141,8 @@ class Miner(BaseMinerNeuron):
             case LLM.OLLAMA_LOCAL:
                 #model = "llama3.1"
                 #model = "nemotron:latest"
-                model = "llama3.1:70b"
+                #model = "llama3.1:70b"
+                model = "llama3.1:70b-instruct-q4_0"
             case LLM.OPEN_ROUTER:
                 #model = "google/gemini-flash-1.5-8b"
                 model = "meta-llama/llama-3.1-70b-instruct:free"
