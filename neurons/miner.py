@@ -22,6 +22,7 @@ import time
 import typing
 import bittensor as bt
 import template
+import ast
 from datetime import datetime, timezone
 from template.base.miner import BaseMinerNeuron
 from template.protocol import BitrecsRequest
@@ -160,9 +161,15 @@ class Miner(BaseMinerNeuron):
 
         final_results = []
         results = [str(r) for r in results]
-        for r in results:
-            r = r.rstrip('"').lstrip('"')
-            final_results.append(r)
+        # for r in results:
+        #     r = r.rstrip('"').lstrip('"')
+        #     final_results.append(r)
+        #processed_data = []
+        
+        for item in results:
+            # Convert the string into a dictionary safely
+            cleaned_item = ast.literal_eval(item.replace("\\'", "'"))
+            final_results.append(cleaned_item)
      
         output_synapse=BitrecsRequest(
             name=synapse.name, 
