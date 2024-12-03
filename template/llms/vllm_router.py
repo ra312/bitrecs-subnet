@@ -1,3 +1,4 @@
+import bittensor as bt
 from openai import OpenAI
 
 class vLLM:
@@ -19,6 +20,13 @@ class vLLM:
             api_key=openai_api_key,
             base_url=openai_api_base,
         )
-        completion = client.completions.create(model=self.model, prompt=user_prompt, max_tokens=500)
-        result = completion.choices[0].text
-        return result
+        try:
+
+            completion = client.completions.create(model=self.model, prompt=user_prompt, max_tokens=500)
+            result = completion.choices[0].text
+            return result
+
+        except Exception as e:
+            bt.logging.error("Error calling vLLM: {}".format(e))
+            raise e
+        
