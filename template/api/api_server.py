@@ -140,7 +140,7 @@ class ApiServer:
 
         try:
 
-            self.verify_request(request)
+            await self.verify_request(request)
 
             bt.logging.debug(f"API generate_product_rec start forward")
             st = time.time()
