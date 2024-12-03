@@ -146,7 +146,8 @@ class Miner(BaseMinerNeuron):
                 #model = "qwen2.5:32b" //invalid results
                 #model = "qwen2.5:32b-instruct" //inaccurate
                 #model = "qwq" //slow
-                model = "mistral-nemo"
+                #model = "mistral-nemo" //inaccurate
+                model = "llama3.2:3b-instruct-q8_0"
             case LLM.OPEN_ROUTER:
                 #model = "google/gemini-flash-1.5-8b"
                 model = "meta-llama/llama-3.1-70b-instruct:free"
