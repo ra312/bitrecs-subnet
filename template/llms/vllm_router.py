@@ -14,7 +14,7 @@ class vLLM:
         self.temp = temp
 
 
-    def call_vllm(self, user_prompt):
+    def call_vllm(self, user_prompt) -> str:
         
         client = OpenAI(
             base_url="http://localhost:8000/v1",
@@ -28,8 +28,9 @@ class vLLM:
             ]
         )
         print(completion.choices[0].message)
-
-        return completion.choices[0].message
+        
+        result = completion.choices[0].text
+        return result        
 
     
     def call_vllm2(self, user_prompt):        
