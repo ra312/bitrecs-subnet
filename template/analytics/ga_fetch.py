@@ -16,7 +16,7 @@ SITES = ["466970572", ""]
 class GAFetch:
     def __init__(self):
         self.data = None
-        self.ga_service_account = os.getenv("GA_SERVICE_ACCOUNT")
+        self.ga_service_account = os.environ.get("GA_SERVICE_ACCOUNT")
         if not self.ga_service_account:
             raise ValueError("GA_SERVICE_ACCOUNT is not set in .env file")
 

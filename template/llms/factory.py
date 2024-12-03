@@ -58,7 +58,7 @@ class OllamaLocalInterface:
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp        
-        self.OLLAMA_LOCAL_URL = os.getenv("OLLAMA_LOCAL_URL")
+        self.OLLAMA_LOCAL_URL = os.environ.get("OLLAMA_LOCAL_URL")
         if not self.OLLAMA_LOCAL_URL:
              bt.logging.error("OLLAMA_LOCAL_URL not set.")        
     
@@ -73,7 +73,7 @@ class OpenRouterInterface:
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
-        self.OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+        self.OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
         if not self.OPENROUTER_API_KEY:
             raise ValueError("OPENROUTER_API_KEY is not set in .env file")
     
@@ -88,7 +88,7 @@ class ChatGPTInterface:
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
-        self.CHATGPT_API_KEY = os.getenv("CHATGPT_API_KEY")
+        self.CHATGPT_API_KEY = os.environ.get("CHATGPT_API_KEY")
         if not self.CHATGPT_API_KEY:            
             raise ValueError("CHATGPT_API_KEY is not set in .env file")        
         
@@ -103,7 +103,7 @@ class VllmInterface:
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
-        self.VLLM_API_KEY = os.getenv("VLLM_API_KEY")
+        self.VLLM_API_KEY = os.environ.get("VLLM_API_KEY")
         if not self.VLLM_API_KEY:            
             raise ValueError("VLLM_API_KEY is not set in .env file")
         
