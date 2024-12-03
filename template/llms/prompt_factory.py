@@ -142,7 +142,7 @@ class PromptFactory:
             3) The products recommended should be products a customer would buy after they have purchased the product from <query>.
             4) Return recommendations in a JSON array.
             5) The order of the recommendations is important. The first recommendation should be the most relevant to the query.
-            6) Double check the potential return data structure for empty fields, invalid values or errors.
+            6) Double check the potential return data structure for empty fields, invalid values or errors or invalid string quotes or characters.
             7) Never explain yourself, no small talk, just return the final data in the correct array format. 
             8) Your final response should only be an array of recommendations in JSON format.
             9) Never say 'Based on the provided query' or 'I have determined'. 
