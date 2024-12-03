@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from bittensor.core.axon import FastAPIThreadedServer
 from template.protocol import BitrecsRequest
+from template.commerce.product import Product
 
 ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 
@@ -176,19 +177,17 @@ class ApiServer:
             request: BitrecsRequest,
             x_signature: str = Header(...),
             x_timestamp: str = Header(...)
-    ):
-        
+    ):        
         bt.logging.debug(f"API generate_product_rec request:  {request.computed_body_hash}")
         bt.logging.debug(f"API generate_product_rec request type:  {type(request)}")
 
         try:
             
+            stuff = Product.try_parse_context(request.context)
+            catalog_size = len(stuff)
+
             await verify_request(request, x_signature, x_timestamp)
-
-            #await verify_request(request)
-            #bt.logging.debug(f"API generate_product_rec request: {request}")
-
-            bt.logging.debug(f"API generate_product_rec start forward")
+            #bt.logging.debug(f"API generate_product_rec start forward")
             st = time.time()
             response = await self.forward_fn(request)
             et = time.time()
@@ -207,18 +206,18 @@ class ApiServer:
             response_text = "Bitrecs Took {:.2f} seconds to process request".format(total_time)
 
             bitrecs_rec = {
-                    "user": response.user, 
-                    "original_query": response.query,
-                    "status_code": "200",
-                    "status_text": "OK", #front end widgets expects this do not change
-                    "response_text": response_text,
-                    "created_at": response.created_at,
-                    "results": final_recs,
-                    "models_used": response.models_used,
-                    "catalog_size": "0",
-                    "miner_uid": response.miner_uid,
-                    "miner_hotkey": response.miner_hotkey,
-                    "reasoning": "testing"
+                "user": response.user, 
+                "original_query": response.query,
+                "status_code": "200",
+                "status_text": "OK", #front end widgets expects this do not change
+                "response_text": response_text,
+                "created_at": response.created_at,
+                "results": final_recs,
+                "models_used": response.models_used,
+                "catalog_size": str(catalog_size),
+                "miner_uid": response.miner_uid,
+                "miner_hotkey": response.miner_hotkey,
+                "reasoning": "testing"
             }
 
             #bt.logging.debug(f"API generate_product_rec JSONResponse bitrecs_rec: {bitrecs_rec}")
