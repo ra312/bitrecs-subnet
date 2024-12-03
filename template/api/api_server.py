@@ -185,6 +185,7 @@ class ApiServer:
             
             stuff = Product.try_parse_context(request.context)
             catalog_size = len(stuff)
+            bt.logging.debug(f"CATALOG SIZE: {catalog_size}")
 
             await verify_request(request, x_signature, x_timestamp)
             #bt.logging.debug(f"API generate_product_rec start forward")
