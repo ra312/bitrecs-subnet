@@ -140,9 +140,10 @@ class Miner(BaseMinerNeuron):
         match server:
             case LLM.OLLAMA_LOCAL:
                 #model = "llama3.1"
-                #model = "nemotron:latest"
-                #model = "llama3.1:70b"
-                model = "llama3.1:70b-instruct-q4_0"
+                #model = "nemotron:latest" //slow
+                #model = "llama3.1:70b" //slow
+                #model = "llama3.1:70b-instruct-q4_0" //slow
+                model = "qwen2.5:32b"
             case LLM.OPEN_ROUTER:
                 #model = "google/gemini-flash-1.5-8b"
                 model = "meta-llama/llama-3.1-70b-instruct:free"
