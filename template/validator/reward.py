@@ -113,7 +113,8 @@ def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest
         for result in response.results:
             try:             
                 result = result.replace("\'", "\"")
-                product: Product = json.loads(result)
+                #product: Product = json.loads(result)
+                product: Product = json_repair.loads(result)
                 #bt.logging.trace(f"{response.miner_uid} response product: {product}")
                 sku = product["sku"]
                 if sku in valid_items:
