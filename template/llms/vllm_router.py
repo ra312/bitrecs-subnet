@@ -15,7 +15,7 @@ class vLLM:
 
     def call_vllm(self, user_prompt):        
         openai_api_key = self.key
-        openai_api_base = "https://localhost:8000/v1"
+        openai_api_base = "http://localhost:8000/v1"
         client = OpenAI(
             api_key=openai_api_key,
             base_url=openai_api_base,
