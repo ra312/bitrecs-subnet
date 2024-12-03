@@ -136,18 +136,19 @@ class Miner(BaseMinerNeuron):
         results = []
        
         bt.logging.info(f"User Query: {synapse.query }")
-        server = self.llm_provider       
+        server = self.llm_provider
         match server:
             case LLM.OLLAMA_LOCAL:
+                model = "llama3.2:3b-instruct-q8_0" #best
                 #model = "llama3.1" //great
-                #model = "nemotron:latest" //slow
-                #model = "llama3.1:70b" //slow
-                #model = "llama3.1:70b-instruct-q4_0" //slow
-                #model = "qwen2.5:32b" //invalid results
-                #model = "qwen2.5:32b-instruct" //inaccurate
-                #model = "qwq" //slow
-                #model = "mistral-nemo" //inaccurate
-                model = "llama3.2:3b-instruct-q8_0"
+
+                #model = "nemotron:latest" #slow
+                #model = "llama3.1:70b" #slow
+                #model = "llama3.1:70b-instruct-q4_0" #slow
+                #model = "qwen2.5:32b" #invalid results
+                #model = "qwen2.5:32b-instruct" #inaccurate
+                #model = "qwq" #slow
+                #model = "mistral-nemo" #inaccurate                
             case LLM.OPEN_ROUTER:
                 #model = "google/gemini-flash-1.5-8b"
                 model = "meta-llama/llama-3.1-70b-instruct:free"
