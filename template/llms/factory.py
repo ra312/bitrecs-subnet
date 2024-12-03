@@ -105,6 +105,7 @@ class VllmInterface:
         self.VLLM_API_KEY = os.environ.get("VLLM_API_KEY")
         if not self.VLLM_API_KEY:            
             raise ValueError("VLLM_API_KEY is not set")
+        bt.logging.info(f"VLLM_API_KEY: {self.VLLM_API_KEY}")
     
     def query(self, user_prompt) -> str:
         router = vLLM(key=self.VLLM_API_KEY, model=self.model, 
