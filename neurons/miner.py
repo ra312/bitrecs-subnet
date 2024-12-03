@@ -162,7 +162,7 @@ class Miner(BaseMinerNeuron):
         #Do some cleanup - schema is validated in the reward function
         final_results = []
         for item in results:
-            bt.logging.trace(f"Item: {item}")            
+            #bt.logging.trace(f"Item: {item}")            
             cleaned_item = str(item).replace("\\'", "'")  # Fix escaped single quotes            
             dictionary_item = ast.literal_eval(cleaned_item)
             if "name" not in dictionary_item:
@@ -170,7 +170,7 @@ class Miner(BaseMinerNeuron):
                 continue
             dictionary_item["name"] = dictionary_item["name"].replace("'", "-")  # Remove single quotes
             recommendation = str(dictionary_item)
-            bt.logging.trace(f"recommendation: {recommendation}")
+            #bt.logging.trace(f"recommendation: {recommendation}")
             final_results.append(str(recommendation))
       
         output_synapse=BitrecsRequest(
