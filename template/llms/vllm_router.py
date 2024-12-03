@@ -8,7 +8,7 @@ class vLLM:
                  model="NousResearch/Meta-Llama-3-8B-Instruct", 
                  system_prompt="You are a helpful AI assistant.", 
                  temp=0.0):
-        self.key = "token-abc123"
+        self.key = "token-abc123H"
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
@@ -18,7 +18,7 @@ class vLLM:
         
         client = OpenAI(
             base_url="http://localhost:8000/v1",
-            api_key="token-abc123",
+            api_key="token-abc123H",
         )
 
         completion = client.chat.completions.create(
