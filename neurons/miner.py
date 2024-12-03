@@ -139,7 +139,8 @@ class Miner(BaseMinerNeuron):
         server = self.llm_provider       
         match server:
             case LLM.OLLAMA_LOCAL:
-                model = "llama3.1"
+                #model = "llama3.1"
+                model = "nemotron:latest"
             case LLM.OPEN_ROUTER:
                 #model = "google/gemini-flash-1.5-8b"
                 model = "meta-llama/llama-3.1-70b-instruct:free"
@@ -147,6 +148,7 @@ class Miner(BaseMinerNeuron):
                 model = "gpt-4o-mini"
             case LLM.VLLM:
                 model = "NousResearch/Meta-Llama-3-8B-Instruct"
+                #model = "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF"
             case _:
                 bt.logging.error("Unknown LLM server")
                 raise ValueError("Unknown LLM server")

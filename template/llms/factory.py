@@ -74,7 +74,7 @@ class OpenRouterInterface:
         self.temp = temp
         self.OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
         if not self.OPENROUTER_API_KEY:
-            raise ValueError("OPENROUTER_API_KEY is not set in .env file")
+            raise ValueError("OPENROUTER_API_KEY is not set")
     
     def query(self, user_prompt) -> str:
         router = OpenRouter(self.OPENROUTER_API_KEY, model=self.model, 
@@ -89,7 +89,7 @@ class ChatGPTInterface:
         self.temp = temp
         self.CHATGPT_API_KEY = os.environ.get("CHATGPT_API_KEY")
         if not self.CHATGPT_API_KEY:            
-            raise ValueError("CHATGPT_API_KEY is not set in .env file")
+            raise ValueError("CHATGPT_API_KEY is not set")
         
     def query(self, user_prompt) -> str:
         router = ChatGPT(self.CHATGPT_API_KEY, model=self.model, 
@@ -104,7 +104,7 @@ class VllmInterface:
         self.temp = temp
         self.VLLM_API_KEY = os.environ.get("VLLM_API_KEY")
         if not self.VLLM_API_KEY:            
-            raise ValueError("VLLM_API_KEY is not set in .env file")
+            raise ValueError("VLLM_API_KEY is not set")
     
     def query(self, user_prompt) -> str:
         router = vLLM(key=self.VLLM_API_KEY, model=self.model, 
