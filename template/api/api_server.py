@@ -4,8 +4,10 @@ import time
 import uvicorn
 import traceback
 import bittensor as bt
+import hmac
+import hashlib
 from typing import Callable, Awaitable, List, Optional, Any
-from fastapi import FastAPI, Request, APIRouter, Response
+from fastapi import FastAPI, HTTPException, Request, APIRouter, Response, Header
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from bittensor.core.axon import FastAPIThreadedServer
@@ -118,7 +120,7 @@ class ApiServer:
         )
         self.router.add_api_route(
             "/rec", 
-            self.get_rec,            
+            self.generate_product_rec,            
             methods=["POST"]  
         )
        
@@ -132,19 +134,22 @@ class ApiServer:
         bt.logging.info(f"\033[1;32m API Server ping \033[0m")
         return JSONResponse(status_code=200, content={"detail": "pong"})
     
-    async def get_rec(self, request: BitrecsRequest):
-        bt.logging.debug(f"API get_rec request:  {request.computed_body_hash}")
-        bt.logging.debug(f"API get_rec request type:  {type(request)}")        
+    async def generate_product_rec(self, request: BitrecsRequest):
+        bt.logging.debug(f"API generate_product_rec request:  {request.computed_body_hash}")
+        bt.logging.debug(f"API generate_product_rec request type:  {type(request)}")
 
-        try:            
-            bt.logging.debug(f"API get_rec start forward")
+        try:
+
+            self.verify_request(request)
+
+            bt.logging.debug(f"API generate_product_rec start forward")
             st = time.time()
             response = await self.forward_fn(request)
             et = time.time()
             total_time = et - st
 
             if len(response.results) == 0:
-                bt.logging.error(f"API get_rec response has no results")
+                bt.logging.error(f"API generate_product_rec response has no results")
                 return JSONResponse(status_code=500,
                                     content={"detail": "error", "status_code": 500})
 
@@ -152,7 +157,7 @@ class ApiServer:
             final_recs = []            
             # Remove single quotes from the string and convert items to JSON objects
             final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
-            #bt.logging.trace(f"API get_rec final_recs: {final_recs}")
+            #bt.logging.trace(f"API generate_product_rec final_recs: {final_recs}")
             response_text = "Bitrecs Took {:.2f} seconds to process request".format(total_time)
 
             bitrecs_rec = {
@@ -170,11 +175,11 @@ class ApiServer:
                     "reasoning": "testing"
             }
 
-            #bt.logging.debug(f"API get_rec JSONResponse bitrecs_rec: {bitrecs_rec}")
+            #bt.logging.debug(f"API generate_product_rec JSONResponse bitrecs_rec: {bitrecs_rec}")
             return JSONResponse(status_code=200, content=bitrecs_rec)
 
         except Exception as e:
-            bt.logging.error(f"API get_rec error:  {e}")
+            bt.logging.error(f"API generate_product_rec error:  {e}")
             return JSONResponse(status_code=500,
                                 content={"detail": "error", "status_code": 500})
 
@@ -197,6 +202,33 @@ class ApiServer:
         #         public_url=self.tunnel.public_url
         #     )
         #     self.tunnel = None
+    
+    async def verify_request(self, request: Request, 
+                       x_signature: str = Header(...),
+                        x_timestamp: str = Header(...)):
+        
+        bt.logging.trace(f"API verify_request request: {request}")
+        bt.logging.trace(f"API verify_request x_signature: {x_signature}")
+        bt.logging.trace(f"API verify_request x_timestamp: {x_timestamp}")
+
+        body = await request.json()
+        body_str = json.dumps(body, sort_keys=True)
+        
+        # Recreate string that was signed
+        string_to_sign = f"{x_timestamp}.{body_str}"
+
+        SECRET_KEY = "change-me"
+        # Calculate expected signature
+        expected_signature = hmac.new(
+            SECRET_KEY.encode('utf-8'),
+            string_to_sign.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+        
+        # Verify signature
+        if not hmac.compare_digest(x_signature, expected_signature):
+            raise HTTPException(status_code=401, detail="Invalid signature")
+                    
 
     @staticmethod
     async def print_req(request: Request):        
