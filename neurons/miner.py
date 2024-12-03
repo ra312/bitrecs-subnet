@@ -159,22 +159,19 @@ class Miner(BaseMinerNeuron):
         utc_now = datetime.now(timezone.utc)
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
+        #Do some cleanup - schema is validated in the reward function
         final_results = []
         for item in results:
             bt.logging.trace(f"Item: {item}")            
-            cleaned_item = str(item).replace("\\'", "'")  # Fix escaped single quotes
-            # Safely evaluate the string into a dictionary
+            cleaned_item = str(item).replace("\\'", "'")  # Fix escaped single quotes            
             dictionary_item = ast.literal_eval(cleaned_item)
+            if "name" not in dictionary_item:
+                bt.logging.error(f"Item does not contain 'name' key: {dictionary_item}")
+                continue
             dictionary_item["name"] = dictionary_item["name"].replace("'", "-")  # Remove single quotes
             recommendation = str(dictionary_item)
             bt.logging.trace(f"recommendation: {recommendation}")
-            final_results.append(str(recommendation))            
-        
-        #results = [str(r) for r in results]
-        # for r in results:
-        #     r = r.rstrip('"').lstrip('"')
-        #     final_results.append(r)
-        #processed_data = []
+            final_results.append(str(recommendation))
       
         output_synapse=BitrecsRequest(
             name=synapse.name, 

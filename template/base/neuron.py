@@ -77,17 +77,7 @@ class BaseNeuron(ABC):
         # Build Bittensor objects
         # These are core Bittensor classes to interact with the network.
         bt.logging.info("Setting up bittensor objects.")
-
-        # The wallet holds the cryptographic key pairs for the miner.
-        # if self.config.mock:
-        #     self.wallet = bt.MockWallet(config=self.config)
-        #     self.subtensor = MockSubtensor(
-        #         self.config.netuid, wallet=self.wallet
-        #     )
-        #     self.metagraph = MockMetagraph(
-        #         self.config.netuid, subtensor=self.subtensor
-        #     )
-        # else:
+              
         self.wallet = bt.wallet(config=self.config)
         self.subtensor = bt.subtensor(config=self.config)
         self.metagraph = self.subtensor.metagraph(self.config.netuid)
