@@ -187,14 +187,18 @@ class ApiServer:
         bt.logging.debug(f"API generate_product_rec request:  {request.computed_body_hash}")
         bt.logging.debug(f"API generate_product_rec request type:  {type(request)}")
 
-        try:
-            
+        try:            
+          
+            await verify_request(request, x_signature, x_timestamp)
+
             stuff = Product.try_parse_context(request.context)
             catalog_size = len(stuff)
             bt.logging.debug(f"CATALOG SIZE: {catalog_size}")
-
-            await verify_request(request, x_signature, x_timestamp)
-            #bt.logging.debug(f"API generate_product_rec start forward")
+            if catalog_size < 10:
+                bt.logging.error(f"API generate_product_rec catalog size too small")
+                return JSONResponse(status_code=500,
+                                    content={"detail": "error", "status_code": 500})
+            
             st = time.time()
             response = await self.forward_fn(request)
             et = time.time()
