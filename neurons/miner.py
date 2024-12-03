@@ -338,8 +338,8 @@ class Miner(BaseMinerNeuron):
                 #model = "qwq" #slow
                 #model = "mistral-nemo" #inaccurate
             case LLM.OPEN_ROUTER:
-                #model = "google/gemini-flash-1.5-8b"
-                model = "meta-llama/llama-3.1-70b-instruct:free"
+                model = "google/gemini-flash-1.5-8b"
+                #model = "meta-llama/llama-3.1-70b-instruct:free"
             case LLM.CHAT_GPT:
                 model = "gpt-4o-mini"
             case LLM.VLLM:
