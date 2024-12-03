@@ -27,9 +27,9 @@ class vLLM:
                 {"role": "user", "content": user_prompt}
             ]
         )
-        print(completion.choices[0].message)
-        
-        result = completion.choices[0].text
+        print(completion.choices[0].message.content)
+
+        result = completion.choices[0].message.content
         return result        
 
     
