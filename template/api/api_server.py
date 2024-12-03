@@ -172,7 +172,8 @@ class ApiServer:
         bt.logging.debug(f"API generate_product_rec request type:  {type(request)}")
 
         try:
-            
+            validated_body = await verify_request(request, x_signature, x_timestamp)
+
             #await verify_request(request)
             bt.logging.debug(f"API generate_product_rec request: {request}")
 
