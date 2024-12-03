@@ -124,8 +124,14 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
     # Verify signature
     if not hmac.compare_digest(x_signature, expected_signature):
         raise HTTPException(status_code=401, detail="Invalid signature")
-    else:
-        bt.logging.info(f"\033[1;32m Signature Verified\033[0m")
+
+    # Check timestamp is not too old (e.g., within last 5 minutes)
+    timestamp = int(x_timestamp)
+    current_time = int(time.time())
+    if current_time - timestamp > 300:  # 5 minutes
+        raise HTTPException(status_code=401, detail="Request expired")
+    
+    bt.logging.info(f"\033[1;32m Signature Verified\033[0m")
         
     
 
