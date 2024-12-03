@@ -171,7 +171,7 @@ class ApiServer:
             x_timestamp: str = Header(...)
     ):
         
-        bt.logging.debug(f"API generate_product_rec request:  {request.computed_body_hash}")
+        #bt.logging.debug(f"API generate_product_rec request:  {request.computed_body_hash}")
         bt.logging.debug(f"API generate_product_rec request type:  {type(request)}")
 
         try:
