@@ -160,19 +160,15 @@ class Miner(BaseMinerNeuron):
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
         final_results = []
-
-        # Process each string to clean and convert to a dictionary        
         for item in results:
-            bt.logging.trace(f"Item: {item}")
-            # Clean up the string
+            bt.logging.trace(f"Item: {item}")            
             cleaned_item = str(item).replace("\\'", "'")  # Fix escaped single quotes
             # Safely evaluate the string into a dictionary
             dictionary_item = ast.literal_eval(cleaned_item)
             dictionary_item["name"] = dictionary_item["name"].replace("'", "-")  # Remove single quotes
-            bt.logging.trace(f"dictionary_item: {dictionary_item}")
-            final_results.append(str(dictionary_item))
-
-            bt.logging.trace(f"cleaned_item: {cleaned_item}")
+            recommendation = str(dictionary_item)
+            bt.logging.trace(f"recommendation: {recommendation}")
+            final_results.append(str(recommendation))            
         
         #results = [str(r) for r in results]
         # for r in results:
