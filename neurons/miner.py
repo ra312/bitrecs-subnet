@@ -168,8 +168,10 @@ class Miner(BaseMinerNeuron):
             cleaned_item = str(item).replace("\\'", "'")  # Fix escaped single quotes
             # Safely evaluate the string into a dictionary
             dictionary_item = ast.literal_eval(cleaned_item)
+            dictionary_item["name"] = dictionary_item["name"].replace("'", "-")  # Remove single quotes
             bt.logging.trace(f"dictionary_item: {dictionary_item}")
-            final_results.append(cleaned_item)
+            final_results.append(str(dictionary_item))
+
             bt.logging.trace(f"cleaned_item: {cleaned_item}")
         
         #results = [str(r) for r in results]
