@@ -283,7 +283,11 @@ class BaseValidatorNeuron(BaseNeuron):
                             
                         selected_rec = rewards.argmax()
                         elected = responses[selected_rec]
-                        bt.logging.info(f"FINAL RESULT AFTER SCORING: {elected}")
+                        
+                        bt.logging.info("SCORING DONE")
+                        bt.logging.info(f"WINNING MINER: {elected.miner_uid}")
+                        bt.logging.info(f"WINNING RESULT: {elected}")
+
                         if len(elected.results) == 0:
                             bt.logging.error("FATAL - Elected response has no results")
                             #TODO this causes empty results back to the client resulting in poor UX fix in API?
