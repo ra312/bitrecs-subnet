@@ -20,6 +20,10 @@ class vLLM:
 
 
     def call_vllm(self, user_prompt) -> str:
+        
+        bt.logging.info(f"Calling vLLM with user prompt: {user_prompt}")
+        bt.logging.info(f"key: {self.key}")
+
         client = OpenAI(
             base_url="http://localhost:8000/v1",
             api_key=self.key,
