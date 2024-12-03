@@ -115,6 +115,12 @@ class Miner(BaseMinerNeuron):
         if self.llm_provider == LLM.VLLM:
             bt.logging.info(f"\033[1;35m Please ensure vLLM Server is running\033[0m")
 
+        bt.logging.info(f"\033[1;35m Miner is warming up\033[0m")
+        warmup_result = self.warmup()
+        if not warmup_result:
+            bt.logging.error(f"\033[31mMiner warmup failed. Exiting.\033[0m")
+            sys.exit()
+
 
     async def forward(
         self, synapse: BitrecsRequest
@@ -148,7 +154,7 @@ class Miner(BaseMinerNeuron):
                 #model = "qwen2.5:32b" #invalid results
                 #model = "qwen2.5:32b-instruct" #inaccurate
                 #model = "qwq" #slow
-                #model = "mistral-nemo" #inaccurate                
+                #model = "mistral-nemo" #inaccurate
             case LLM.OPEN_ROUTER:
                 #model = "google/gemini-flash-1.5-8b"
                 model = "meta-llama/llama-3.1-70b-instruct:free"
@@ -312,6 +318,45 @@ class Miner(BaseMinerNeuron):
     
     def save_state(self):        
         pass
+
+
+    def warmup(self):
+        match self.llm_provider:
+            case LLM.OLLAMA_LOCAL:
+                model = "llama3.2:3b-instruct-q8_0" #best
+                #model = "llama3.1" //great
+
+                #model = "nemotron:latest" #slow
+                #model = "llama3.1:70b" #slow
+                #model = "llama3.1:70b-instruct-q4_0" #slow
+                #model = "qwen2.5:32b" #invalid results
+                #model = "qwen2.5:32b-instruct" #inaccurate
+                #model = "qwq" #slow
+                #model = "mistral-nemo" #inaccurate
+            case LLM.OPEN_ROUTER:
+                #model = "google/gemini-flash-1.5-8b"
+                model = "meta-llama/llama-3.1-70b-instruct:free"
+            case LLM.CHAT_GPT:
+                model = "gpt-4o-mini"
+            case LLM.VLLM:
+                model = "NousResearch/Meta-Llama-3-8B-Instruct"
+                #model = "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF"
+            case _:
+                bt.logging.error("Unknown LLM server")
+                raise ValueError("Unknown LLM server")
+             
+        bt.logging.info(f"Miner Warmup: {self.llm} - Model: {model}")
+        try:
+            result = LLMFactory.query_llm(server=self.llm_provider, 
+                                 model=model, 
+                                 system_prompt="You are a helpful assistant", 
+                                 temp=0.1, user_prompt="Tell me a joke")
+            bt.logging.info(f"LLM {model} - Warmup Result: {result}")
+            return True            
+        except Exception as e:            
+            bt.logging.error(f"\033[31mFATAL ERROR calling warmup: {e!r} \033[0m")
+        return False
+        
 
 # This is the main function, which runs the miner.
 if __name__ == "__main__":
