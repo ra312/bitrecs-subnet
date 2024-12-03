@@ -98,7 +98,20 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
     Raises HTTPException if validation fails.
     """
 
-    body_str = json.dumps(request, sort_keys=True)    
+    d = {
+        'created_at': request.created_at,
+        'user': request.user,
+        'num_results': request.num_results,
+        'query': request.query,
+        'context': request.context,
+        'site_key': request.site_key,
+        'results': request.results,
+        'models_used': request.models_used,
+        'miner_uid': request.miner_uid,
+        'miner_hotkey': request.miner_hotkey
+    }
+
+    body_str = json.dumps(d, sort_keys=True)
     # Recreate string that was signed
     string_to_sign = f"{x_timestamp}.{body_str}"
     
