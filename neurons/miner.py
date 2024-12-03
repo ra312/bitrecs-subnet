@@ -163,11 +163,14 @@ class Miner(BaseMinerNeuron):
 
         # Process each string to clean and convert to a dictionary        
         for item in results:
+            bt.logging.trace(f"Item: {item}")
             # Clean up the string
             cleaned_item = str(item).replace("\\'", "'")  # Fix escaped single quotes
             # Safely evaluate the string into a dictionary
             dictionary_item = ast.literal_eval(cleaned_item)
+            bt.logging.trace(f"dictionary_item: {dictionary_item}")
             final_results.append(cleaned_item)
+            bt.logging.trace(f"cleaned_item: {cleaned_item}")
         
         #results = [str(r) for r in results]
         # for r in results:
