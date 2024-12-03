@@ -20,11 +20,14 @@ class vLLM:
         }
         data = {
             "prompt": "{}".format(user_prompt),
-            "max_tokens": 50
+            "max_tokens": 500
         }
         response = requests.post("http://127.0.0.1:8000/v1/completions", json=data, headers=headers)
-        print(response.json())
-        return response.json()["choices"][0]["text"]
+        
+        llm_response = response.json()
+        bt.logging.trace("vLLM response: {}".format(llm_response))
+
+        return llm_response["choices"][0]["text"].strip()  # Strip to remove any extraneous whitespace
                 
     
     def call_vllm2(self, user_prompt):        
