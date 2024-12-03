@@ -18,6 +18,8 @@ ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 auth_data = dict()
 request_counts = {}
 
+SECRET_KEY = "change-me"
+
 
 def is_api_data_valid(data) -> tuple[bool, str]:
     if not isinstance(data, dict):
@@ -109,20 +111,15 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
         'miner_uid': request.miner_uid,
         'miner_hotkey': request.miner_hotkey
     }
-
     body_str = json.dumps(d, sort_keys=True)
     # Recreate string that was signed
     string_to_sign = f"{x_timestamp}.{body_str}"
-    
-    SECRET_KEY = "change-me"
-
     # Calculate expected signature
     expected_signature = hmac.new(
         SECRET_KEY.encode('utf-8'),
         string_to_sign.encode('utf-8'),
         hashlib.sha256
-    ).hexdigest()
-    
+    ).hexdigest()    
     # Verify signature
     if not hmac.compare_digest(x_signature, expected_signature):
         raise HTTPException(status_code=401, detail="Invalid signature")
@@ -185,7 +182,8 @@ class ApiServer:
         bt.logging.debug(f"API generate_product_rec request type:  {type(request)}")
 
         try:
-            validated_body = await verify_request(request, x_signature, x_timestamp)
+            
+            await verify_request(request, x_signature, x_timestamp)
 
             #await verify_request(request)
             #bt.logging.debug(f"API generate_product_rec request: {request}")
