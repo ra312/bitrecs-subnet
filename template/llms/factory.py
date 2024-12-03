@@ -10,7 +10,7 @@ from enum import Enum
 from template.llms.llama_local import OllamaLocal
 from template.llms.open_router import OpenRouter
 from template.llms.chat_gpt import ChatGPT
-from template.llms.vllm import VLLM
+from template.llms.vllm_router import vLLM
 
 
 class LLM(Enum):
@@ -105,5 +105,5 @@ class VllmInterface:
         self.temp = temp
     
     def query(self, user_prompt) -> str:
-        router = VLLM(self.model, system_prompt=self.system_prompt, temp=self.temp)
+        router = vLLM(self.model, system_prompt=self.system_prompt, temp=self.temp)
         return router.call_vllm(user_prompt)
