@@ -6,6 +6,8 @@ from google.analytics.data_v1beta.types import (
     Metric,
     RunReportRequest,
 )
+import asyncio
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -48,9 +50,6 @@ class GAFetch:
         for row in response.rows:
             print(row.dimension_values[0].value, row.metric_values[0].value)
 
-
-
-import asyncio
 
 if __name__ == '__main__':
     async def main():

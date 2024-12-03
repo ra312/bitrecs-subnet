@@ -18,15 +18,7 @@ class vLLM:
         self.temp = temp
 
 
-    def call_vllm(self, user_prompt) -> str:     
-
-        bt.logging.info(f"Calling vLLM with user_prompt: {user_prompt}")
-        bt.logging.info(f"Model: {self.model}")
-        bt.logging.info(f"System Prompt: {self.system_prompt}")
-        bt.logging.info(f"Temp: {self.temp}")
-        bt.logging.info(f"Key: {self.key}")
-        
-
+    def call_vllm(self, user_prompt) -> str:
         client = OpenAI(
             base_url="http://localhost:8000/v1",
             api_key="token-abc123H",
