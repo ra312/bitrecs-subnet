@@ -22,7 +22,7 @@ class vLLM:
             "prompt": "{}".format(user_prompt),
             "max_tokens": 500
         }
-        response = requests.post("http://127.0.0.1:8000/v1/completions", json=data, headers=headers)
+        response = requests.post("http://0.0.0.0:8000/v1/completions", json=data, headers=headers)
         
         llm_response = response.json()
         bt.logging.trace("vLLM response: {}".format(llm_response))
