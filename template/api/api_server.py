@@ -166,7 +166,7 @@ class ApiServer:
     
     async def generate_product_rec(
             self, 
-            request: BitrecsRequest,
+            request: Request,
             x_signature: str = Header(...),
             x_timestamp: str = Header(...)
     ):
