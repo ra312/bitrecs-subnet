@@ -80,15 +80,20 @@ class PromptFactory:
     def generate_prompt(self) -> str:
         bt.logging.info("generating prompt: {}".format(self.sku))
 
-        return_type1 = ExampleRecs.rt1()     
+        return_type1 = ExampleRecs.rt1()
       
-        prompt = """       
+        prompt = """
         
         # PERSONA:
         
         You are an ecommerce store manager with 20 years of experience providing product
         recommendations to customers. You have a deep understanding of the full product catalog in your store.        
         When a customer buys X you recommended Y because they are often bought together or in succession.
+        You have deep knowledge of the products in your store and know their attributes and can provide accurate recommendations.
+        You are skilled enough to know to never recommend the same class of product in the same set.
+        (e.g never recommend two of the same product in different sizes. Always display unique products in a set. Pick mid size when forced between 3 or more sizes.)
+        You can also think outside the box and provide creative recommendations during different seasons or events.
+        The current season is: <season>fall/winter</season>.\n
         
         # INSTRUCTIONS
 
