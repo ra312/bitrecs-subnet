@@ -91,14 +91,14 @@ async def api_key_validator(request, call_next) -> Response:
     return response
 
 
-async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str) -> Dict[str, Any]:
+async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str):
     """
     Internal function to verify HMAC signature of incoming requests.
     Returns the validated request body if signature is valid.
     Raises HTTPException if validation fails.
     """
 
-    body_str = json.dumps(request.dict(), sort_keys=True)    
+    body_str = json.dumps(request, sort_keys=True)    
     # Recreate string that was signed
     string_to_sign = f"{x_timestamp}.{body_str}"
     
@@ -115,7 +115,7 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
     if not hmac.compare_digest(x_signature, expected_signature):
         raise HTTPException(status_code=401, detail="Invalid signature")
         
-    return body
+    
 
 
 class ApiServer:
