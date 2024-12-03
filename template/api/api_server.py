@@ -97,7 +97,10 @@ async def verify_request(request: Request, x_signature: str, x_timestamp: str) -
     Returns the validated request body if signature is valid.
     Raises HTTPException if validation fails.
     """
-    body = await request.json()
+    
+    raw_body = await request.body()
+    # Decode it to string and parse as JSON
+    body = json.loads(raw_body)
     body_str = json.dumps(body, sort_keys=True)
     
     # Recreate string that was signed
