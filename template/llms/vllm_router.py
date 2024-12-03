@@ -4,7 +4,7 @@ from openai import OpenAI
 
 class vLLM:
     """
-     python3 -m vllm.entrypoints.openai.api_server --model NousResearch/Meta-Llama-3-8B-Instruct --dtype auto --api-key token-abc123H
+     python3 -m vllm.entrypoints.openai.api_server --model NousResearch/Meta-Llama-3-8B-Instruct --dtype auto --api-key xxxxxxx
 
     """
     def __init__(self, 
@@ -21,7 +21,7 @@ class vLLM:
     def call_vllm(self, user_prompt) -> str:
         client = OpenAI(
             base_url="http://localhost:8000/v1",
-            api_key="token-abc123H",
+            api_key=self.key,
         )
         completion = client.chat.completions.create(
             model=self.model,
