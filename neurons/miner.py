@@ -160,12 +160,12 @@ class Miner(BaseMinerNeuron):
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
         final_results = []
-        results = [str(r) for r in results]
+        #results = [str(r) for r in results]
         # for r in results:
         #     r = r.rstrip('"').lstrip('"')
         #     final_results.append(r)
         #processed_data = []
-        
+
         for item in results:
             # Convert the string into a dictionary safely
             cleaned_item = ast.literal_eval(item.replace("\\'", "'"))
