@@ -1,8 +1,24 @@
-
+from openai import OpenAI
 
 class vLLM:
-    def __init__(self, vllm):
-        self.vllm = vllm
+    def __init__(self, 
+                 key, 
+                 model="NousResearch/Meta-Llama-3-8B-Instruct", 
+                 system_prompt="You are a helpful AI assistant.", 
+                 temp=0.0):
+        self.key = key
+        self.model = model
+        self.system_prompt = system_prompt
+        self.temp = temp
 
-    def get_vllm(self):
-        return self.vllm
+
+    def call_vllm(self, user_prompt):        
+        openai_api_key = self.key
+        openai_api_base = "https://localhost:8000/v1"
+        client = OpenAI(
+            api_key=openai_api_key,
+            base_url=openai_api_base,
+        )
+        completion = client.completions.create(model=self.model, prompt=user_prompt, max_tokens=500)
+        result = completion.choices[0].text
+        return result

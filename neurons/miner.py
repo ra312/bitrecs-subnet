@@ -112,6 +112,9 @@ class Miner(BaseMinerNeuron):
         if self.uid == best_performing_uid:
             bt.logging.info(f"\033[1;32m 🐸 You are the BEST performing miner in the subnet, keep it up!\033[0m")
 
+        if self.llm_provider == LLM.VLLM:
+            bt.logging.info(f"\033[1;35m Please ensure vLLM Server is running\033[0m")
+
 
     async def forward(
         self, synapse: BitrecsRequest
@@ -143,7 +146,7 @@ class Miner(BaseMinerNeuron):
             case LLM.CHAT_GPT:
                 model = "gpt-4o-mini"
             case LLM.VLLM:
-                model = ""
+                model = "NousResearch/Meta-Llama-3-8B-Instruct"
             case _:
                 bt.logging.error("Unknown LLM server")
                 raise ValueError("Unknown LLM server")
