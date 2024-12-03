@@ -139,13 +139,14 @@ class Miner(BaseMinerNeuron):
         server = self.llm_provider       
         match server:
             case LLM.OLLAMA_LOCAL:
-                #model = "llama3.1"
+                #model = "llama3.1" //great
                 #model = "nemotron:latest" //slow
                 #model = "llama3.1:70b" //slow
                 #model = "llama3.1:70b-instruct-q4_0" //slow
                 #model = "qwen2.5:32b" //invalid results
-                #model = "qwen2.5:32b-instruct"
-                model = "qwq"
+                #model = "qwen2.5:32b-instruct" //inaccurate
+                #model = "qwq" //slow
+                model = "mistral-nemo"
             case LLM.OPEN_ROUTER:
                 #model = "google/gemini-flash-1.5-8b"
                 model = "meta-llama/llama-3.1-70b-instruct:free"
