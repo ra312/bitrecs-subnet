@@ -164,7 +164,7 @@ class Miner(BaseMinerNeuron):
         # Process each string to clean and convert to a dictionary        
         for item in results:
             # Clean up the string
-            cleaned_item = item.replace("\\'", "'")  # Fix escaped single quotes
+            cleaned_item = str(item).replace("\\'", "'")  # Fix escaped single quotes
             # Safely evaluate the string into a dictionary
             dictionary_item = ast.literal_eval(cleaned_item)
             final_results.append(dictionary_item)
