@@ -104,6 +104,7 @@ class Miner(BaseMinerNeuron):
             provider = LLMFactory.try_get_enum(self.llm)
             bt.logging.info(f"\033[1;35m Miner LLM Provider: [{self.llm}]\033[0m")
             self.llm_provider = provider
+            self.model = ""
         except ValueError as ve:
             bt.logging.error(f"Invalid LLM provider: {ve}")
             sys.exit()
@@ -119,6 +120,9 @@ class Miner(BaseMinerNeuron):
         warmup_result = self.warmup()
         if not warmup_result:
             bt.logging.error(f"\033[31mMiner warmup failed. Exiting.\033[0m")
+            sys.exit()
+        if not self.model:
+            bt.logging.error(f"\033[31mMiner model not set. Exiting.\033[0m")
             sys.exit()
 
 
@@ -143,37 +147,37 @@ class Miner(BaseMinerNeuron):
        
         bt.logging.info(f"User Query: {synapse.query }")
         server = self.llm_provider
-        match server:
-            case LLM.OLLAMA_LOCAL:
-                model = "llama3.2:3b-instruct-q8_0" #best
-                #model = "llama3.1" //great
+        # match server:
+        #     case LLM.OLLAMA_LOCAL:
+        #         model = "llama3.2:3b-instruct-q8_0" #best
+        #         #model = "llama3.1" //great
 
-                #model = "nemotron:latest" #slow
-                #model = "llama3.1:70b" #slow
-                #model = "llama3.1:70b-instruct-q4_0" #slow
-                #model = "qwen2.5:32b" #invalid results
-                #model = "qwen2.5:32b-instruct" #inaccurate
-                #model = "qwq" #slow
-                #model = "mistral-nemo" #inaccurate
-            case LLM.OPEN_ROUTER:
-                #model = "google/gemini-flash-1.5-8b"
-                model = "meta-llama/llama-3.1-70b-instruct:free"
-            case LLM.CHAT_GPT:
-                model = "gpt-4o-mini"
-            case LLM.VLLM:
-                model = "NousResearch/Meta-Llama-3-8B-Instruct"
-                #model = "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF"
-            case _:
-                bt.logging.error("Unknown LLM server")
-                raise ValueError("Unknown LLM server")
-        bt.logging.info(f"LLM: {server} - Model: {model}")
+        #         #model = "nemotron:latest" #slow
+        #         #model = "llama3.1:70b" #slow
+        #         #model = "llama3.1:70b-instruct-q4_0" #slow
+        #         #model = "qwen2.5:32b" #invalid results
+        #         #model = "qwen2.5:32b-instruct" #inaccurate
+        #         #model = "qwq" #slow
+        #         #model = "mistral-nemo" #inaccurate
+        #     case LLM.OPEN_ROUTER:
+        #         #model = "google/gemini-flash-1.5-8b"
+        #         model = "meta-llama/llama-3.1-70b-instruct:free"
+        #     case LLM.CHAT_GPT:
+        #         model = "gpt-4o-mini"
+        #     case LLM.VLLM:
+        #         model = "NousResearch/Meta-Llama-3-8B-Instruct"
+        #         #model = "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF"
+        #     case _:
+        #         bt.logging.error("Unknown LLM server")
+        #         raise ValueError("Unknown LLM server")
+        # bt.logging.info(f"LLM: {server} - Model: {model}")
       
         context = synapse.context
         num_recs = synapse.num_results
         try:
 
-            results = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)            
-            bt.logging.info(f"LLM {model} - Results: count ({len(results)})")
+            results = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=self.model)            
+            bt.logging.info(f"LLM {self.model} - Results: count ({len(results)})")
             
         except Exception as e:            
             bt.logging.error(f"\033[31mFATAL ERROR calling do_work: {e!r} \033[0m")
@@ -199,7 +203,7 @@ class Miner(BaseMinerNeuron):
             context="[]",
             site_key=synapse.site_key,
             results=final_results,
-            models_used=[model],
+            models_used=[self.model],
             miner_uid=str(self.uid),
             miner_hotkey=synapse.dendrite.hotkey
         )
@@ -352,6 +356,7 @@ class Miner(BaseMinerNeuron):
                                  system_prompt="You are a helpful assistant", 
                                  temp=0.1, user_prompt="Tell me a joke")
             bt.logging.info(f"LLM {model} - Warmup Result: {result}")
+            self.model = model
             return True            
         except Exception as e:            
             bt.logging.error(f"\033[31mFATAL ERROR calling warmup: {e!r} \033[0m")
