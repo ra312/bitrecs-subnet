@@ -103,7 +103,11 @@ class VllmInterface:
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
+        self.VLLM_API_KEY = os.getenv("VLLM_API_KEY")
+        if not self.VLLM_API_KEY:            
+            raise ValueError("VLLM_API_KEY is not set in .env file")
     
     def query(self, user_prompt) -> str:
-        router = vLLM(self.model, system_prompt=self.system_prompt, temp=self.temp)
+        router = vLLM(key=self.VLLM_API_KEY, model=self.model, 
+                      system_prompt=self.system_prompt, temp=self.temp)
         return router.call_vllm(user_prompt)
