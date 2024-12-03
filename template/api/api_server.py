@@ -139,31 +139,35 @@ class ApiServer:
             port=axon_port,
             log_level="trace" if bt.logging.__trace_on__ else "critical"
         ))
-
         self.router = APIRouter()
         self.router.add_api_route(
             "/ping", 
             self.ping,            
             methods=["GET"],
         )
-
         self.router.add_api_route(
             "/rec", 
             self.generate_product_rec,
             methods=["POST"]  
-        )
-       
+        )       
         self.app.include_router(self.router)
         self.api_json = api_json
-
         self.tunnel = None
         bt.logging.info(f"\033[1;32m API Server initialized \033[0m")
 
+    
     async def ping(self):
         bt.logging.info(f"\033[1;32m API Server ping \033[0m")
         return JSONResponse(status_code=200, content={"detail": "pong"})
     
-    async def generate_product_rec(self, request: BitrecsRequest):
+    
+    async def generate_product_rec(
+            self, 
+            request: BitrecsRequest,
+            x_signature: str = Header(...),
+            x_timestamp: str = Header(...)
+    ):
+        
         bt.logging.debug(f"API generate_product_rec request:  {request.computed_body_hash}")
         bt.logging.debug(f"API generate_product_rec request type:  {type(request)}")
 
