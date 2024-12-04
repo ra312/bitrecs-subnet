@@ -64,7 +64,7 @@ async def do_work(user_prompt: str,
                             context=context, 
                             num_recs=num_recs, 
                             load_catalog=False, 
-                            debug=True)
+                            debug=False)
     
     prompt = factory.generate_prompt()    
     system_prompt = "You are a helpful assistant."
@@ -176,7 +176,7 @@ class Miner(BaseMinerNeuron):
             dictionary_item["name"] = dictionary_item["name"].replace("'", "-")  # Remove single quotes
             recommendation = str(dictionary_item)
             #bt.logging.trace(f"recommendation: {recommendation}")
-            final_results.append(str(recommendation))
+            final_results.append(recommendation)
       
         output_synapse=BitrecsRequest(
             name=synapse.name, 
