@@ -359,7 +359,7 @@ class Miner(BaseMinerNeuron):
 
         
 async def main():     
-    GPUInfo.log_gpu_info()
+    await GPUInfo.log_gpu_info()
     with Miner() as miner:
         #start_time = time.time()
         while True:
