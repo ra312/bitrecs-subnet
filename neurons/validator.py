@@ -70,13 +70,7 @@ async def main():
             if current_time.minute % 15 == 0 and (current_time.second >= 0 or current_time.minute > 14):
                 print(f"Current hour is {current_time.hour}, it's a special hour!")
             time.sleep(5)
-            
 
 
-# The main function parses the configuration and runs the validator.
-if __name__ == "__main__":
-    # with Validator() as validator:
-    #     while True:
-    #         bt.logging.info(f"Validator {validator.uid} running ... {int(time.time())}")
-    #         time.sleep(5)
+if __name__ == "__main__": 
     asyncio.run(main())

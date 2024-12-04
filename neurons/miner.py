@@ -280,7 +280,7 @@ class Miner(BaseMinerNeuron):
         This implementation assigns priority to incoming requests based on the calling entity's stake in the metagraph.
 
         Args:
-            synapse (template.protocol.Dummy): The synapse object that contains metadata about the incoming request.
+            synapse (template.protocol.BitrecsRequest): The synapse object that contains metadata about the incoming request.
 
         Returns:
             float: A priority score derived from the stake of the calling entity.
@@ -332,8 +332,8 @@ class Miner(BaseMinerNeuron):
                 #model = "qwq" #slow
                 #model = "mistral-nemo" #inaccurate
             case LLM.OPEN_ROUTER:
-                model = "google/gemini-flash-1.5-8b"
-                #model = "meta-llama/llama-3.1-70b-instruct:free"
+                model = "google/gemini-flash-1.5-8b" #best
+                #model = "meta-llama/llama-3.1-70b-instruct:free" #ok
             case LLM.CHAT_GPT:
                 model = "gpt-4o-mini"
             case LLM.VLLM:
@@ -348,9 +348,9 @@ class Miner(BaseMinerNeuron):
             result = LLMFactory.query_llm(server=self.llm_provider, 
                                  model=model, 
                                  system_prompt="You are a helpful assistant", 
-                                 temp=0.1, user_prompt="Tell me a joke")
-            bt.logging.info(f"Warmup SUCCESS: {model} - Result: {result}")
+                                 temp=0.1, user_prompt="Tell me a joke")            
             self.model = model
+            bt.logging.info(f"Warmup SUCCESS: {self.model} - Result: {result}")
             return True
         except Exception as e:
             bt.logging.error(f"\033[31mFATAL ERROR calling warmup: {e!r} \033[0m")
@@ -358,15 +358,14 @@ class Miner(BaseMinerNeuron):
 
 
         
-async def main():     
+async def main():
     await GPUInfo.log_gpu_info()
     with Miner() as miner:
         #start_time = time.time()
         while True:
-            bt.logging.info(f"Miner running... {time.time()}")
+            bt.logging.info(f"Miner {miner.uid} running... {time.time()}")
             time.sleep(15)
 
 
-# This is the main function, which runs the miner.
 if __name__ == "__main__":  
     asyncio.run(main())
