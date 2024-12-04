@@ -5,78 +5,20 @@ import pandas as pd
 import bittensor as bt
 
 
-
 class PromptFactory:
     """
     Creates a bitrecs prompt for a given SKU and context.
     
     """
-    def __init__(self, sku, context, num_recs=5, load_catalog=False):        
+    def __init__(self, sku, context, num_recs=5, load_catalog=False, debug=False):        
         self.sku = sku
         self.context = context
         self.num_recs = num_recs
         if self.num_recs < 1 or self.num_recs > 20:
             raise ValueError("num_recs must be between 1 and 20")
         self.catalog = []
+        self.debug = debug
 
-        # if load_catalog:
-        #     data_folder = os.path.join(os.path.dirname(__file__), "..", "..", "data")
-        #     print(data_folder)
-        #     catalog_file = "{}/product_catalog.csv".format(data_folder)
-        #     if not os.path.exists(catalog_file):
-        #         raise FileNotFoundError("Catalog file not found: {}".format(catalog_file))
-        #     df = OpenRouterRec.tryload_catalog(catalog_file)
-        #     self.catalog = df
-
-    @staticmethod
-    def tryload_catalog(file_path: str, max_rows=10000) -> list:
-        try:
-            df = pd.read_csv(file_path)
-            #WooCommerce Format
-            columns = ["ID", "Type", "SKU", "Name", "Published", "Description", "In stock?", "Stock", "Categories"]            
-            #Take only certain columns
-            df = df[[c for c in columns if c in df.columns]]            
-            #Clean HTML
-            df['Description'] = df['Description'].str.replace(r'<[^<>]*>', '', regex=True)
-            #Only take simple and variable products
-            product_types = ["simple", "variable"]
-            df = df[df['Type'].isin(product_types)]            
-            #Final renaming of columns
-            df = df.rename(columns={'In stock?': 'InStock', 'Stock': 'OnHand'})
-            #Remove NaN
-            df.fillna('', inplace=True)
-            df = df.head(max_rows)
-            df = df.to_dict(orient='records')
-            return df
-        except Exception as e:            
-            bt.logging.error(str(e))
-            return []
-        
-
-    @staticmethod
-    def tryparse_llm(input_str: str) -> list:
-        try:
-            pattern = r'\[.*?\]'
-            regex = re.compile(pattern, re.DOTALL)
-            match = regex.findall(input_str)        
-            for array in match:
-                try:
-                    llm_result = array.strip()
-                    return json.loads(llm_result)
-                except json.JSONDecodeError:
-                    #print(f"Invalid JSON: {array}")
-                    bt.logging.error(f"Invalid JSON in prompt factory: {array}")
-            return []
-        except Exception as e:
-            bt.logging.error(str(e))
-            return []
-
-
-    def catalog_to_json(self) -> str:
-        if len(self.catalog) == 0:
-            return "[]"
-        return json.dumps(self.catalog, indent=2)
-    
     
     def generate_prompt(self) -> str:
 
@@ -190,8 +132,62 @@ class PromptFactory:
         prompt_length = len(prompt)
         bt.logging.info(f"LLM QUERY Prompt length: {prompt_length}")
 
+        if self.debug:
+            bt.logging.info("Prompt: {}".format(prompt))
+
         return prompt
     
+
+    @staticmethod
+    def tryload_catalog(file_path: str, max_rows=10000) -> list:
+        try:
+            df = pd.read_csv(file_path)
+            #WooCommerce Format
+            columns = ["ID", "Type", "SKU", "Name", "Published", "Description", "In stock?", "Stock", "Categories"]            
+            #Take only certain columns
+            df = df[[c for c in columns if c in df.columns]]            
+            #Clean HTML
+            df['Description'] = df['Description'].str.replace(r'<[^<>]*>', '', regex=True)
+            #Only take simple and variable products
+            product_types = ["simple", "variable"]
+            df = df[df['Type'].isin(product_types)]            
+            #Final renaming of columns
+            df = df.rename(columns={'In stock?': 'InStock', 'Stock': 'OnHand'})
+            #Remove NaN
+            df.fillna('', inplace=True)
+            df = df.head(max_rows)
+            df = df.to_dict(orient='records')
+            return df
+        except Exception as e:            
+            bt.logging.error(str(e))
+            return []
+        
+
+    @staticmethod
+    def tryparse_llm(input_str: str) -> list:
+        try:
+            pattern = r'\[.*?\]'
+            regex = re.compile(pattern, re.DOTALL)
+            match = regex.findall(input_str)        
+            for array in match:
+                try:
+                    llm_result = array.strip()
+                    return json.loads(llm_result)
+                except json.JSONDecodeError:
+                    #print(f"Invalid JSON: {array}")
+                    bt.logging.error(f"Invalid JSON in prompt factory: {array}")
+            return []
+        except Exception as e:
+            bt.logging.error(str(e))
+            return []
+
+
+    def catalog_to_json(self) -> str:
+        if len(self.catalog) == 0:
+            return "[]"
+        return json.dumps(self.catalog, indent=2)
+
+
 
 class ExampleRecs:
     

@@ -59,7 +59,7 @@ class SynapseWithEvent:
 
 async def api_forward(synapse: BitrecsRequest) -> BitrecsRequest:
     #bt.logging.info(f"api_forward validator synapse: {synapse}")
-    bt.logging.info(f"api_forward validator synapse type: {type(synapse)}")
+    bt.logging.trace(f"API FORWARD validator synapse type: {type(synapse)}")
     
     """ Forward function for API server. """
     synapse_with_event = SynapseWithEvent(
@@ -101,12 +101,7 @@ class BaseValidatorNeuron(BaseNeuron):
         super().__init__(config=config)
 
         # Save a copy of the hotkeys to local memory.
-        self.hotkeys = copy.deepcopy(self.metagraph.hotkeys)
-
-        # Dendrite lets us send messages to other nodes (axons) in the network.
-        # if self.config.mock:
-        #     self.dendrite = MockDendrite(wallet=self.wallet)
-        # else:
+        self.hotkeys = copy.deepcopy(self.metagraph.hotkeys)      
 
         self.dendrite = bt.dendrite(wallet=self.wallet)
         bt.logging.info(f"Dendrite: {self.dendrite}")
@@ -180,7 +175,7 @@ class BaseValidatorNeuron(BaseNeuron):
         if not isinstance(synapse, BitrecsRequest):
             bt.logging.error(f"Invalid synapse item: {synapse}")
             return False
-        if len(synapse.query) < MIN_QUERY_LENGTH or len(synapse.query) > 100000:
+        if len(synapse.query) < MIN_QUERY_LENGTH or len(synapse.query) > 100:
             bt.logging.error(f"Invalid synampse Query!: {synapse}")
             return False
         if len(synapse.results) != 0:
@@ -188,6 +183,9 @@ class BaseValidatorNeuron(BaseNeuron):
             return False
         if synapse.context is None or synapse.context == "":
             bt.logging.error(f"Context is empty!: {synapse}")
+            return False
+        if len(synapse.context) > 100000:
+            bt.logging.error(f"Context is too long!: {synapse}")
             return False
         if len(synapse.models_used) != 0:
             bt.logging.error(f"Models used is not empty!: {synapse}")

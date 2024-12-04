@@ -19,11 +19,11 @@ class OllamaLocal():
             raise Exception
         self.keep_alive = 1800
 
-    def file_to_base64(self, file_path):
+    def file_to_base64(self, file_path) -> str:
         with open(file_path, "rb") as file:
             return base64.b64encode(file.read()).decode("utf-8")
 
-    def ask_ollama(self, prompt):
+    def ask_ollama(self, prompt) -> str:
         #print("ask_ollama: {}".format(prompt))
         data = {
             "model": self.model,
@@ -44,7 +44,7 @@ class OllamaLocal():
         # print(data)
         return self.call_ollama(data)
 
-    def get_ollama_caption(self, file_path):
+    def get_ollama_caption(self, file_path) -> str:
         #print("get_ollama_caption checking image: {}".format(file_path))
         base64_image = self.file_to_base64(file_path)
         data = {
@@ -67,7 +67,7 @@ class OllamaLocal():
         # print(data)
         return self.call_ollama(data)
 
-    def route_intention(self, file_path):
+    def route_intention(self, file_path) -> str:
         #print("route_intention checking image: {}".format(file_path))
         prompt = "What is this? : "
         file_extension = file_path.split('.')[-1]
@@ -130,7 +130,7 @@ class OllamaLocal():
 
         return self.call_ollama(data)
 
-    def call_ollama(self, data):
+    def call_ollama(self, data) -> str:
         #print("called llama ")
         response = requests.post(self.ollama_url, json=data)
         # print(response)

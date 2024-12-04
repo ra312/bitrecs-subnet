@@ -17,7 +17,7 @@ class OpenRouter:
         self.temp = temp
 
 
-    def call_open_router(self, prompt):
+    def call_open_router(self, prompt) -> str:
         if not prompt or len(prompt) < 10:
             raise ValueError()
 

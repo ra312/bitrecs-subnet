@@ -10,7 +10,7 @@ class ChatGPT:
         self.system_prompt = system_prompt
         self.temp = temp
 
-    def call_chat_gpt(self, prompt):
+    def call_chat_gpt(self, prompt) -> str:
         if not prompt or len(prompt) < 10:
             raise ValueError()
 
