@@ -364,7 +364,7 @@ async def main():
         #start_time = time.time()
         while True:
             bt.logging.info(f"Miner {miner.uid} running... {time.time()}")
-            time.sleep(15)
+            await asyncio.sleep(15)
 
 
 if __name__ == "__main__":  

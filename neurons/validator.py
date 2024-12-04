@@ -69,7 +69,7 @@ async def main():
             current_time = datetime.now()            
             if current_time.minute % 15 == 0 and (current_time.second >= 0 or current_time.minute > 14):
                 print(f"Current hour is {current_time.hour}, it's a special hour!")
-            time.sleep(5)
+            await asyncio.sleep(5)
 
 
 if __name__ == "__main__": 
