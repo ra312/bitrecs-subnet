@@ -355,11 +355,15 @@ class Miner(BaseMinerNeuron):
         except Exception as e:            
             bt.logging.error(f"\033[31mFATAL ERROR calling warmup: {e!r} \033[0m")
         return False
+
     
         
 async def main():
-     GPUInfo.log_gpu_info()
-     with Miner() as miner:
+     
+    GPUInfo.log_gpu_info()
+    bt.logging.info(f"HI DIMI Miner started at {time.time()}")
+
+    with Miner() as miner:
         start_time = time.time()
         while True:
             bt.logging.info(f"Miner running... {time.time()}")
