@@ -13,6 +13,7 @@ class classproperty:
 
 class GPUInfo:
     def log_gpu_info():
+        print("GPU Info")
         bt.logging.info(
             f"""Total GPU memory: {GPUInfo.total_memory} GB
                     Free GPU memory: {GPUInfo.free_memory} GB
