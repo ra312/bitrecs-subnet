@@ -5,7 +5,7 @@ import torch
 
 class GPUInfo:
     def log_gpu_info():
-        bt.logger.info(
+        bt.logging.info(
             f"""Total GPU memory: {GPUInfo.total_memory} GB
                     Free GPU memory: {GPUInfo.free_memory} GB
                     Used GPU memory: {GPUInfo.used_memory} GB
