@@ -102,7 +102,7 @@ class Miner(BaseMinerNeuron):
 
         try:
             self.llm = self.config.llm.provider
-            provider = LLMFactory.try_get_enum(self.llm)
+            provider = LLMFactory.try_parse_llm(self.llm)
             bt.logging.info(f"\033[1;35m Miner LLM Provider: [{self.llm}]\033[0m")
             self.llm_provider = provider
             self.model = ""

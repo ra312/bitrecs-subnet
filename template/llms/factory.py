@@ -38,7 +38,7 @@ class LLMFactory:
                 raise ValueError("Unknown LLM server")
             
     @staticmethod
-    def try_get_enum(value: str) -> LLM:        
+    def try_parse_llm(value: str) -> LLM:
         match value.upper():
             case "OLLAMA_LOCAL":
                 return LLM.OLLAMA_LOCAL
