@@ -14,7 +14,7 @@ class classproperty:
 class GPUInfo:
     def log_gpu_info():
         print("GPU Info")
-        bt.logging.info(
+        bt.logging.trace(
             f"""Total GPU memory: {GPUInfo.total_memory} GB
                     Free GPU memory: {GPUInfo.free_memory} GB
                     Used GPU memory: {GPUInfo.used_memory} GB
