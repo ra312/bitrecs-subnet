@@ -22,6 +22,11 @@ class GPUInfo:
         #             GPU utilization: {GPUInfo.gpu_utilization * 100}%"""
         # )
 
+        gpus = GPUInfo.n_gpus()
+        if gpus == 0:
+            logger.error("WARNING - No GPUs found on this server")
+            return
+        
         logger.info(f"Total GPU memory: {GPUInfo.total_memory} GB")
         logger.info(f"Free GPU memory:  {GPUInfo.free_memory} GB")
         logger.info(f"Used GPU memory: {GPUInfo.used_memory} GB")
