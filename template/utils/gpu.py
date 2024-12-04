@@ -14,6 +14,7 @@ class classproperty:
 
 class GPUInfo:
     def log_gpu_info():
+        logger.trace("HI DIMI")
         
         logger.info(
             f"""Total GPU memory: {GPUInfo.total_memory} GB
