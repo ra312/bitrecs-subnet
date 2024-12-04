@@ -2,8 +2,8 @@
 
 # Bitrecs Subnet
 
-<img src="docs/logo-light.svg#gh-light-mode-only" width="400" height="auto" alt="Bitrecs Logo"/>
-<img src="docs/logo-dark.svg#gh-dark-mode-only" width="400" height="auto" alt="Bitrecs Logo"/>
+<img src="docs/light-logo.svg#gh-light-mode-only" width="400" height="auto" alt="Bitrecs Logo"/>
+<img src="docs/dark-logo.svg#gh-dark-mode-only" width="400" height="auto" alt="Bitrecs Logo"/>
 
 [![Discord Chat](https://img.shields.io/discord/308323056592486420.svg)](https://discord.gg/bittensor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
