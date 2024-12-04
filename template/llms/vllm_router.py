@@ -8,7 +8,7 @@ class vLLM:
 
     """
     def __init__(self, 
-                 key="", 
+                 key, 
                  model="NousResearch/Meta-Llama-3-8B-Instruct", 
                  system_prompt="You are a helpful AI assistant.", 
                  temp=0.0):
@@ -20,14 +20,14 @@ class vLLM:
         self.model = model
         self.model = model
         self.system_prompt = system_prompt
-        self.temp = temp        
+        self.temp = temp
         #self.key = "token-abc123H"
 
 
     def call_vllm(self, user_prompt) -> str:
         
         bt.logging.info(f"Calling vLLM with user prompt: {user_prompt}")
-        bt.logging.info(f"key: {self.key}")
+        bt.logging.info(f"key: {self.VLLM_API_KEY}")
 
         client = OpenAI(
             base_url="http://localhost:8000/v1",
