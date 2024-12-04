@@ -25,6 +25,7 @@ from template.base.validator import BaseValidatorNeuron
 from template.validator import forward
 from template.protocol import BitrecsRequest
 from template.utils.gpu import GPUInfo
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -65,6 +66,9 @@ async def main():
     with Validator() as validator:
         while True:
             bt.logging.info(f"Validator {validator.uid} running ... {int(time.time())}")
+            current_time = datetime.now()
+            if current_time.hour % 5 == 0:
+                GPUInfo.log_gpu_info()
             time.sleep(5)
             
 
