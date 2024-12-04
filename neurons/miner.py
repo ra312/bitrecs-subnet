@@ -366,11 +366,13 @@ async def main():
         start_time = time.time()
         while True:
             bt.logging.info(f"Miner running... {time.time()}")
-            elapsed_time = int(time.time() - start_time)
-            if elapsed_time % 30 == 0:
-                bt.logging.info(f"Miner is configured for {miner.llm_provider}")                
-            time.sleep(15)            
-
+            # elapsed_time = int(time.time() - start_time)
+            # if elapsed_time % 30 == 0:
+            #     bt.logging.info(f"Miner is configured for {miner.llm_provider}")          
+            current_time = datetime.now()
+            if current_time.minute % 5 == 0 and (current_time.second >= 0 or current_time.minute > 4):
+                bt.logging.info(f"Miner is configured for {miner.llm_provider}")
+            time.sleep(15)
 
 
 # This is the main function, which runs the miner.
