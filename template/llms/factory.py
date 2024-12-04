@@ -10,7 +10,8 @@ from template.llms.llama_local import OllamaLocal
 from template.llms.open_router import OpenRouter
 from template.llms.chat_gpt import ChatGPT
 from template.llms.vllm_router import vLLM
-
+from dotenv import load_dotenv
+load_dotenv()
 
 class LLM(Enum):
     OLLAMA_LOCAL = 1
