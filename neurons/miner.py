@@ -357,51 +357,16 @@ class Miner(BaseMinerNeuron):
         return False
 
 
-async def repeat(interval, func, *args, **kwargs):
-    """Run func every interval seconds.
-
-    If func has not finished before *interval*, will run again
-    immediately when the previous iteration finished.
-
-    *args and **kwargs are passed as the arguments to func.
-    """
-    while True:
-        await asyncio.gather(
-            func(*args, **kwargs),
-            asyncio.sleep(interval),
-        )
-
         
-async def main():
-     
-    #@GPUInfo.log_gpu_info()       
-    
-
+async def main():     
+    GPUInfo.log_gpu_info()
     with Miner() as miner:
-        start_time = time.time()
-        await repeat(30, GPUInfo.log_gpu_info) 
-       
-
+        #start_time = time.time()
         while True:
-            bt.logging.info(f"Miner running... {time.time()}")         
-            # current_time = datetime.now()
-            # if current_time.minute % 5 == 0 and (current_time.second >= 0 or current_time.minute > 4):
-            #     bt.logging.info(f"Miner is configured for {miner.llm_provider}")
-            #     log_extended_info = True
-            #     if log_extended_info:
-            #         bt.logging.info(f"Miner is configured for {miner.llm_provider}")
-            #         log_extended_info = False
+            bt.logging.info(f"Miner running... {time.time()}")
             time.sleep(15)
 
 
 # This is the main function, which runs the miner.
-if __name__ == "__main__":
-    # with Miner() as miner:
-    #     start_time = time.time()
-    #     while True:
-    #         bt.logging.info(f"Miner running... {time.time()}")
-    #         elapsed_time = int(time.time() - start_time)
-    #         if elapsed_time % 30 == 0:
-    #             bt.logging.info(f"Miner is configured for {miner.llm_provider}")                
-    #         time.sleep(15)
+if __name__ == "__main__":  
     asyncio.run(main())
