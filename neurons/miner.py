@@ -22,13 +22,17 @@ import time
 import typing
 import bittensor as bt
 import template
+import asyncio
 import ast
+
 from datetime import datetime, timezone
 from template.base.miner import BaseMinerNeuron
 from template.protocol import BitrecsRequest
 from template.llms.prompt_factory import PromptFactory
 from template.llms.factory import LLM, LLMFactory
 from template.utils.uids import best_uid
+from template.utils.gpu import GPUInfo
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -351,11 +355,11 @@ class Miner(BaseMinerNeuron):
         except Exception as e:            
             bt.logging.error(f"\033[31mFATAL ERROR calling warmup: {e!r} \033[0m")
         return False
+    
         
-
-# This is the main function, which runs the miner.
-if __name__ == "__main__":
-    with Miner() as miner:
+async def main():
+     GPUInfo.log_gpu_info()
+     with Miner() as miner:
         start_time = time.time()
         while True:
             bt.logging.info(f"Miner running... {time.time()}")
@@ -363,3 +367,17 @@ if __name__ == "__main__":
             if elapsed_time % 30 == 0:
                 bt.logging.info(f"Miner is configured for {miner.llm_provider}")                
             time.sleep(15)
+
+
+
+# This is the main function, which runs the miner.
+if __name__ == "__main__":
+    # with Miner() as miner:
+    #     start_time = time.time()
+    #     while True:
+    #         bt.logging.info(f"Miner running... {time.time()}")
+    #         elapsed_time = int(time.time() - start_time)
+    #         if elapsed_time % 30 == 0:
+    #             bt.logging.info(f"Miner is configured for {miner.llm_provider}")                
+    #         time.sleep(15)
+    asyncio.run(main())
