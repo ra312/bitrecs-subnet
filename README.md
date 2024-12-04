@@ -1,6 +1,6 @@
 <div align="center">
 
-# Bitrecs Recommendation Engine 
+# Bitrecs Subnet - E-Commerce Recommendation Engine 
 
 <img src="docs/light-logo.svg#gh-light-mode-only" width="400" height="auto" alt="Bitrecs Logo"/>
 <img src="docs/dark-logo.svg#gh-dark-mode-only" width="400" height="auto" alt="Bitrecs Logo"/>
@@ -12,17 +12,17 @@
 </div>
 
 ## Introduction
-Btrecs is an enterprise grade recommendation engine build on the bittensor network. Our implementation provides a framework for serving e-commerce recommendations (recs) via various state of the art LLMs (large language models). Miners are encouraged to experiement with their own implementations to improve latency and quality. 
+Bitrecs is an enterprise grade recommendation engine built on the Bittensor network. Our implementation provides a framework for serving e-commerce recommendations (recs) via state of the art LLMs (large language models). Miners are encouraged to experiement with their own implementations to improve latency and quality. 
 
 ## Product
-The subnet operates through an incentive mechanism where miners produce arrays of product SKUs from a given input SKU and a catalogue of store inventory and (when applicable) supplementary user browsing history. The protocol enables:
+The subnet operates through an incentive mechanism where miners produce arrays of product SKUs from a given input SKUs, a catalogue of store inventory and (when applicable) supplementary user browsing history. The protocol enables:
 
-- Easy integration for e-commerce shop owners through free propriatary WooCommerce and Shopify plugins
+- Easy integration for e-commerce shop owners through our propriatary WooCommerce and Shopify plugins
 - Base miner class with support for several popular LLM models and providers, out of the box
 - API layer serving requests from our plugins to the bittensor network
 
 ## Incentive
-The incentive mechanism ranks miner responses by qualitative metrics and sales events such as
+The incentive mechanism ranks miner responses by qualitative metrics and sales events like
 
 - Latency to response
 - Quality of responses (recs cannot be hallucinated, recs cannot be dupes, etc) 
@@ -31,10 +31,10 @@ The incentive mechanism ranks miner responses by qualitative metrics and sales e
 ## Getting Started
 
 ### Mining
-want to earn tao by mining? check out our [mining guide](docs/running_miner.md) to get started.
+Want to earn tao by mining? Check out our [mining guide](docs/running_miner.md) to get started.
 
 ### Validating 
-interested in running a validator? see our [validator setup instructions](docs/running_validator.md) for details.
+Interested in running a validator? See our [validator setup instructions](docs/running_validator.md) for details.
 
 ## License
 
