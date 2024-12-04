@@ -2,7 +2,26 @@
 
 # Bitrecs Subnet
 
-<img src="docs/bitrecs_transp.png" width="400" height="auto" alt="Bitrecs Logo"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+    @media (prefers-color-scheme: light) {
+      .square {
+        fill: black;
+      }
+    }
+    @media (prefers-color-scheme: dark) {
+      .square {
+        fill: white;
+      }
+    }
+  </style>
+  <rect x="80" y="80" width="160" height="160" class="square" style="opacity: 1"/>
+  <rect x="120" y="120" width="160" height="160" class="square" style="opacity: 0.6"/>
+  <rect x="160" y="160" width="160" height="160" class="square" style="opacity: 0.3"/>
+</svg>
 
 [![Discord Chat](https://img.shields.io/discord/308323056592486420.svg)](https://discord.gg/bittensor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
