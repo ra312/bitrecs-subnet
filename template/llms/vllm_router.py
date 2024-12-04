@@ -12,7 +12,7 @@ class vLLM:
                  model="NousResearch/Meta-Llama-3-8B-Instruct", 
                  system_prompt="You are a helpful AI assistant.", 
                  temp=0.0):
-        self.key = key[0]
+        self.key = str(key[0])
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
