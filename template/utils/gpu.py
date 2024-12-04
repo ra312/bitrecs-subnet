@@ -14,14 +14,18 @@ class classproperty:
 
 class GPUInfo:
     def log_gpu_info():
-        logger.trace("HI DIMI")
+        
+        # logger.info(
+        #     f"""Total GPU memory: {GPUInfo.total_memory} GB\n
+        #             Free GPU memory: {GPUInfo.free_memory} GB\n
+        #             Used GPU memory: {GPUInfo.used_memory} GB\n
+        #             GPU utilization: {GPUInfo.gpu_utilization * 100}%"""
+        # )
 
-        logger.info(
-            f"""Total GPU memory: {GPUInfo.total_memory} GB\n
-                    Free GPU memory: {GPUInfo.free_memory} GB\n
-                    Used GPU memory: {GPUInfo.used_memory} GB\n
-                    GPU utilization: {GPUInfo.gpu_utilization * 100}%"""
-        )
+        logger.info(f"Total GPU memory: {GPUInfo.total_memory} GB")
+        logger.info(f"Free GPU memory:  {GPUInfo.free_memory} GB")
+        logger.info(f"Used GPU memory: {GPUInfo.used_memory} GB")
+        logger.info(f"GPU utilization: {GPUInfo.gpu_utilization * 100}%")
 
     @classproperty
     def total_memory(cls):
