@@ -369,8 +369,7 @@ async def main():
             elapsed_time = int(time.time() - start_time)
             if elapsed_time % 30 == 0:
                 bt.logging.info(f"Miner is configured for {miner.llm_provider}")                
-            #time.sleep(15)
-            asyncio.sleep(15)
+            time.sleep(15)            
 
 
 

@@ -65,7 +65,7 @@ async def main():
     with Validator() as validator:
         while True:
             bt.logging.info(f"Validator {validator.uid} running ... {int(time.time())}")
-            asyncio.sleep(5)
+            time.sleep(5)
             
 
 
