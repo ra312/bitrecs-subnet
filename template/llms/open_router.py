@@ -2,16 +2,22 @@ import os
 from openai import OpenAI
 
 class OpenRouter:    
-    def __init__(self, key, model="openai/gpt-3.5-turbo", system_prompt="You are a helpful AI assistant.", temp=0.0):
+    def __init__(self, 
+                 key,
+                   model="openai/gpt-3.5-turbo", 
+                   system_prompt="You are a helpful AI assistant.", 
+                   temp=0.0
+        ):
+
         self.OPENROUTER_API_KEY = key
         if not self.OPENROUTER_API_KEY:
-            raise ValueError("OPENROUTER_API_KEY is not set in .env file")
+            raise ValueError("OPENROUTER_API_KEY is not set")
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
 
 
-    def call_open_router(self, prompt):
+    def call_open_router(self, prompt) -> str:
         if not prompt or len(prompt) < 10:
             raise ValueError()
 

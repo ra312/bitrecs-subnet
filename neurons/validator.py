@@ -19,9 +19,13 @@
 
 import time
 import bittensor as bt
+import asyncio
+
 from template.base.validator import BaseValidatorNeuron
 from template.validator import forward
 from template.protocol import BitrecsRequest
+from template.utils.gpu import GPUInfo
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -48,15 +52,25 @@ class Validator(BaseValidatorNeuron):
         - Generating the query
         - Querying the miners
         - Getting the responses
+        - Selecting a top candidate from the responses
+        - Return top candidate to the client
         - Rewarding the miners
         - Updating the scores
         """                
         return await forward(self, pr)
+    
 
 
-# The main function parses the configuration and runs the validator.
-if __name__ == "__main__":
+async def main():     
+    GPUInfo.log_gpu_info()
     with Validator() as validator:
         while True:
-            bt.logging.info(f"Validator running D... {time.time()}")
-            time.sleep(5)
+            bt.logging.info(f"Validator {validator.uid} running ... {int(time.time())}")
+            current_time = datetime.now()            
+            if current_time.minute % 15 == 0 and (current_time.second >= 0 or current_time.minute > 14):
+                print(f"Current hour is {current_time.hour}, it's a special hour!")
+            await asyncio.sleep(5)
+
+
+if __name__ == "__main__": 
+    asyncio.run(main())

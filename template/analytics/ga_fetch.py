@@ -6,6 +6,8 @@ from google.analytics.data_v1beta.types import (
     Metric,
     RunReportRequest,
 )
+import asyncio
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -16,7 +18,7 @@ SITES = ["466970572", ""]
 class GAFetch:
     def __init__(self):
         self.data = None
-        self.ga_service_account = os.getenv("GA_SERVICE_ACCOUNT")
+        self.ga_service_account = os.environ.get("GA_SERVICE_ACCOUNT")
         if not self.ga_service_account:
             raise ValueError("GA_SERVICE_ACCOUNT is not set in .env file")
 
@@ -48,9 +50,6 @@ class GAFetch:
         for row in response.rows:
             print(row.dimension_values[0].value, row.metric_values[0].value)
 
-
-
-import asyncio
 
 if __name__ == '__main__':
     async def main():

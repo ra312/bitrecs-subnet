@@ -3,13 +3,13 @@ import sys
 import time
 import typing
 import bittensor as bt
-import random
 from datetime import datetime, timezone
 from enum import Enum
 
 from template.llms.llama_local import OllamaLocal
 from template.llms.open_router import OpenRouter
 from template.llms.chat_gpt import ChatGPT
+from template.llms.vllm_router import vLLM
 
 
 class LLM(Enum):
@@ -38,8 +38,7 @@ class LLMFactory:
                 raise ValueError("Unknown LLM server")
             
     @staticmethod
-    def try_get_enum(value: str) -> LLM:
-        #bt.logging.info(f"Trying to get enum for {value}")
+    def try_parse_llm(value: str) -> LLM:
         match value.upper():
             case "OLLAMA_LOCAL":
                 return LLM.OLLAMA_LOCAL
@@ -58,7 +57,7 @@ class OllamaLocalInterface:
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp        
-        self.OLLAMA_LOCAL_URL = os.getenv("OLLAMA_LOCAL_URL")
+        self.OLLAMA_LOCAL_URL = os.environ.get("OLLAMA_LOCAL_URL")
         if not self.OLLAMA_LOCAL_URL:
              bt.logging.error("OLLAMA_LOCAL_URL not set.")        
     
@@ -67,28 +66,30 @@ class OllamaLocalInterface:
                           system_prompt=self.system_prompt, temp=self.temp)
         return llm.ask_ollama(user_prompt)
     
+    
 class OpenRouterInterface:
     def __init__(self, model, system_prompt, temp):
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
-        self.OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+        self.OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
         if not self.OPENROUTER_API_KEY:
-            raise ValueError("OPENROUTER_API_KEY is not set in .env file")
+            raise ValueError("OPENROUTER_API_KEY is not set")
     
     def query(self, user_prompt) -> str:
         router = OpenRouter(self.OPENROUTER_API_KEY, model=self.model, 
                             system_prompt=self.system_prompt, temp=self.temp)
         return router.call_open_router(user_prompt)
     
+    
 class ChatGPTInterface:
     def __init__(self, model, system_prompt, temp):
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
-        self.CHATGPT_API_KEY = os.getenv("CHATGPT_API_KEY")
+        self.CHATGPT_API_KEY = os.environ.get("CHATGPT_API_KEY")
         if not self.CHATGPT_API_KEY:            
-            raise ValueError("CHATGPT_API_KEY is not set in .env file")        
+            raise ValueError("CHATGPT_API_KEY is not set")
         
     def query(self, user_prompt) -> str:
         router = ChatGPT(self.CHATGPT_API_KEY, model=self.model, 
@@ -101,6 +102,11 @@ class VllmInterface:
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
+        self.VLLM_API_KEY = os.environ.get("VLLM_API_KEY")
+        if not self.VLLM_API_KEY:            
+            raise ValueError("VLLM_API_KEY is not set")
     
     def query(self, user_prompt) -> str:
-        return ""
+        router = vLLM(key=self.VLLM_API_KEY, model=self.model, 
+                      system_prompt=self.system_prompt, temp=self.temp)
+        return router.call_vllm(user_prompt)

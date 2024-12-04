@@ -5,28 +5,138 @@ import pandas as pd
 import bittensor as bt
 
 
-
 class PromptFactory:
     """
     Creates a bitrecs prompt for a given SKU and context.
     
     """
-    def __init__(self, sku, context, num_recs=5, load_catalog=False):        
+    def __init__(self, sku, context, num_recs=5, load_catalog=False, debug=False):        
         self.sku = sku
         self.context = context
         self.num_recs = num_recs
         if self.num_recs < 1 or self.num_recs > 20:
             raise ValueError("num_recs must be between 1 and 20")
         self.catalog = []
+        self.debug = debug
 
-        # if load_catalog:
-        #     data_folder = os.path.join(os.path.dirname(__file__), "..", "..", "data")
-        #     print(data_folder)
-        #     catalog_file = "{}/product_catalog.csv".format(data_folder)
-        #     if not os.path.exists(catalog_file):
-        #         raise FileNotFoundError("Catalog file not found: {}".format(catalog_file))
-        #     df = OpenRouterRec.tryload_catalog(catalog_file)
-        #     self.catalog = df
+    
+    def generate_prompt(self) -> str:
+
+        bt.logging.info("PROMPT generating prompt: {}".format(self.sku))
+
+        return_type1 = ExampleRecs.rt1()
+
+        season = "fall/winter"
+        persona = "Ecommerce Store Manager"
+      
+        prompt = """
+        
+        # PERSONA:
+
+        <persona>Ecommerce Store Manager</persona>
+
+        You are an ecommerce store manager with 20 years of experience providing product recommendations to customers.
+        You have a deep understanding of the full product catalog in your store.
+        When a customer buys X you recommended Y because they are often bought together or in succession.
+        You have deep knowledge of the products in your store and know their attributes and can provide accurate recommendations.
+        You are skilled enough to know to never recommend the same class of product in the same set.
+        For example, never show the same product multiple times for each of their sizes. Only display unique products.
+        There should be a fair distribution of skus in the final list of recommendations.
+        You can also think outside the box and provide creative recommendations during different seasons or events.
+        The current season is: <season>{}</season>.\n
+        
+        # INSTRUCTIONS
+
+        Given the <query> make a list of {} product recommendations that compliment the query. 
+        Return only products from the <context> provided.
+    
+        Consider your <persona> before making your list of {} recommendations. 
+        Only return products that exist in the <context> provided.
+        Very important you must return products that exist in the context only. 
+        Do not hallucinate.
+
+        Here is the user query:
+        <query>
+        {}
+        </query>        
+        """.format(season, self.num_recs, self.num_recs, self.sku)
+
+        if self.context and len(self.context) > 10:
+            prompt += """Here is the list of products you can select your recommendations from:
+        <context>{}</context>        
+        **Important** Only return products from the <context> provided.
+        
+        """.format(self.context)
+        
+        if 1==2:
+            prompt += """
+
+            # Example Result Format:
+            {}        
+            """.format(return_type1)
+
+        #   prompt += """
+        #     # FINAL INSTRUCTIONS
+            
+        #     1) Observe the user <query>.
+        #     2) Find recommended products in the <context> provided and make a list of {} recommendations that compliment the query.
+        #     3) The products recommended should be products a customer would buy before, along with, or after they have purchased the product from <query>.
+        #     4) Return recommendations in a JSON array.
+        #     5) The order of the recommendations is important. The first few recommendations should be the most relevant to the query.
+        #     6) Be diverse in your recommendations. Do not recommend the same product multiple times or from the same class of products.
+        #     7) Double check the potential return data structure for empty fields, invalid values or errors.
+        #     8) Never explain yourself, no small talk, just return the final data in the correct array format. 
+        #     9) Your final response should only be an array of recommendations in JSON format.
+        #     10) Never say 'Based on the provided query' or 'I have determined'. 
+        #     11) Never explain yourself.
+        #     12) Return in JSON.
+
+        # prompt += """
+        #     # FINAL INSTRUCTIONS
+            
+        #     1) Observe the user <query>.
+        #     2) Find recommended products in the <context> provided and make a list of {} recommendations that compliment the query.
+        #     3) The products recommended should be products a customer would buy after they have purchased the product from <query>.
+        #     4) Return recommendations in a JSON array.
+        #     5) The order of the recommendations is important. The first recommendation should be the most relevant to the query.
+        #     6) Double check the potential return data structure for empty fields, invalid values or errors or invalid string quotes or characters.
+        #     7) Never explain yourself, no small talk, just return the final data in the correct array format. 
+        #     8) Your final response should only be an array of recommendations in JSON format.
+        #     9) Never say 'Based on the provided query' or 'I have determined'. 
+        #     10) Never explain yourself.
+        #     11) Return in JSON.
+
+        prompt += """\n
+            # FINAL INSTRUCTIONS
+            
+            1) Load <persona> and <context> into your memory.
+            2) Observe the user <query>.
+            3) Find recommended products in the <context> and make a list of {} recommendations that compliment the query.
+            4) The products recommended should be products a customer would buy after they have purchased the product from <query>.
+            5) The products recommended could also be products the customer would buy before they purchased the product from <query>.
+            6) Think step by step and consider the customer journey.
+            6) Return recommendations in a JSON array.
+            7) The order of the recommendations is important. The first recommendation should be the most relevant to the query.
+            8) Double check the potential return data structure for empty fields, invalid values or errors or invalid string quotes or characters.
+            9) Never explain yourself, no small talk, just return the final data in the correct array format. 
+            10) Your final response should only be an array of recommendations in JSON format.
+            11) Never say 'Based on the provided query' or 'I have determined'. 
+            12) Never explain yourself.
+            13) Return in JSON.
+            
+            
+        """.format(self.num_recs)
+
+        #print(prompt)
+        #bt.logging.info("generated prompt: {}".format(prompt))
+        prompt_length = len(prompt)
+        bt.logging.info(f"LLM QUERY Prompt length: {prompt_length}")
+
+        if self.debug:
+            bt.logging.info("Prompt: {}".format(prompt))
+
+        return prompt
+    
 
     @staticmethod
     def tryload_catalog(file_path: str, max_rows=10000) -> list:
@@ -64,7 +174,8 @@ class PromptFactory:
                     llm_result = array.strip()
                     return json.loads(llm_result)
                 except json.JSONDecodeError:
-                    print(f"Invalid JSON: {array}")
+                    #print(f"Invalid JSON: {array}")
+                    bt.logging.error(f"Invalid JSON in prompt factory: {array}")
             return []
         except Exception as e:
             bt.logging.error(str(e))
@@ -75,70 +186,8 @@ class PromptFactory:
         if len(self.catalog) == 0:
             return "[]"
         return json.dumps(self.catalog, indent=2)
-    
-    
-    def generate_prompt(self) -> str:
-        bt.logging.info("generating prompt: {}".format(self.sku))
 
-        return_type1 = ExampleRecs.rt1()     
-      
-        prompt = """       
-        
-        # PERSONA:
-        
-        You are an ecommerce store manager with 20 years of experience providing product
-        recommendations to customers. You have a deep understanding of the full product catalog in your store.        
-        When a customer buys X you recommended Y because they are often bought together or in succession.
-        
-        # INSTRUCTIONS
 
-        Given the <query> make a list of {} product recommendations that compliment the query. 
-        Return only products from the <context> provided.
-    
-        Consider your persona before making your list of {} recommendations. 
-        Only return products that exist in the <context> provided.
-
-        Here is the user query:        
-        <query>
-        {}
-        </query>        
-        """.format(self.num_recs, self.num_recs, self.sku)       
-
-        if self.context and len(self.context) > 10:
-            prompt += """Here is the list of products you can select your recommendations from:
-        <context>{}</context>        
-        **Important** Only return products from the <context> provided.
-        
-        """.format(self.context)
-        
-        if 1==2:
-            prompt += """
-
-            # Example Result Format:
-            {}        
-            """.format(return_type1)
-
-        prompt += """
-            # FINAL INSTRUCTIONS
-            
-            1) Observe the user <query>.
-            2) Find recommended products in the <context> provided and make a list of {} recommendations that compliment the query.
-            3) The products recommended should be products a customer would buy after they have purchased the product from <query>.
-            4) Return recommendations in a JSON array similar to the Example Result Format.
-            5) Double check the potential return data structure for empty fields, invalid values or errors.
-            6) Never explain yourself, no small talk, just return the final data in the correct array format. 
-            7) Your final response should only be an array of recommendations in JSON format.
-            8) Never say 'Based on the provided query' or 'I have determined'. 
-            9) Never explain yourself.
-            10) Return in JSON.
-            
-        """.format(self.num_recs)
-
-        #print(prompt)
-        #bt.logging.info("generated prompt: {}".format(prompt))
-        
-        return prompt
-    
 
 class ExampleRecs:
     
