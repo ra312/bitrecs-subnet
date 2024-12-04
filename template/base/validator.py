@@ -180,7 +180,7 @@ class BaseValidatorNeuron(BaseNeuron):
         if not isinstance(synapse, BitrecsRequest):
             bt.logging.error(f"Invalid synapse item: {synapse}")
             return False
-        if len(synapse.query) < MIN_QUERY_LENGTH:
+        if len(synapse.query) < MIN_QUERY_LENGTH or len(synapse.query) > 100000:
             bt.logging.error(f"Invalid synampse Query!: {synapse}")
             return False
         if len(synapse.results) != 0:

@@ -45,7 +45,7 @@ class OllamaLocal():
         return self.call_ollama(data)
 
     def get_ollama_caption(self, file_path):
-        print("get_ollama_caption checking image: {}".format(file_path))
+        #print("get_ollama_caption checking image: {}".format(file_path))
         base64_image = self.file_to_base64(file_path)
         data = {
             "model": self.model,
@@ -68,7 +68,7 @@ class OllamaLocal():
         return self.call_ollama(data)
 
     def route_intention(self, file_path):
-        print("route_intention checking image: {}".format(file_path))
+        #print("route_intention checking image: {}".format(file_path))
         prompt = "What is this? : "
         file_extension = file_path.split('.')[-1]
         #print(file_extension)
@@ -108,7 +108,7 @@ class OllamaLocal():
                 }
             }
         else:
-            print("processing IMG")
+            #print("processing IMG")
             base64_image = self.file_to_base64(file_path)
             data = {
                 "model": self.model,
