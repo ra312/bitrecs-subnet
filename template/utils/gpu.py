@@ -22,7 +22,7 @@ class GPUInfo:
         #             GPU utilization: {GPUInfo.gpu_utilization * 100}%"""
         # )
 
-        gpus = GPUInfo.n_gpus()
+        gpus = GPUInfo.n_gpus
         if gpus == 0:
             logger.error("WARNING - No GPUs found on this server")
             return
