@@ -348,7 +348,7 @@ class Miner(BaseMinerNeuron):
             result = LLMFactory.query_llm(server=self.llm_provider, 
                                  model=model, 
                                  system_prompt="You are a helpful assistant", 
-                                 temp=0.1, user_prompt="Tell me a joke")            
+                                 temp=0.1, user_prompt="Tell me a joke")
             self.model = model
             bt.logging.info(f"Warmup SUCCESS: {self.model} - Result: {result}")
             return True

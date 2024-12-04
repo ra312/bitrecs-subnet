@@ -189,9 +189,8 @@ class ApiServer:
         #bt.logging.debug(f"API generate_product_rec request:  {request.computed_body_hash}")
         #bt.logging.debug(f"API generate_product_rec request type:  {type(request)}")
         
-        headers = request.to_headers()
-        bt.logging.info(f"{headers}")
-
+        # headers = request.to_headers()
+        # bt.logging.info(f"{headers}")
 
         try:            
           
