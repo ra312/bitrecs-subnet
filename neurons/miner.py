@@ -374,11 +374,12 @@ async def repeat(interval, func, *args, **kwargs):
         
 async def main():
      
-    GPUInfo.log_gpu_info()        
+    #@GPUInfo.log_gpu_info()       
+    await repeat(30, GPUInfo.log_gpu_info) 
 
     with Miner() as miner:
         start_time = time.time()
-        await repeat(30, GPUInfo.log_gpu_info)
+       
 
         while True:
             bt.logging.info(f"Miner running... {time.time()}")         
