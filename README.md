@@ -1,6 +1,6 @@
 <div align="center">
 
-# Bitrecs Subnet
+# Bitrecs Recommendation Engine 
 
 <img src="docs/light-logo.svg#gh-light-mode-only" width="400" height="auto" alt="Bitrecs Logo"/>
 <img src="docs/dark-logo.svg#gh-dark-mode-only" width="400" height="auto" alt="Bitrecs Logo"/>
