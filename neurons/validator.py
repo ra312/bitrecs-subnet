@@ -66,9 +66,9 @@ async def main():
     with Validator() as validator:
         while True:
             bt.logging.info(f"Validator {validator.uid} running ... {int(time.time())}")
-            current_time = datetime.now()
-            if current_time.hour % 5 == 0:
-                GPUInfo.log_gpu_info()
+            current_time = datetime.now()            
+            if current_time.minute % 15 == 0 and (current_time.second >= 0 or current_time.minute > 14):
+                print(f"Current hour is {current_time.hour}, it's a special hour!")
             time.sleep(5)
             
 
