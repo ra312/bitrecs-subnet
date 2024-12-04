@@ -78,20 +78,24 @@ class PromptFactory:
     
     
     def generate_prompt(self) -> str:
-        bt.logging.info("generating prompt: {}".format(self.sku))
+
+        bt.logging.info("PROMPT generating prompt: {}".format(self.sku))
 
         return_type1 = ExampleRecs.rt1()
       
         prompt = """
         
         # PERSONA:
-        
+
+        <persona>ecommerce store manager</persona>
+
         You are an ecommerce store manager with 20 years of experience providing product
         recommendations to customers. You have a deep understanding of the full product catalog in your store.        
         When a customer buys X you recommended Y because they are often bought together or in succession.
         You have deep knowledge of the products in your store and know their attributes and can provide accurate recommendations.
         You are skilled enough to know to never recommend the same class of product in the same set.
-        (e.g never recommend two of the same product in different sizes. Always display unique products in a set. Pick mid size when forced between 3 or more sizes.)
+        For example, never show the same product multiple times for each of their sizes. Only display unique products.
+        There should be a fair distribution of skus in the final list of recommendations.
         You can also think outside the box and provide creative recommendations during different seasons or events.
         The current season is: <season>fall/winter</season>.\n
         
@@ -100,8 +104,10 @@ class PromptFactory:
         Given the <query> make a list of {} product recommendations that compliment the query. 
         Return only products from the <context> provided.
     
-        Consider your persona before making your list of {} recommendations. 
+        Consider your <persona> before making your list of {} recommendations. 
         Only return products that exist in the <context> provided.
+        Very important you must return products that exist in the context only. 
+        Do not hallucinate.
 
         Here is the user query:        
         <query>
@@ -139,10 +145,26 @@ class PromptFactory:
         #     11) Never explain yourself.
         #     12) Return in JSON.
 
+        # prompt += """
+        #     # FINAL INSTRUCTIONS
+            
+        #     1) Observe the user <query>.
+        #     2) Find recommended products in the <context> provided and make a list of {} recommendations that compliment the query.
+        #     3) The products recommended should be products a customer would buy after they have purchased the product from <query>.
+        #     4) Return recommendations in a JSON array.
+        #     5) The order of the recommendations is important. The first recommendation should be the most relevant to the query.
+        #     6) Double check the potential return data structure for empty fields, invalid values or errors or invalid string quotes or characters.
+        #     7) Never explain yourself, no small talk, just return the final data in the correct array format. 
+        #     8) Your final response should only be an array of recommendations in JSON format.
+        #     9) Never say 'Based on the provided query' or 'I have determined'. 
+        #     10) Never explain yourself.
+        #     11) Return in JSON.
+
         prompt += """
             # FINAL INSTRUCTIONS
             
-            1) Observe the user <query>.
+            1) Load <persona> and <context> into your memory.
+            1) Observe the user <query> and <context>.
             2) Find recommended products in the <context> provided and make a list of {} recommendations that compliment the query.
             3) The products recommended should be products a customer would buy after they have purchased the product from <query>.
             4) Return recommendations in a JSON array.
@@ -154,11 +176,14 @@ class PromptFactory:
             10) Never explain yourself.
             11) Return in JSON.
             
+            
         """.format(self.num_recs)
 
         #print(prompt)
         #bt.logging.info("generated prompt: {}".format(prompt))
-        
+        prompt_length = len(prompt)
+        bt.logging.info(f"Prompt length: {prompt_length}")
+
         return prompt
     
 
