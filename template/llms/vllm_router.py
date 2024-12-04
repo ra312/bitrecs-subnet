@@ -8,15 +8,20 @@ class vLLM:
 
     """
     def __init__(self, 
-                 key, 
+                 key="", 
                  model="NousResearch/Meta-Llama-3-8B-Instruct", 
                  system_prompt="You are a helpful AI assistant.", 
                  temp=0.0):
-        self.key = str(key[0])
+        
+        self.VLLM_API_KEY = key
+        if not self.VLLM_API_KEY:
+            raise ValueError("VLLM_API_KEY is not set")
+        
+        self.model = model
         self.model = model
         self.system_prompt = system_prompt
-        self.temp = temp
-        
+        self.temp = temp        
+        #self.key = "token-abc123H"
 
 
     def call_vllm(self, user_prompt) -> str:
@@ -26,7 +31,7 @@ class vLLM:
 
         client = OpenAI(
             base_url="http://localhost:8000/v1",
-            api_key=self.key,
+            api_key=self.VLLM_API_KEY,
         )
         completion = client.chat.completions.create(
             model=self.model,
