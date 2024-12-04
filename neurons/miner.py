@@ -151,7 +151,7 @@ class Miner(BaseMinerNeuron):
             template.protocol.BitrecsRequest: The synapse object with the recs - same object modified with updated fields.
 
         """
-        bt.logging.info("MINER FORWARD PASS {}".format(synapse.query))
+        bt.logging.info(f"MINER {self.uid} FORWARD PASS {synapse.query}")
 
         results = []
         model = self.model
@@ -198,7 +198,7 @@ class Miner(BaseMinerNeuron):
             miner_hotkey=synapse.dendrite.hotkey
         )
         
-        bt.logging.info(f"MINER FORWARD PASS RESULT -> {output_synapse}")
+        bt.logging.info(f"MINER {self.uid} FORWARD PASS RESULT -> {output_synapse}")        
 
         return output_synapse
         
