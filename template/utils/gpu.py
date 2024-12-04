@@ -13,7 +13,7 @@ class classproperty:
 
 
 class GPUInfo:
-    def log_gpu_info():
+    async def log_gpu_info():
         
         # logger.info(
         #     f"""Total GPU memory: {GPUInfo.total_memory} GB\n
