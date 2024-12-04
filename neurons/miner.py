@@ -378,7 +378,7 @@ async def main():
 
     with Miner() as miner:
         start_time = time.time()
-        await repeat(30, GPUInfo.log_gpu_info())
+        await repeat(30, GPUInfo.log_gpu_info)
 
         while True:
             bt.logging.info(f"Miner running... {time.time()}")         
