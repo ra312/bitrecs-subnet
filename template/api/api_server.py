@@ -100,6 +100,9 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
    
     """
 
+    bt.logging.trace(f"API verify_request x_signature: {x_signature}")
+    bt.logging.trace(f"API verify_request x_timestamp: {x_timestamp}")
+
     d = {
         'created_at': request.created_at,
         'user': request.user,
@@ -120,12 +123,12 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
         SECRET_KEY.encode('utf-8'),
         string_to_sign.encode('utf-8'),
         hashlib.sha256
-    ).hexdigest()    
+    ).hexdigest()
+
     # Verify signature
     if not hmac.compare_digest(x_signature, expected_signature):
         raise HTTPException(status_code=401, detail="Invalid signature")
-
-    # Check timestamp is not too old (e.g., within last 5 minutes)
+    
     timestamp = int(x_timestamp)
     current_time = int(time.time())
     if current_time - timestamp > 300:  # 5 minutes
@@ -145,8 +148,7 @@ class ApiServer:
     def __init__(self, axon_port: int, forward_fn: ForwardFn, api_json: str):
         self.forward_fn = forward_fn
         self.app = FastAPI()        
-        self.app.middleware('http')(api_key_validator)
-        #self.app.middleware('http')(hmac_validator)
+        self.app.middleware('http')(api_key_validator)        
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         #self.app.middleware('http')(auth_rate_limiting_middleware)
 
@@ -186,6 +188,10 @@ class ApiServer:
     ):        
         #bt.logging.debug(f"API generate_product_rec request:  {request.computed_body_hash}")
         #bt.logging.debug(f"API generate_product_rec request type:  {type(request)}")
+        
+        headers = request.to_headers()
+        bt.logging.info(f"{headers}")
+
 
         try:            
           
