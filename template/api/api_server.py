@@ -136,7 +136,7 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
     
 
 
-class ApiServer:
+class ApiServer:    
     app: FastAPI
     fast_server: FastAPIThreadedServer
     router: APIRouter
@@ -184,8 +184,8 @@ class ApiServer:
             x_signature: str = Header(...),
             x_timestamp: str = Header(...)
     ):        
-        bt.logging.debug(f"API generate_product_rec request:  {request.computed_body_hash}")
-        bt.logging.debug(f"API generate_product_rec request type:  {type(request)}")
+        #bt.logging.debug(f"API generate_product_rec request:  {request.computed_body_hash}")
+        #bt.logging.debug(f"API generate_product_rec request type:  {type(request)}")
 
         try:            
           
@@ -193,7 +193,7 @@ class ApiServer:
 
             stuff = Product.try_parse_context(request.context)
             catalog_size = len(stuff)
-            bt.logging.debug(f"CATALOG SIZE: {catalog_size}")
+            bt.logging.trace(f"REQUEST CATALOG SIZE: {catalog_size}")
             if catalog_size < 10:
                 bt.logging.error(f"API generate_product_rec catalog size too small")
                 return JSONResponse(status_code=500,
@@ -243,21 +243,10 @@ class ApiServer:
         self.fast_server.start()
         bt.logging.info(f"API server started at {self.fast_server.config.host}:{self.fast_server.config.port}")
 
-        # if self.ngrok_domain is not None:
-        #     self.tunnel = connect_ngrok_tunnel(
-        #         local_port=self.fast_server.config.port,
-        #         domain=self.ngrok_domain
-        #     )
 
     def stop(self):
         self.fast_server.stop()
         bt.logging.info("API server stopped")
-
-        # if self.tunnel is not None:
-        #     ngrok.disconnect(
-        #         public_url=self.tunnel.public_url
-        #     )
-        #     self.tunnel = None    
    
 
     @staticmethod
