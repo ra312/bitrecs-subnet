@@ -102,7 +102,7 @@ class VllmInterface:
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
-        self.VLLM_API_KEY = os.environ.get("VLLM_API_KEY", "")
+        self.VLLM_API_KEY = os.environ.get("VLLM_API_KEY")[0]
         if not self.VLLM_API_KEY:            
             raise ValueError("VLLM_API_KEY is not set")
     
