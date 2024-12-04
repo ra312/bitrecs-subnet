@@ -74,7 +74,7 @@ async def do_work(user_prompt: str,
     system_prompt = "You are a helpful assistant."
     
     try:        
-        llm_response = LLMFactory.query_llm(server=server, model=model, system_prompt=system_prompt, temp=0.1, user_prompt=prompt)
+        llm_response = LLMFactory.query_llm(server=server, model=model, system_prompt=system_prompt, temp=0.0, user_prompt=prompt)
         if not llm_response or len(llm_response) < 10:
             bt.logging.error("LLM response is empty.")
             return []
@@ -352,26 +352,43 @@ class Miner(BaseMinerNeuron):
             bt.logging.info(f"Warmup SUCCESS: {model} - Result: {result}")
             self.model = model
             return True
-        except Exception as e:            
+        except Exception as e:
             bt.logging.error(f"\033[31mFATAL ERROR calling warmup: {e!r} \033[0m")
         return False
 
 
+async def repeat(interval, func, *args, **kwargs):
+    """Run func every interval seconds.
+
+    If func has not finished before *interval*, will run again
+    immediately when the previous iteration finished.
+
+    *args and **kwargs are passed as the arguments to func.
+    """
+    while True:
+        await asyncio.gather(
+            func(*args, **kwargs),
+            asyncio.sleep(interval),
+        )
+
         
 async def main():
      
-    GPUInfo.log_gpu_info()    
+    GPUInfo.log_gpu_info()        
 
     with Miner() as miner:
         start_time = time.time()
+        await repeat(30, GPUInfo.log_gpu_info())
+
         while True:
-            bt.logging.info(f"Miner running... {time.time()}")
-            # elapsed_time = int(time.time() - start_time)
-            # if elapsed_time % 30 == 0:
-            #     bt.logging.info(f"Miner is configured for {miner.llm_provider}")          
-            current_time = datetime.now()
-            if current_time.minute % 5 == 0 and (current_time.second >= 0 or current_time.minute > 4):
-                bt.logging.info(f"Miner is configured for {miner.llm_provider}")
+            bt.logging.info(f"Miner running... {time.time()}")         
+            # current_time = datetime.now()
+            # if current_time.minute % 5 == 0 and (current_time.second >= 0 or current_time.minute > 4):
+            #     bt.logging.info(f"Miner is configured for {miner.llm_provider}")
+            #     log_extended_info = True
+            #     if log_extended_info:
+            #         bt.logging.info(f"Miner is configured for {miner.llm_provider}")
+            #         log_extended_info = False
             time.sleep(15)
 
 
