@@ -16,7 +16,7 @@ class vLLM:
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
-        #self.key = "token-abc123H"
+        self.key = "token-abc123H"
 
 
     def call_vllm(self, user_prompt) -> str:
