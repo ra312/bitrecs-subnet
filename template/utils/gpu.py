@@ -2,6 +2,7 @@ import numpy as np
 import bittensor as bt
 import torch
 from typing import Callable, Any
+from loguru import logger
 
 class classproperty:
     def __init__(self, func: Callable):
@@ -13,8 +14,8 @@ class classproperty:
 
 class GPUInfo:
     def log_gpu_info():
-        print("GPU Info")
-        bt.logging.trace(
+        
+        logger.info(
             f"""Total GPU memory: {GPUInfo.total_memory} GB
                     Free GPU memory: {GPUInfo.free_memory} GB
                     Used GPU memory: {GPUInfo.used_memory} GB
