@@ -19,9 +19,12 @@
 
 import time
 import bittensor as bt
+import asyncio
+
 from template.base.validator import BaseValidatorNeuron
 from template.validator import forward
 from template.protocol import BitrecsRequest
+from template.utils.gpu import GPUInfo
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -54,11 +57,22 @@ class Validator(BaseValidatorNeuron):
         - Updating the scores
         """                
         return await forward(self, pr)
+    
+
+
+async def main():     
+    GPUInfo.log_gpu_info()
+    with Validator() as validator:
+        while True:
+            bt.logging.info(f"Validator {validator.uid} running ... {int(time.time())}")
+            asyncio.sleep(5)
+            
 
 
 # The main function parses the configuration and runs the validator.
 if __name__ == "__main__":
-    with Validator() as validator:
-        while True:
-            bt.logging.info(f"Validator {validator.uid} running ... {int(time.time())}")
-            time.sleep(5)
+    # with Validator() as validator:
+    #     while True:
+    #         bt.logging.info(f"Validator {validator.uid} running ... {int(time.time())}")
+    #         time.sleep(5)
+    asyncio.run(main())

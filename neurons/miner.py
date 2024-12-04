@@ -356,12 +356,11 @@ class Miner(BaseMinerNeuron):
             bt.logging.error(f"\033[31mFATAL ERROR calling warmup: {e!r} \033[0m")
         return False
 
-    
+
         
 async def main():
      
-    GPUInfo.log_gpu_info()
-    bt.logging.info(f"HI DIMI Miner started at {time.time()}")
+    GPUInfo.log_gpu_info()    
 
     with Miner() as miner:
         start_time = time.time()
@@ -370,7 +369,8 @@ async def main():
             elapsed_time = int(time.time() - start_time)
             if elapsed_time % 30 == 0:
                 bt.logging.info(f"Miner is configured for {miner.llm_provider}")                
-            time.sleep(15)
+            #time.sleep(15)
+            asyncio.sleep(15)
 
 
 
