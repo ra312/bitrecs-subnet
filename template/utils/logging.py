@@ -68,7 +68,7 @@ def remove_timestamp_file():
 
 def log_miner_responses(step: int, responses: List[BitrecsRequest]) -> None:
     try:
-        
+        bt.logging.info(bt.config)
         frames = []
         for response in responses:
             headers = response.to_headers()
@@ -77,6 +77,7 @@ def log_miner_responses(step: int, responses: List[BitrecsRequest]) -> None:
             bt.logging.info(f"Miner response: {df.head()}")
             frames.append(df)
         final = pd.concat(frames)
+
         final.to_csv(f'miner_responses_step_{step}.csv', index=False)
     
     except Exception as e:
