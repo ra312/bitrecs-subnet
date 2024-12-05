@@ -88,7 +88,7 @@ def log_miner_responses(step: int, responses: List[BitrecsRequest]) -> None:
         
         if len(final) > 0:
             utc_now = datetime.now(timezone.utc)
-            created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
+            created_at = utc_now.strftime("%Y-%m-%d_%H-%M-%S")
             full_path = os.path.join(p, f'miner_responses_step_{step}_{created_at}.csv')
             final.to_csv(full_path, index=False)
         bt.logging.info(f"Miner responses logged {len(final)}")    
