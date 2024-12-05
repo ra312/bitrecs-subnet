@@ -175,6 +175,7 @@ class ApiServer:
         )       
         self.app.include_router(self.router)
         self.api_json = api_json
+        
         self.api_counter = APICounter(  
             os.path.join(self.config.neuron.full_path, "proxy_counter.json")
         )
