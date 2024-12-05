@@ -210,16 +210,17 @@ class ApiServer:
             bt.logging.trace(f"REQUEST CATALOG SIZE: {catalog_size}")
             if catalog_size < 10:
                 bt.logging.error(f"API generate_product_rec catalog size too small")
+                self.log_counter(False)
                 return JSONResponse(status_code=500,
                                     content={"detail": "error", "status_code": 500})
             
             st = time.time()
             response = await self.forward_fn(request)
-            et = time.time()
-            total_time = et - st
+            total_time = time.time() - st
 
             if len(response.results) == 0:
                 bt.logging.error(f"API generate_product_rec response has no results")
+                self.log_counter(False)
                 return JSONResponse(status_code=500,
                                     content={"detail": "error", "status_code": 500})
 
@@ -228,9 +229,9 @@ class ApiServer:
             # Remove single quotes from the string and convert items to JSON objects
             final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
             #bt.logging.trace(f"API generate_product_rec final_recs: {final_recs}")
-            response_text = "Bitrecs Took {:.2f} seconds to process request".format(total_time)
+            response_text = "Bitrecs Took {:.2f} seconds to process this request".format(total_time)
 
-            bitrecs_rec = {
+            response = {
                 "user": response.user, 
                 "original_query": response.query,
                 "status_code": "200",
@@ -245,14 +246,13 @@ class ApiServer:
                 "reasoning": "testing"
             }
 
-            self.api_counter.update(is_success=True)
-            self.api_counter.save()
-
+            self.log_counter(True)
             #bt.logging.debug(f"API generate_product_rec JSONResponse bitrecs_rec: {bitrecs_rec}")
-            return JSONResponse(status_code=200, content=bitrecs_rec)
+            return JSONResponse(status_code=200, content=response)
 
         except Exception as e:
-            bt.logging.error(f"API generate_product_rec error:  {e}")
+            bt.logging.error(f"ERROR API generate_product_rec error:  {e}")
+            self.log_counter(False)
             return JSONResponse(status_code=500,
                                 content={"detail": "error", "status_code": 500})
 
@@ -264,10 +264,19 @@ class ApiServer:
     def stop(self):
         self.fast_server.stop()
         bt.logging.info("API server stopped")
+
+
+    def log_counter(self, success: bool) -> None:
+        try: 
+            self.api_counter.update(is_success=success)
+            self.api_counter.save()
+        except Exception as e:
+            bt.logging.error(f"ERROR API could not update counter log:  {e}")
+            pass
    
 
     @staticmethod
-    async def print_req(request: Request):        
+    async def print_req(request: Request) -> Dict:
         # Get request method
         method = request.method
         # Get request headers
