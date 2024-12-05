@@ -5,7 +5,8 @@ import bittensor as bt
 import pandas as pd
 from typing_extensions import List
 from logging.handlers import RotatingFileHandler
-from neurons.validator import Validator
+
+from template.base.validator import BaseValidatorNeuron
 from template.protocol import BitrecsRequest
 
 
@@ -67,7 +68,7 @@ def remove_timestamp_file():
         os.remove(timestamp_file)
 
 
-def log_miner_responses(validator: Validator, responses: List[BitrecsRequest]) -> None:
+def log_miner_responses(validator: BaseValidatorNeuron, responses: List[BitrecsRequest]) -> None:
     try:
         
         frames = []
@@ -78,7 +79,7 @@ def log_miner_responses(validator: Validator, responses: List[BitrecsRequest]) -
             bt.logging.info(f"Miner response: {df.head()}")
             frames.append(df)
         final = pd.concat(frames)
-        
+
         p = os.path.join(validator.config.logging_dir, 'miner_responses')
         if not os.path.exists(p):
             os.makedirs(p)  
