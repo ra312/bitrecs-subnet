@@ -4,9 +4,9 @@ from openai import OpenAI
 class OpenRouter:    
     def __init__(self, 
                  key,
-                   model="openai/gpt-3.5-turbo", 
-                   system_prompt="You are a helpful AI assistant.", 
-                   temp=0.0
+                 model="openai/gpt-3.5-turbo", 
+                 system_prompt="You are a helpful AI assistant.", 
+                 temp=0.0
         ):
 
         self.OPENROUTER_API_KEY = key

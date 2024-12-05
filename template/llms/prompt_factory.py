@@ -15,9 +15,10 @@ class PromptFactory:
         self.context = context
         self.num_recs = num_recs
         if self.num_recs < 1 or self.num_recs > 20:
-            raise ValueError("num_recs must be between 1 and 20")
-        self.catalog = []
+            raise ValueError("num_recs must be between 1 and 20")        
+        self.load_catalog = load_catalog
         self.debug = debug
+        self.catalog = []
 
     
     def generate_prompt(self) -> str:
@@ -133,7 +134,7 @@ class PromptFactory:
         bt.logging.info(f"LLM QUERY Prompt length: {prompt_length}")
 
         if self.debug:
-            bt.logging.info("Prompt: {}".format(prompt))
+            bt.logging.debug("Prompt: {}".format(prompt))
 
         return prompt
     
