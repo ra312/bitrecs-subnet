@@ -120,11 +120,12 @@ class PromptFactory:
             8) The order of the recommendations is important. The first recommendation should be the most relevant to the query.
             9) Double check the potential return data structure for empty fields, invalid values or errors or invalid string quotes or characters.
             10) Never explain yourself, no small talk, just return the final data in the correct array format. 
-            11) Your final response should only be an array of recommendations in JSON format.
-            12) Never say 'Based on the provided query' or 'I have determined'. 
-            13) Never explain yourself.
-            14) Do not alter the context JSON, return all fields as they are.
-            15) Return in JSON.
+            11) Your final response should only be an array of recommendations in JSON format.                        
+            12) Do not alter the context JSON, return all fields as they are.
+            13) Eeach recommendations should have a 'sku', 'name' and 'price' field.
+            14) Never say 'Based on the provided query' or 'I have determined'. 
+            15) Never explain yourself.
+            16) Return in JSON.
             
             
         """.format(self.num_recs)
