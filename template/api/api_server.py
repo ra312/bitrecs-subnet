@@ -146,11 +146,11 @@ class ApiServer:
     router: APIRouter
     forward_fn: ForwardFn  
 
-    def __init__(self, axon_port: int, forward_fn: ForwardFn, api_json: str):
-        self.forward_fn = forward_fn
+    def __init__(self, axon_port: int, forward_fn: ForwardFn, api_json: str):       
         if not callable(forward_fn):
             raise ValueError("forward_fn must be a callable function")
         
+        self.forward_fn = forward_fn        
         self.app = FastAPI()        
         self.app.middleware('http')(api_key_validator)        
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
@@ -177,7 +177,7 @@ class ApiServer:
         self.api_json = api_json
 
         self.api_counter = APICounter(  
-            os.path.join(self.fast_server.config.full_path, "proxy_counter.json")
+            os.path.join(self.app.root_path, "proxy_counter.json")
         )
 
         bt.logging.info(f"\033[1;32m API Server initialized \033[0m")
