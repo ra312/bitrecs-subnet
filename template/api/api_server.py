@@ -245,6 +245,9 @@ class ApiServer:
                 "reasoning": "testing"
             }
 
+            self.api_counter.update(is_success=True)
+            self.api_counter.save()
+
             #bt.logging.debug(f"API generate_product_rec JSONResponse bitrecs_rec: {bitrecs_rec}")
             return JSONResponse(status_code=200, content=bitrecs_rec)
 
