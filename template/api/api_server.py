@@ -175,9 +175,9 @@ class ApiServer:
         )       
         self.app.include_router(self.router)
         self.api_json = api_json
-        
+
         self.api_counter = APICounter(  
-            os.path.join(self.config.neuron.full_path, "proxy_counter.json")
+            os.path.join(self.fast_server.config.full_path, "proxy_counter.json")
         )
 
         bt.logging.info(f"\033[1;32m API Server initialized \033[0m")
