@@ -279,7 +279,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             synapse_with_event.event.set()
                             continue
 
-                        log_miner_responses(responses)
+                        log_miner_responses(self.step, responses)
                             
                         selected_rec = rewards.argmax()
                         elected = responses[selected_rec]
