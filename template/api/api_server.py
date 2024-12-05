@@ -13,6 +13,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from bittensor.core.axon import FastAPIThreadedServer
 from template.protocol import BitrecsRequest
 from template.commerce.product import Product
+from template.api.api_counter import APICounter
 
 ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 
@@ -147,6 +148,9 @@ class ApiServer:
 
     def __init__(self, axon_port: int, forward_fn: ForwardFn, api_json: str):
         self.forward_fn = forward_fn
+        if not callable(forward_fn):
+            raise ValueError("forward_fn must be a callable function")
+        
         self.app = FastAPI()        
         self.app.middleware('http')(api_key_validator)        
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
@@ -171,7 +175,10 @@ class ApiServer:
         )       
         self.app.include_router(self.router)
         self.api_json = api_json
-        self.tunnel = None
+        self.api_counter = APICounter(  
+            os.path.join(self.validator.config.neuron.full_path, "proxy_counter.json")
+        )
+
         bt.logging.info(f"\033[1;32m API Server initialized \033[0m")
 
     

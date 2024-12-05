@@ -332,17 +332,16 @@ class Miner(BaseMinerNeuron):
         """
         match self.llm_provider:
             case LLM.OLLAMA_LOCAL:
-                
-                #model = "llama3.1" #great
-                #model = "llama3.2"
+
+                model = "llama3.1" #great/fast
+                #model = "llama3.2" #good
+                #model = "llama3.2:3b-instruct-q8_0" #good
 
                 #model = "llama3.1:70b" #slow
                 #model = "mistral-nemo:latest" #good
-
-                #model = "qwen2.5-coder:latest" #broken json
-                
-                #model = "gemma2:27b" #slow
-                model = "llama3.2:3b-instruct-q8_0" #inaccurate
+                #model = "qwen2.5" #good/fast
+                #model = "qwen2.5-coder:latest" #good/slow                
+                #model = "gemma2:27b" #slow                
 
                 #model = "nemotron:latest" #slow
                 #model = "llama3.1:70b" #slow
@@ -350,7 +349,9 @@ class Miner(BaseMinerNeuron):
                 #model = "qwen2.5:32b" #invalid results
                 #model = "qwen2.5:32b-instruct" #inaccurate
                 #model = "qwq" #slow
-                #model = "mistral-nemo" #inaccurate
+                #model = "mistral-nemo" #slow
+                #model = "nemotron-mini:latest" #inaccurate
+
             case LLM.OPEN_ROUTER:
                 model = "google/gemini-flash-1.5-8b" #best
                 #model = "meta-llama/llama-3.1-70b-instruct:free" #ok
@@ -371,7 +372,7 @@ class Miner(BaseMinerNeuron):
             result = LLMFactory.query_llm(server=self.llm_provider, 
                                  model=model, 
                                  system_prompt="You are a helpful assistant", 
-                                 temp=0.1, user_prompt="Tell me a joke")
+                                 temp=0.1, user_prompt="Tell me a sarcastic joke")
             self.model = model
             bt.logging.info(f"Warmup SUCCESS: {self.model} - Result: {result}")
             return True
