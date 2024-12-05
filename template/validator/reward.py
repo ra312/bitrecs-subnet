@@ -59,7 +59,7 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
         "properties": {
             "sku": {"type": "string"},
             "name": {"type": "string"},
-            "price": {"type": "string"}
+            "price": {"type": ["string", "number"]}
         },
         "required": ["sku", "name", "price"]
     }
