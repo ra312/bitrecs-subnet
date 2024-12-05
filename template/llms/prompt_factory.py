@@ -116,14 +116,15 @@ class PromptFactory:
             4) The products recommended should be products a customer would buy after they have purchased the product from <query>.
             5) The products recommended could also be products the customer would buy before they purchased the product from <query>.
             6) Think step by step and consider the customer journey.
-            6) Return recommendations in a JSON array.
-            7) The order of the recommendations is important. The first recommendation should be the most relevant to the query.
-            8) Double check the potential return data structure for empty fields, invalid values or errors or invalid string quotes or characters.
-            9) Never explain yourself, no small talk, just return the final data in the correct array format. 
-            10) Your final response should only be an array of recommendations in JSON format.
-            11) Never say 'Based on the provided query' or 'I have determined'. 
-            12) Never explain yourself.
-            13) Return in JSON.
+            7) Return recommendations in a JSON array.
+            8) The order of the recommendations is important. The first recommendation should be the most relevant to the query.
+            9) Double check the potential return data structure for empty fields, invalid values or errors or invalid string quotes or characters.
+            10) Never explain yourself, no small talk, just return the final data in the correct array format. 
+            11) Your final response should only be an array of recommendations in JSON format.
+            12) Never say 'Based on the provided query' or 'I have determined'. 
+            13) Never explain yourself.
+            14) Do not alter the context JSON, return all fields as they are.
+            15) Return in JSON.
             
             
         """.format(self.num_recs)
