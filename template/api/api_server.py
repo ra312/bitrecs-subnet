@@ -179,7 +179,7 @@ class ApiServer:
         self.api_counter = APICounter(  
             os.path.join(self.app.root_path, "proxy_counter.json")
         )
-        bt.logging.info(f"\033[1;22m API Counter set { self.api_counter.save_path} \033[0m")
+        bt.logging.info(f"\033[1;33m API Counter set { self.api_counter.save_path} \033[0m")
 
         bt.logging.info(f"\033[1;32m API Server initialized \033[0m")
 
