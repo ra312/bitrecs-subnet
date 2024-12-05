@@ -75,9 +75,7 @@ def log_miner_responses(step: int, responses: List[BitrecsRequest]) -> None:
         frames = []
         for response in responses:
             headers = response.to_headers()
-            df = pd.json_normalize(headers)
-            #print(df.head())
-            #bt.logging.info(f"Miner response: {df.head()}")
+            df = pd.json_normalize(headers)          
             frames.append(df)
         final = pd.concat(frames)
 
@@ -91,7 +89,7 @@ def log_miner_responses(step: int, responses: List[BitrecsRequest]) -> None:
             created_at = utc_now.strftime("%Y-%m-%d_%H-%M-%S")
             full_path = os.path.join(p, f'miner_responses_step_{step}_{created_at}.csv')
             final.to_csv(full_path, index=False)
-        bt.logging.info(f"Miner responses logged {len(final)}")    
+        bt.logging.info(f"Miner responses logged {len(final)}")
     except Exception as e:
         bt.logging.error(f"Error in logging miner responses: {e}")
         
