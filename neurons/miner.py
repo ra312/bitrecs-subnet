@@ -333,7 +333,7 @@ class Miner(BaseMinerNeuron):
         match self.llm_provider:
             case LLM.OLLAMA_LOCAL:
                 
-                model = "llama3.1" #great
+                #model = "llama3.1" #great
                 #model = "llama3.2"
 
                 #model = "llama3.1:70b" #slow
@@ -341,7 +341,8 @@ class Miner(BaseMinerNeuron):
 
                 #model = "qwen2.5-coder:latest" #broken json
                 
-                #model = "gemma2:27b" #broken json
+                model = "gemma2:27b" #broken json
+                
                 #model = "llama3.2:3b-instruct-q8_0" #inaccurate
                 #model = "nemotron:latest" #slow
                 #model = "llama3.1:70b" #slow
