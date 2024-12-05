@@ -64,12 +64,12 @@ async def do_work(user_prompt: str,
     bt.logging.info(f"do_work Prompt: {user_prompt}")
     bt.logging.info(f"do_work LLM server: {server}")  
     bt.logging.info(f"do_work LLM model: {model}")
-
+    debug_prompts : bool = False
     factory = PromptFactory(sku=user_prompt, 
                             context=context, 
                             num_recs=num_recs, 
                             load_catalog=False, 
-                            debug=True)
+                            debug=debug_prompts)
     
     prompt = factory.generate_prompt()    
     system_prompt = "You are a helpful assistant."
@@ -81,6 +81,10 @@ async def do_work(user_prompt: str,
             return []
 
         llm_response = llm_response.replace("```json", "").replace("```", "").strip()
+
+        if debug_prompts:
+            bt.logging.trace(f" {llm_response} ")
+
         parsed_recs = PromptFactory.tryparse_llm(llm_response)
         #bt.logging.trace(f"LLM response: {parsed_recs}")
         return parsed_recs
