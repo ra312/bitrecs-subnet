@@ -181,7 +181,7 @@ def add_miner_args(cls, parser):
     parser.add_argument(
         "--llm.model",
         type=str,
-        default="llama3.1",
+        default=None,
         help="Which LLM model to use",
     )
 

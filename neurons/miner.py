@@ -343,7 +343,7 @@ class Miner(BaseMinerNeuron):
                 
                 #model = "gemma2:27b" #slow
                 model = "llama3.2:3b-instruct-q8_0" #inaccurate
-                
+
                 #model = "nemotron:latest" #slow
                 #model = "llama3.1:70b" #slow
                 #model = "llama3.1:70b-instruct-q4_0" #slow
@@ -363,7 +363,7 @@ class Miner(BaseMinerNeuron):
                 bt.logging.error("Unknown LLM server")
                 raise ValueError("Unknown LLM server")
             
-        if self.config.llm.model:
+        if self.config.llm.model and len(self.config.llm.model) > 2:
             model = self.config.llm.model
              
         bt.logging.info(f"Miner Warmup: {self.llm} - Model: {model}")
