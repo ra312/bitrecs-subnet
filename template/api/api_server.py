@@ -140,17 +140,14 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
     
 
 
-class ApiServer:    
+class ApiServer:
     app: FastAPI
     fast_server: FastAPIThreadedServer
     router: APIRouter
-    forward_fn: ForwardFn  
+    forward_fn: ForwardFn
 
-    def __init__(self, axon_port: int, forward_fn: ForwardFn, api_json: str):       
-        if not callable(forward_fn):
-            raise ValueError("forward_fn must be a callable function")
-        
-        self.forward_fn = forward_fn        
+    def __init__(self, axon_port: int, forward_fn: ForwardFn, api_json: str):
+        self.forward_fn = forward_fn
         self.app = FastAPI()        
         self.app.middleware('http')(api_key_validator)        
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
@@ -165,21 +162,21 @@ class ApiServer:
         self.router = APIRouter()
         self.router.add_api_route(
             "/ping", 
-            self.ping,            
+            self.ping,
             methods=["GET"],
         )
         self.router.add_api_route(
-            "/rec", 
+            "/rec",
             self.generate_product_rec,
-            methods=["POST"]  
-        )       
-        self.app.include_router(self.router)
-        self.api_json = api_json
-
-        self.api_counter = APICounter(  
-            os.path.join(self.app.root_path, "proxy_counter.json")
+            methods=["POST"]
         )
-        bt.logging.info(f"\033[1;33m API Counter set { self.api_counter.save_path} \033[0m")
+        self.app.include_router(self.router)
+        self.api_json = api_json #TODO not used
+
+        self.api_counter = APICounter(
+            os.path.join(self.app.root_path, "api_counter.json")
+        )
+        bt.logging.info(f"\033[1;33m API Counter set {self.api_counter.save_path} \033[0m")
 
         bt.logging.info(f"\033[1;32m API Server initialized \033[0m")
 
