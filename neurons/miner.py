@@ -325,8 +325,9 @@ class Miner(BaseMinerNeuron):
                 
                 #model = "llama3.1" #great
                 #model = "llama3.2"
-                
-                model = "llama3.1:70b"
+
+                #model = "llama3.1:70b" #slow
+                model = "mistral-nemo:latest"
 
                 #model = "qwen2.5-coder:latest" #broken json
                 #model = random.choice(["llama3.1:latest", "llama3.2:latest"]) #missing json fields
