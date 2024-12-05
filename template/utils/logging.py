@@ -4,10 +4,10 @@ import logging
 import bittensor as bt
 import pandas as pd
 from datetime import datetime
+
 from typing_extensions import List
 from logging.handlers import RotatingFileHandler
 
-from template.base.validator import BaseValidatorNeuron
 from template.protocol import BitrecsRequest
 
 
