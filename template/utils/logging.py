@@ -69,7 +69,7 @@ def remove_timestamp_file():
         os.remove(timestamp_file)
 
 
-def log_miner_responses(full_path: str, step: int, responses: List[BitrecsRequest]) -> None:
+def log_miner_responses(step: int, responses: List[BitrecsRequest]) -> None:
     try:
         
         frames = []
@@ -87,14 +87,11 @@ def log_miner_responses(full_path: str, step: int, responses: List[BitrecsReques
             os.makedirs(p)
         
         if len(final) > 0:
-            #dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-            #full_path = os.path.join(p, f'miner_responses_step_{step}_{dt}.csv')
-            
-            full_path = os.path.join(p, f'miner_responses_step_{step}.csv')
+            now = datetime.datetime.now()
+            formatted_time = now.strftime('%Y-%m-%d_%H-%M-%S')
+            full_path = os.path.join(p, f'miner_responses_step_{step}_{formatted_time}.csv')
             final.to_csv(full_path, index=False)
-
-        bt.logging.info(f"Miner responses logged {len(final)}")
-    
+        bt.logging.info(f"Miner responses logged {len(final)}")    
     except Exception as e:
         bt.logging.error(f"Error in logging miner responses: {e}")
         

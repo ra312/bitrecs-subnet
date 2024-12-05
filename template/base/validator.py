@@ -298,7 +298,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         # Mark the synapse as processed, API will then return to the client
                         synapse_with_event.event.set()
                         
-                        log_miner_responses(self.config.neuron.full_path, self.step, responses)
+                        log_miner_responses(self.step, responses)
 
                         bt.logging.info(f"Scored responses: {rewards}")
                         self.update_scores(rewards, chosen_uids) 
