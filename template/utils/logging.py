@@ -81,15 +81,16 @@ def log_miner_responses(full_path: str, step: int, responses: List[BitrecsReques
             frames.append(df)
         final = pd.concat(frames)
 
-        p = os.path.join(full_path, 'miner_responses')
+        cwd = os.getcwd()
+        p = os.path.join(cwd, 'miner_responses')
         if not os.path.exists(p):
             os.makedirs(p)
         
         if len(final) > 0:
             #dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
             #full_path = os.path.join(p, f'miner_responses_step_{step}_{dt}.csv')
-           
-            full_path = os.path.join(os.path.pwd(), f'miner_responses_step_{step}.csv')
+            
+            full_path = os.path.join(p, f'miner_responses_step_{step}.csv')
             final.to_csv(full_path, index=False)
 
         bt.logging.info(f"Miner responses logged {len(final)}")
