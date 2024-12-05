@@ -326,8 +326,8 @@ class Miner(BaseMinerNeuron):
                 #model = "llama3.1" #great
                 #model = "llama3.2"
 
-                #model = "gemma2:27b"
-                model = random.choice(["llama3.1:latest", "llama3.2:latest"])
+                model = "gemma2:27b"
+                #model = random.choice(["llama3.1:latest", "llama3.2:latest"])
 
                 #model = "llama3.2:3b-instruct-q8_0" #inaccurate
                 #model = "nemotron:latest" #slow
