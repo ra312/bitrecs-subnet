@@ -116,10 +116,8 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
         'miner_uid': request.miner_uid,
         'miner_hotkey': request.miner_hotkey
     }
-    body_str = json.dumps(d, sort_keys=True)
-    # Recreate string that was signed
-    string_to_sign = f"{x_timestamp}.{body_str}"
-    # Calculate expected signature
+    body_str = json.dumps(d, sort_keys=True)    
+    string_to_sign = f"{x_timestamp}.{body_str}"    
     expected_signature = hmac.new(
         SECRET_KEY.encode('utf-8'),
         string_to_sign.encode('utf-8'),
@@ -171,7 +169,7 @@ class ApiServer:
             methods=["POST"]
         )
         self.app.include_router(self.router)
-        self.api_json = api_json #TODO not used
+        self.api_json = api_json #TODO not used        
 
         self.api_counter = APICounter(
             os.path.join(self.app.root_path, "api_counter.json")

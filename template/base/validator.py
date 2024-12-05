@@ -40,7 +40,7 @@ from dataclasses import dataclass
 from queue import SimpleQueue, Empty
 from template.utils.uids import check_uid_availability, get_random_uids
 from template.validator.reward import get_rewards
-from template.utils.logging import write_timestamp
+from template.utils.logging import log_miner_responses, write_timestamp
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -278,6 +278,8 @@ class BaseValidatorNeuron(BaseNeuron):
                             bt.logging.error("MISMATCH in lengths of chosen_uids, responses and rewards")
                             synapse_with_event.event.set()
                             continue
+
+                        log_miner_responses(responses)
                             
                         selected_rec = rewards.argmax()
                         elected = responses[selected_rec]

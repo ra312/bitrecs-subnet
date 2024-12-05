@@ -1,6 +1,11 @@
+
 import os
 import logging
+import bittensor as bt
+from typing_extensions import List
 from logging.handlers import RotatingFileHandler
+from template.protocol import BitrecsRequest
+
 
 EVENTS_LEVEL_NUM = 38
 DEFAULT_LOG_BACKUP_COUNT = 10
@@ -58,3 +63,16 @@ def read_timestamp():
 def remove_timestamp_file():
     if os.path.exists(timestamp_file):
         os.remove(timestamp_file)
+
+
+def log_miner_responses(responses: List[BitrecsRequest]) -> None:
+    for response in responses:
+        headers = response.to_headers()
+        # if "bt_header_dendrite_process_time" in headers:
+        #     dendrite_time = headers["bt_header_dendrite_process_time"] #0.000132  1.2
+        #     score = score - ALPHA_TIME_DECAY * float(dendrite_time)
+        # else:
+        #     bt.logging.error(f"Error in reward: dendrite_time not found in headers")
+        #     return 0.0    
+        bt.logging.info(f"Miner response: {headers}")
+    
