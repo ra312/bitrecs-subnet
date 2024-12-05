@@ -178,6 +178,13 @@ def add_miner_args(cls, parser):
         help="Which LLM to use for recs.",
     )
 
+    parser.add_argument(
+        "--llm.model",
+        type=str,
+        default="llama3.1",
+        help="Which LLM model to use",
+    )
+
 
 
 

@@ -215,7 +215,7 @@ class Miner(BaseMinerNeuron):
         requests before they are deserialized to avoid wasting resources on requests that will be ignored.
 
         Args:
-            synapse (template.protocol.Dummy): A synapse object constructed from the headers of the incoming request.
+            synapse (template.protocol.BitrecsRequest): A synapse object constructed from the headers of the incoming request.
 
         Returns:
             Tuple[bool, str]: A tuple containing a boolean indicating whether the synapse's hotkey is blacklisted,
@@ -348,7 +348,7 @@ class Miner(BaseMinerNeuron):
             result = LLMFactory.query_llm(server=self.llm_provider, 
                                  model=model, 
                                  system_prompt="You are a helpful assistant", 
-                                 temp=0.1, user_prompt="Tell me a joke")            
+                                 temp=0.1, user_prompt="Tell me a joke")
             self.model = model
             bt.logging.info(f"Warmup SUCCESS: {self.model} - Result: {result}")
             return True
