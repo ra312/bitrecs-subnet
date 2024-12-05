@@ -24,6 +24,7 @@ import bittensor as bt
 import template
 import asyncio
 import ast
+import random
 
 from datetime import datetime, timezone
 from template.base.miner import BaseMinerNeuron
@@ -321,9 +322,14 @@ class Miner(BaseMinerNeuron):
         """
         match self.llm_provider:
             case LLM.OLLAMA_LOCAL:
-                model = "llama3.2:3b-instruct-q8_0" #best
+                
                 #model = "llama3.1" #great
+                #model = "llama3.2"
 
+                #model = "gemma2:27b"
+                model = random.choice(["llama3.1:latest", "llama3.2:latest"])
+
+                #model = "llama3.2:3b-instruct-q8_0" #inaccurate
                 #model = "nemotron:latest" #slow
                 #model = "llama3.1:70b" #slow
                 #model = "llama3.1:70b-instruct-q4_0" #slow
