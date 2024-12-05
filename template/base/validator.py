@@ -284,7 +284,10 @@ class BaseValidatorNeuron(BaseNeuron):
                         elected.context = "" #save bandwidth
 
                         bt.logging.info("SCORING DONE")
-                        bt.logging.info(f"WINNING MINER: {elected.miner_uid}")
+                        
+                        bt.logging.info(f"\033[1;32m WINNING MINER: {elected.miner_uid} \033[0m")
+                        # bt.logging.info(f"\033[1;32m API Server ping \033[0m")
+
                         bt.logging.info(f"WINNING RESULT: {elected}")
                         
                         if len(elected.results) == 0:
