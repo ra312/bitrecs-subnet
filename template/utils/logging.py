@@ -70,20 +70,17 @@ def remove_timestamp_file():
 
 
 def log_miner_responses(step: int, responses: List[BitrecsRequest]) -> None:
-    try:
-        
+    try:        
         frames = []
         for response in responses:
             headers = response.to_headers()
             df = pd.json_normalize(headers)          
             frames.append(df)
         final = pd.concat(frames)
-
         cwd = os.getcwd()
         p = os.path.join(cwd, 'miner_responses')
         if not os.path.exists(p):
-            os.makedirs(p)
-        
+            os.makedirs(p)        
         if len(final) > 0:
             utc_now = datetime.now(timezone.utc)
             created_at = utc_now.strftime("%Y-%m-%d_%H-%M-%S")
@@ -92,6 +89,7 @@ def log_miner_responses(step: int, responses: List[BitrecsRequest]) -> None:
         bt.logging.info(f"Miner responses logged {len(final)}")
     except Exception as e:
         bt.logging.error(f"Error in logging miner responses: {e}")
+        pass
         
     
     
