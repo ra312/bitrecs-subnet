@@ -164,12 +164,17 @@ class Miner(BaseMinerNeuron):
         server = self.llm_provider      
         context = synapse.context
         num_recs = synapse.num_results
+        st = time.time()
         try:
             results = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)            
             bt.logging.info(f"LLM {self.model} - Results: count ({len(results)})")
         except Exception as e:
             bt.logging.error(f"\033[31mFATAL ERROR calling do_work: {e!r} \033[0m")
             pass
+        finally:
+            et = time.time()
+            bt.logging.info(f"{self.model} Query - Elapsed Time: {et-st}")
+
 
         utc_now = datetime.now(timezone.utc)
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
