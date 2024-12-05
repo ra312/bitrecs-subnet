@@ -3,7 +3,7 @@ import os
 import logging
 import bittensor as bt
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone
 
 from typing_extensions import List
 from logging.handlers import RotatingFileHandler
@@ -87,9 +87,9 @@ def log_miner_responses(step: int, responses: List[BitrecsRequest]) -> None:
             os.makedirs(p)
         
         if len(final) > 0:
-            now = datetime.datetime.now()
-            formatted_time = now.strftime('%Y-%m-%d_%H-%M-%S')
-            full_path = os.path.join(p, f'miner_responses_step_{step}_{formatted_time}.csv')
+            utc_now = datetime.now(timezone.utc)
+            created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
+            full_path = os.path.join(p, f'miner_responses_step_{step}_{created_at}.csv')
             final.to_csv(full_path, index=False)
         bt.logging.info(f"Miner responses logged {len(final)}")    
     except Exception as e:
