@@ -341,9 +341,9 @@ class Miner(BaseMinerNeuron):
 
                 #model = "qwen2.5-coder:latest" #broken json
                 
-                model = "gemma2:27b" #broken json
+                #model = "gemma2:27b" #slow
+                model = "llama3.2:3b-instruct-q8_0" #inaccurate
                 
-                #model = "llama3.2:3b-instruct-q8_0" #inaccurate
                 #model = "nemotron:latest" #slow
                 #model = "llama3.1:70b" #slow
                 #model = "llama3.1:70b-instruct-q4_0" #slow
