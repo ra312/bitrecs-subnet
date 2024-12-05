@@ -69,7 +69,7 @@ async def do_work(user_prompt: str,
                             context=context, 
                             num_recs=num_recs, 
                             load_catalog=False, 
-                            debug=False)
+                            debug=True)
     
     prompt = factory.generate_prompt()    
     system_prompt = "You are a helpful assistant."
