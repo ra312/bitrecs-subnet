@@ -68,6 +68,7 @@ def remove_timestamp_file():
 
 def log_miner_responses(step: int, responses: List[BitrecsRequest]) -> None:
     try:
+        
         frames = []
         for response in responses:
             headers = response.to_headers()
@@ -75,14 +76,6 @@ def log_miner_responses(step: int, responses: List[BitrecsRequest]) -> None:
             #print(df.head())
             bt.logging.info(f"Miner response: {df.head()}")
             frames.append(df)
-            # if "bt_header_dendrite_process_time" in headers:
-            #     dendrite_time = headers["bt_header_dendrite_process_time"] #0.000132  1.2
-            #     score = score - ALPHA_TIME_DECAY * float(dendrite_time)
-            # else:
-            #     bt.logging.error(f"Error in reward: dendrite_time not found in headers")
-            #     return 0.0    
-            #bt.logging.info(f"Miner response: {headers}")
-        
         final = pd.concat(frames)
         final.to_csv(f'miner_responses_step_{step}.csv', index=False)
     

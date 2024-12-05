@@ -138,6 +138,8 @@ class BaseValidatorNeuron(BaseNeuron):
         self.thread: Union[threading.Thread, None] = None
         self.lock = asyncio.Lock()
 
+        bt.logging.info(self.config)
+
     def serve_axon(self):
         """Serve axon to enable external connections."""
 
@@ -277,19 +279,15 @@ class BaseValidatorNeuron(BaseNeuron):
                         if not len(chosen_uids) == len(responses) == len(rewards):
                             bt.logging.error("MISMATCH in lengths of chosen_uids, responses and rewards")
                             synapse_with_event.event.set()
-                            continue
-
-                        log_miner_responses(self.step, responses)
+                            continue                     
                             
                         selected_rec = rewards.argmax()
                         elected = responses[selected_rec]
-                        elected.context = "" #save bandwidth
+                        elected.context = "" #save bandwidth                        
 
-                        bt.logging.info("SCORING DONE")
-                        
+                        bt.logging.info("SCORING DONE")                        
                         bt.logging.info(f"\033[1;32m WINNING MINER: {elected.miner_uid} \033[0m")
-                        # bt.logging.info(f"\033[1;32m API Server ping \033[0m")
-
+                        bt.logging.info(f"\033[1;32m WINNING MODEL: {elected.models_used} \033[0m")
                         bt.logging.info(f"WINNING RESULT: {elected}")
                         
                         if len(elected.results) == 0:
@@ -300,7 +298,9 @@ class BaseValidatorNeuron(BaseNeuron):
                         
                         synapse_with_event.output_synapse = elected
                         # Mark the synapse as processed, API will then return to the client
-                        synapse_with_event.event.set()                        
+                        synapse_with_event.event.set()
+
+                        log_miner_responses(self.step, responses)
 
                         bt.logging.info(f"Scored responses: {rewards}")
                         self.update_scores(rewards, chosen_uids) 
