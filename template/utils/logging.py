@@ -85,7 +85,7 @@ def log_miner_responses(full_path: str, step: int, responses: List[BitrecsReques
         if not os.path.exists(p):
             os.makedirs(p)
         
-        if not final.empty:
+        if len(final) > 0:
             dt = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
             full_path = os.path.join(p, f'miner_responses_step_{step}_{dt}.csv')
             final.to_csv(full_path, index=False)
