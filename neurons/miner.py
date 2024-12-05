@@ -65,7 +65,7 @@ async def do_work(user_prompt: str,
     bt.logging.info(f"do_work LLM server: {server}")  
     bt.logging.info(f"do_work LLM model: {model}")
     debug_prompts : bool = True
-    
+
     factory = PromptFactory(sku=user_prompt, 
                             context=context, 
                             num_recs=num_recs, 
@@ -332,10 +332,10 @@ class Miner(BaseMinerNeuron):
                 #model = "llama3.2"
 
                 #model = "llama3.1:70b" #slow
-                model = "mistral-nemo:latest"
+                #model = "mistral-nemo:latest" #good
 
                 #model = "qwen2.5-coder:latest" #broken json
-                #model = random.choice(["llama3.1:latest", "llama3.2:latest"]) #missing json fields
+                model = random.choice(["llama3.1:latest", "llama3.2:latest"]) #missing json fields
                 #model = "gemma2:27b" #broken json
                 #model = "llama3.2:3b-instruct-q8_0" #inaccurate
                 #model = "nemotron:latest" #slow
@@ -356,6 +356,9 @@ class Miner(BaseMinerNeuron):
             case _:
                 bt.logging.error("Unknown LLM server")
                 raise ValueError("Unknown LLM server")
+            
+        if self.config.llm.model:
+            model = self.config.llm.model
              
         bt.logging.info(f"Miner Warmup: {self.llm} - Model: {model}")
         try:
