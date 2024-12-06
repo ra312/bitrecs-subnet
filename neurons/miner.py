@@ -384,18 +384,15 @@ class Miner(BaseMinerNeuron):
 async def main():
     await GPUInfo.log_gpu_info()
     with Miner() as miner:
-
         start_time = time.time()
-        while True:
-            
-            bt.logging.info(f"Miner {miner.uid} running... {time.time()}")
-            
-            if time.time() - start_time > 180:
+        while True:            
+            bt.logging.info(f"Miner {miner.uid} running... {time.time()}")            
+            if time.time() - start_time > 300:
                 bt.logging.info(
                     f"---Total request in last 5 minutes: {miner.total_request_in_interval}"
                 )
                 start_time = time.time()
-                miner.total_request_in_interval = 0                
+                miner.total_request_in_interval = 0
                 try:
                     bt.logging.debug("Syncing metagraph")
                     if miner.should_sync_metagraph():
