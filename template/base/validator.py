@@ -184,7 +184,7 @@ class BaseValidatorNeuron(BaseNeuron):
         if synapse.context is None or synapse.context == "":
             bt.logging.error(f"Context is empty!: {synapse}")
             return False
-        if len(synapse.context) > 100000:
+        if len(synapse.context) > 200000:
             bt.logging.error(f"Context is too long!: {synapse}")
             return False
         if len(synapse.models_used) != 0:
