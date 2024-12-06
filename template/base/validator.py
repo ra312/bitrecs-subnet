@@ -40,7 +40,7 @@ from dataclasses import dataclass
 from queue import SimpleQueue, Empty
 from template.utils.uids import check_uid_availability, get_random_uids
 from template.validator.reward import get_rewards
-from template.utils.logging import log_miner_responses, write_timestamp
+from template.utils.logging import log_miner_responses, write_timestamp, log_miner_responses_to_sql
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -300,6 +300,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         
                         if self.config.logging.trace:
                             log_miner_responses(self.step, responses)
+                            log_miner_responses_to_sql(self.step, responses)
 
                         bt.logging.info(f"Scored responses: {rewards}")
                         self.update_scores(rewards, chosen_uids) 

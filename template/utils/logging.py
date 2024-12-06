@@ -3,6 +3,7 @@ import os
 import logging
 import bittensor as bt
 import pandas as pd
+import sqlite3
 from datetime import datetime, timezone
 
 from typing_extensions import List
@@ -91,5 +92,41 @@ def log_miner_responses(step: int, responses: List[BitrecsRequest]) -> None:
         bt.logging.error(f"Error in logging miner responses: {e}")
         pass
         
-    
+
+
+def log_miner_responses_to_sql(step: int, responses: List[BitrecsRequest]) -> None:
+    try:
+        frames = []
+        for response in responses:
+            headers = response.to_headers()
+            df = pd.json_normalize(headers)          
+            frames.append(df)
+        final = pd.concat(frames)
+
+        if len(final) > 0:
+            utc_now = datetime.now(timezone.utc)
+            created_at = utc_now.strftime("%Y-%m-%d %H:%M:%S")
+
+            # Create or connect to a SQLite database
+            db_path = os.path.join(os.getcwd(), 'miner_responses', 'miner_responses.db')
+            os.makedirs(os.path.dirname(db_path), exist_ok=True)
+
+            conn = sqlite3.connect(db_path)
+            try:
+                # Add a 'step' and 'created_at' column to the DataFrame
+                final['step'] = step
+                final['created_at'] = created_at
+
+                # Define data types for all columns as TEXT
+                dtype_dict = {col: 'TEXT' for col in final.columns}
+
+                # Write the DataFrame to a SQLite table, overwriting if it already exists
+                final.to_sql('miner_responses', conn, index=False, if_exists='append', dtype=dtype_dict)
+            finally:
+                conn.close()
+
+        bt.logging.info(f"Miner responses logged to SQL {len(final)}")
+    except Exception as e:
+        bt.logging.error(f"Error in logging miner responses to SQL: {e}")
+
     

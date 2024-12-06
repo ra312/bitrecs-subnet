@@ -72,7 +72,7 @@ async def do_work(user_prompt: str,
                             load_catalog=False, 
                             debug=debug_prompts)
     
-    prompt = factory.generate_prompt()    
+    prompt = factory.generate_prompt()
     system_prompt = "You are a helpful assistant."
     
     try:        
@@ -82,14 +82,12 @@ async def do_work(user_prompt: str,
             return []
 
         llm_response = llm_response.replace("```json", "").replace("```", "").strip()
-
+        parsed_recs = PromptFactory.tryparse_llm(llm_response)
         if debug_prompts:
             bt.logging.trace(f" {llm_response} ")
+            bt.logging.trace(f"LLM response: {parsed_recs}")
 
-        parsed_recs = PromptFactory.tryparse_llm(llm_response)
-        #bt.logging.trace(f"LLM response: {parsed_recs}")
         return parsed_recs
-
     except Exception as e:
         bt.logging.error(f"Error calling LLM: {e}")
 
@@ -384,8 +382,7 @@ class Miner(BaseMinerNeuron):
         
 async def main():
     await GPUInfo.log_gpu_info()
-    with Miner() as miner:
-        #start_time = time.time()
+    with Miner() as miner:        
         while True:
             bt.logging.info(f"Miner {miner.uid} running... {time.time()}")
             await asyncio.sleep(15)
