@@ -28,22 +28,21 @@ class PromptFactory:
         return_type1 = ExampleRecs.rt1()
 
         season = "fall/winter"
-        persona = "Ecommerce Store Manager"
+        persona = "Ecommerce Store Manager"        
       
         prompt = """
-        
         # PERSONA:
 
-        <persona>Ecommerce Store Manager</persona>
+        <persona>{}</persona>
 
-        You are an ecommerce store manager with 20 years of experience providing product recommendations to customers.
-        You have a deep understanding of the full product catalog in your store.
+        You are a {} with 20 years of experience providing product recommendations to customers.
+        You are goal oriented and your goal is to increase average order value and conversion rate for the store.
+        You have a deep understanding of the full product catalog in the store.
         When a customer buys X you recommended Y because they are often bought together or in succession.
-        You have deep knowledge of the products in your store and know their attributes and can provide accurate recommendations.
-        You are skilled enough to know to never recommend the same class of product in the same set.
-        For example, never show the same product multiple times for each of their sizes. Only display unique products.
-        There should be a fair distribution of skus in the final list of recommendations.
-        You can also think outside the box and provide creative recommendations during different seasons or events.
+        You have deep knowledge of the products in the store and know each product attribute and can provide accurate recommendations.
+        You never show multiple colors or sizes of the same product in a set of recommendations.
+        You produce a fair distribution of skus in the final list of recommendations.
+        You also think outside the box and provide creative recommendations during different seasons or events.
         The current season is: <season>{}</season>.\n
         
         # INSTRUCTIONS
@@ -60,7 +59,7 @@ class PromptFactory:
         <query>
         {}
         </query>        
-        """.format(season, self.num_recs, self.num_recs, self.sku)
+        """.format(persona, persona, season, self.num_recs, self.num_recs, self.sku)
 
         if self.context and len(self.context) > 10:
             prompt += """Here is the list of products you can select your recommendations from:
@@ -117,12 +116,12 @@ class PromptFactory:
             5) The products recommended could also be products the customer would buy before they purchased the product from <query>.
             6) Think step by step and consider the customer journey.
             7) Return recommendations in a JSON array.
-            8) The order of the recommendations is important. The first recommendation should be the most relevant to the query.
-            9) Double check the potential return data structure for empty fields, invalid values or errors or invalid string quotes or characters.
+            8) The order of the recommendations is important. The first recommendation should be the most relevant to the <query>.
+            9) Double check the potential return array for empty fields, invalid values or errors or invalid string quotes or characters.
             10) Never explain yourself, no small talk, just return the final data in the correct array format. 
             11) Your final response should only be an array of recommendations in JSON format.                        
             12) Do not alter the context JSON, return all fields as they are.
-            13) Eeach recommendations should have a 'sku', 'name' and 'price' field.
+            13) Each recommendation should have a 'sku', 'name' and 'price' field.
             14) Never say 'Based on the provided query' or 'I have determined'. 
             15) Never explain yourself.
             16) Return in JSON.
@@ -176,8 +175,7 @@ class PromptFactory:
                 try:
                     llm_result = array.strip()
                     return json.loads(llm_result)
-                except json.JSONDecodeError:
-                    #print(f"Invalid JSON: {array}")
+                except json.JSONDecodeError:                    
                     bt.logging.error(f"Invalid JSON in prompt factory: {array}")
             return []
         except Exception as e:
