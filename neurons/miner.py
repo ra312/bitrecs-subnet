@@ -141,6 +141,7 @@ class Miner(BaseMinerNeuron):
         if self.uid == best_performing_uid:
             bt.logging.info(f"\033[1;32m 🐸 You are the BEST performing miner in the subnet, keep it up!\033[0m")
 
+        self.total_request_in_interval = 0
 
     async def forward(
         self, synapse: BitrecsRequest
@@ -207,9 +208,9 @@ class Miner(BaseMinerNeuron):
             miner_hotkey=synapse.dendrite.hotkey
         )
         
-        bt.logging.info(f"MINER {self.uid} FORWARD PASS RESULT -> {output_synapse}")        
-
-        return output_synapse
+        bt.logging.info(f"MINER {self.uid} FORWARD PASS RESULT -> {output_synapse}")
+        self.total_request_in_interval += 1
+        return output_synapse   
         
 
     async def blacklist(
@@ -382,9 +383,33 @@ class Miner(BaseMinerNeuron):
         
 async def main():
     await GPUInfo.log_gpu_info()
-    with Miner() as miner:        
+    with Miner() as miner:
+
+        start_time = time.time()
         while True:
+            
             bt.logging.info(f"Miner {miner.uid} running... {time.time()}")
+            
+            if time.time() - start_time > 60:
+                bt.logging.info(
+                    f"---Total request in last 5 minutes: {miner.total_request_in_interval}"
+                )
+                start_time = time.time()
+                miner.total_request_in_interval = 0
+            # try:
+            #     bt.logging.debug("Syncing metagraph")
+            #     miner.resync_metagraph()
+            #     bt.logging.debug("Synced metagraph")
+            #     miner.volume_per_validator = image_generation_subnet.utils.volume_setting.get_volume_per_validator(
+            #         miner.metagraph,
+            #         miner.config.miner.total_volume,
+            #         miner.config.miner.size_preference_factor,
+            #         miner.config.miner.min_stake,
+            #         log=False,
+            #     )
+            # except Exception as e:
+            #     print(e)
+            #time.sleep(60)
             await asyncio.sleep(15)
 
 
