@@ -27,7 +27,7 @@ class PromptFactory:
 
         return_type1 = ExampleRecs.rt1()
 
-        season = "spring"
+        season = "fall/winter"
         persona = "Ecommerce Store Manager"        
       
         prompt = """
