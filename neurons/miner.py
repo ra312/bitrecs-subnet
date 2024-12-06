@@ -390,28 +390,23 @@ async def main():
             
             bt.logging.info(f"Miner {miner.uid} running... {time.time()}")
             
-            if time.time() - start_time > 60:
+            if time.time() - start_time > 180:
                 bt.logging.info(
                     f"---Total request in last 5 minutes: {miner.total_request_in_interval}"
                 )
                 start_time = time.time()
-                miner.total_request_in_interval = 0
-            # try:
-            #     bt.logging.debug("Syncing metagraph")
-            #     miner.resync_metagraph()
-            #     bt.logging.debug("Synced metagraph")
-            #     miner.volume_per_validator = image_generation_subnet.utils.volume_setting.get_volume_per_validator(
-            #         miner.metagraph,
-            #         miner.config.miner.total_volume,
-            #         miner.config.miner.size_preference_factor,
-            #         miner.config.miner.min_stake,
-            #         log=False,
-            #     )
-            # except Exception as e:
-            #     print(e)
-            #time.sleep(60)
-            await asyncio.sleep(15)
+                miner.total_request_in_interval = 0                
+                try:
+                    bt.logging.debug("Syncing metagraph")
+                    if miner.should_sync_metagraph():
+                        miner.resync_metagraph()
+                        bt.logging.debug("Synced metagraph")
+                    else:
+                        bt.logging.debug("No need to sync metagraph")
+                except Exception as e:                    
+                    bt.logging.error(f"Error syncing metagraph: {e}")
 
+            await asyncio.sleep(15)
 
 if __name__ == "__main__":  
     asyncio.run(main())
