@@ -48,6 +48,7 @@ api_queue = SimpleQueue() # Queue of SynapseEventPair
 MAX_DENDRITE_TIMEOUT = 10
 MIN_QUERY_LENGTH = 3
 MAX_RECS_PER_REQUEST = 20
+MAX_CONTEXT_LENGTH = 200000
 
 @dataclass
 class SynapseWithEvent:
@@ -184,7 +185,7 @@ class BaseValidatorNeuron(BaseNeuron):
         if synapse.context is None or synapse.context == "":
             bt.logging.error(f"Context is empty!: {synapse}")
             return False
-        if len(synapse.context) > 200000:
+        if len(synapse.context) > MAX_CONTEXT_LENGTH:
             bt.logging.error(f"Context is too long!: {synapse}")
             return False
         if len(synapse.models_used) != 0:
@@ -281,9 +282,9 @@ class BaseValidatorNeuron(BaseNeuron):
                             
                         selected_rec = rewards.argmax()
                         elected = responses[selected_rec]
-                        elected.context = "" #save bandwidth                        
+                        elected.context = "" #save bandwidth
 
-                        bt.logging.info("SCORING DONE")                        
+                        bt.logging.info("SCORING DONE")
                         bt.logging.info(f"\033[1;32m WINNING MINER: {elected.miner_uid} \033[0m")
                         bt.logging.info(f"\033[1;32m WINNING MODEL: {elected.models_used} \033[0m")
                         bt.logging.info(f"WINNING RESULT: {elected}")

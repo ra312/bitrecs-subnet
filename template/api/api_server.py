@@ -22,6 +22,8 @@ request_counts = {}
 
 SECRET_KEY = "change-me"
 
+MIN_CATALOG_SIZE = 10
+
 
 def is_api_data_valid(data) -> tuple[bool, str]:
     if not isinstance(data, dict):
@@ -101,8 +103,8 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
    
     """
 
-    bt.logging.trace(f"API verify_request x_signature: {x_signature}")
-    bt.logging.trace(f"API verify_request x_timestamp: {x_timestamp}")
+    # bt.logging.trace(f"API verify_request x_signature: {x_signature}")
+    # bt.logging.trace(f"API verify_request x_timestamp: {x_timestamp}")
 
     d = {
         'created_at': request.created_at,
@@ -189,25 +191,23 @@ class ApiServer:
             request: BitrecsRequest,
             x_signature: str = Header(...),
             x_timestamp: str = Header(...)
-    ):        
-        #bt.logging.debug(f"API generate_product_rec request:  {request.computed_body_hash}")
-        #bt.logging.debug(f"API generate_product_rec request type:  {type(request)}")
+    ):  
         
         # headers = request.to_headers()
         # bt.logging.info(f"{headers}")
 
-        try:            
+        try:
           
             await verify_request(request, x_signature, x_timestamp)
 
             stuff = Product.try_parse_context(request.context)
             catalog_size = len(stuff)
             bt.logging.trace(f"REQUEST CATALOG SIZE: {catalog_size}")
-            if catalog_size < 10:
+            if catalog_size < MIN_CATALOG_SIZE:
                 bt.logging.error(f"API generate_product_rec catalog size too small")
                 self.log_counter(False)
                 return JSONResponse(status_code=500,
-                                    content={"detail": "error", "status_code": 500})
+                                    content={"detail": "error - invalid catalog", "status_code": 500})
             
             st = time.time()
             response = await self.forward_fn(request)

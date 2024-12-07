@@ -393,15 +393,15 @@ async def main():
                 )
                 start_time = time.time()
                 miner.total_request_in_interval = 0
-                try:
-                    bt.logging.debug("Syncing metagraph")
-                    if miner.should_sync_metagraph():
-                        miner.resync_metagraph()
-                        bt.logging.debug("Synced metagraph")
-                    else:
-                        bt.logging.debug("No need to sync metagraph")
-                except Exception as e:                    
-                    bt.logging.error(f"Error syncing metagraph: {e}")
+                # try:
+                #     bt.logging.debug("Syncing metagraph")
+                #     if miner.should_sync_metagraph():
+                #         miner.resync_metagraph()
+                #         bt.logging.debug("Synced metagraph")
+                #     else:
+                #         bt.logging.debug("No need to sync metagraph")
+                # except Exception as e:                    
+                #     bt.logging.error(f"Error syncing metagraph: {e}")
 
             await asyncio.sleep(15)
 
