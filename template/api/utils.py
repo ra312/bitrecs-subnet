@@ -81,16 +81,11 @@ async def api_key_validator(request, call_next) -> Response:
 
 
  
-async def print_req(request: Request) -> Dict:
-    # Get request method
-    method = request.method
-    # Get request headers
-    headers = request.headers
-    # Get query parameters
-    query_params = request.query_params
-    # Get the body (awaitable for POST requests)
-    body = await request.body()
-    # Get the JSON body (if JSON is expected)
+async def print_req(request: Request) -> Dict:    
+    method = request.method    
+    headers = request.headers    
+    query_params = request.query_params    
+    body = await request.body()    
     try:
         json_body = await request.json()
     except Exception as e:
