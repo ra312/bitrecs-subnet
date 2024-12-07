@@ -489,16 +489,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 version_key=self.spec_version,
             )
             if result is True:
-                
-                try:
-                    write_timestamp(time.time())
-                except Exception as e:
-                    bt.logging.error(f"write_timestamp failed with exception: {e}")
-                    pass
-
-                print(f"updated timestamp to {time.time()}")
                 bt.logging.info(f"set_weights on chain successfully! msg: {msg}")
-
             else:
                 bt.logging.error(f"set_weights on chain failed {msg}")
         except Exception as e:
