@@ -38,11 +38,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-async def do_work(user_prompt: str, 
+async def do_work(user_prompt: str,
                   context: str, 
-                  num_recs, 
-                  server: LLM, 
-                  model: str, 
+                  num_recs: int,
+                  server: LLM,
+                  model: str,
                   system_prompt="You are a helpful assistant.") -> typing.List[str]:
     """
     Do your miner work here. 
@@ -340,7 +340,7 @@ class Miner(BaseMinerNeuron):
                 #model = "mistral-nemo:latest" #good
                 #model = "qwen2.5" #good/fast
                 #model = "qwen2.5-coder:latest" #good/slow                
-                #model = "gemma2:27b" #slow                
+                #model = "gemma2:27b" #slow
 
                 #model = "nemotron:latest" #slow
                 #model = "llama3.1:70b" #slow
@@ -393,6 +393,7 @@ async def main():
                 )
                 start_time = time.time()
                 miner.total_request_in_interval = 0
+
                 # try:
                 #     bt.logging.debug("Syncing metagraph")
                 #     if miner.should_sync_metagraph():
