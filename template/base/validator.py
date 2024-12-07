@@ -207,7 +207,8 @@ class BaseValidatorNeuron(BaseNeuron):
         1. Check for registration on the Bittensor network.
         2. Configures an API endpoint which receive organic requests from the API server.
         3. Periodically resynchronizes with the chain; updating the metagraph with the latest network state and setting weights.
-        4. Runs a loop that generates synthetic requests and forwards them to the network.
+        4. Runs a loop that generates synthetic requests and forwards them to the network (if API is disabled).
+        5. Handles organic API requests from bitrecs API to generate recommendations.
 
         """
         # Check that validator is registered on the network.
