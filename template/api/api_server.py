@@ -14,6 +14,7 @@ from bittensor.core.axon import FastAPIThreadedServer
 from template.protocol import BitrecsRequest
 from template.commerce.product import Product
 from template.api.api_counter import APICounter
+from template.utils import constants as CONST
 
 ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 
@@ -22,7 +23,7 @@ request_counts = {}
 
 SECRET_KEY = "change-me"
 
-MIN_CATALOG_SIZE = 10
+#MIN_CATALOG_SIZE = 10
 
 
 def is_api_data_valid(data) -> tuple[bool, str]:
@@ -203,7 +204,7 @@ class ApiServer:
             stuff = Product.try_parse_context(request.context)
             catalog_size = len(stuff)
             bt.logging.trace(f"REQUEST CATALOG SIZE: {catalog_size}")
-            if catalog_size < MIN_CATALOG_SIZE:
+            if catalog_size < CONST.MIN_CATALOG_SIZE:
                 bt.logging.error(f"API generate_product_rec catalog size too small")
                 self.log_counter(False)
                 return JSONResponse(status_code=500,

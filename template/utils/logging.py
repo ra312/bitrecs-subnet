@@ -91,44 +91,6 @@ def log_miner_responses(step: int, responses: List[BitrecsRequest]) -> None:
     except Exception as e:
         bt.logging.error(f"Error in logging miner responses: {e}")
         pass
-        
-
-
-# def log_miner_responses_to_sql(step: int, responses: List[BitrecsRequest]) -> None:
-#     try:
-#         frames = []
-#         for response in responses:
-#             headers = response.to_headers()
-#             df = pd.json_normalize(headers)          
-#             frames.append(df)
-#         final = pd.concat(frames)
-
-#         if len(final) > 0:
-#             utc_now = datetime.now(timezone.utc)
-#             created_at = utc_now.strftime("%Y-%m-%d %H:%M:%S")
-
-#             # Create or connect to a SQLite database
-#             db_path = os.path.join(os.getcwd(), 'miner_responses', 'miner_responses.db')
-#             os.makedirs(os.path.dirname(db_path), exist_ok=True)
-
-#             conn = sqlite3.connect(db_path)
-#             try:
-#                 # Add a 'step' and 'created_at' column to the DataFrame
-#                 final['step'] = step
-#                 final['created_at'] = created_at
-
-#                 # Define data types for all columns as TEXT
-#                 dtype_dict = {col: 'TEXT' for col in final.columns}
-
-#                 # Write the DataFrame to a SQLite table, overwriting if it already exists
-#                 final.to_sql('miner_responses', conn, index=False, if_exists='append', dtype=dtype_dict)
-#             finally:
-#                 conn.close()
-
-#         bt.logging.info(f"Miner responses logged to SQL {len(final)}")
-#     except Exception as e:
-#         bt.logging.error(f"Error in logging miner responses to SQL: {e}")
-
 
 
 def log_miner_responses_to_sql(step: int, responses: List[BitrecsRequest]) -> None:
@@ -142,33 +104,25 @@ def log_miner_responses_to_sql(step: int, responses: List[BitrecsRequest]) -> No
 
         if len(final) > 0:
             utc_now = datetime.now(timezone.utc)
-            created_at = utc_now.strftime("%Y-%m-%d %H:%M:%S")
-
-            # Define the path to the SQLite database in the current working directory
-            db_path = os.path.join(os.getcwd(), 'miner_responses.db')
-
-            # Create or connect to a SQLite database
+            created_at = utc_now.strftime("%Y-%m-%d %H:%M:%S")            
+            db_path = os.path.join(os.getcwd(), 'miner_responses.db')            
             conn = sqlite3.connect(db_path)
             try:
                 # Add a 'step' and 'created_at' column to the DataFrame
                 final['step'] = step
                 final['created_at'] = created_at
-
                 # Define data types for all columns as TEXT
                 dtype_dict = {col: 'TEXT' for col in final.columns}
-
                 # Check if the table already exists
                 cursor = conn.cursor()
                 cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='miner_responses';")
                 table_exists = cursor.fetchone() is not None
-
                 if not table_exists:
                     # If the table does not exist, create it and write the data
                     final.to_sql('miner_responses', conn, index=False, dtype=dtype_dict)
                 else:
                     # If the table exists, append the new data
                     final.to_sql('miner_responses', conn, index=False, if_exists='append', dtype=dtype_dict)
-
             finally:
                 conn.close()
 

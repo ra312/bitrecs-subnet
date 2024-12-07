@@ -38,17 +38,18 @@ from template.api.api_server import ApiServer
 from template.protocol import BitrecsRequest
 from dataclasses import dataclass
 from queue import SimpleQueue, Empty
-from template.utils.uids import check_uid_availability, get_random_uids
+from template.utils.uids import get_random_uids
 from template.validator.reward import get_rewards
 from template.utils.logging import log_miner_responses, write_timestamp, log_miner_responses_to_sql
+from template.utils import constants as CONST
 from dotenv import load_dotenv
 load_dotenv()
 
 api_queue = SimpleQueue() # Queue of SynapseEventPair
-MAX_DENDRITE_TIMEOUT = 10
-MIN_QUERY_LENGTH = 3
-MAX_RECS_PER_REQUEST = 20
-MAX_CONTEXT_LENGTH = 200000
+# MAX_DENDRITE_TIMEOUT = 10
+# MIN_QUERY_LENGTH = 3
+# MAX_RECS_PER_REQUEST = 20
+# MAX_CONTEXT_LENGTH = 200000
 
 @dataclass
 class SynapseWithEvent:
@@ -59,10 +60,8 @@ class SynapseWithEvent:
 
 
 async def api_forward(synapse: BitrecsRequest) -> BitrecsRequest:
-    #bt.logging.info(f"api_forward validator synapse: {synapse}")
-    bt.logging.trace(f"API FORWARD validator synapse type: {type(synapse)}")
-    
     """ Forward function for API server. """
+    bt.logging.trace(f"API FORWARD validator synapse type: {type(synapse)}")
     synapse_with_event = SynapseWithEvent(
         input_synapse=synapse,
         event=threading.Event(),
@@ -176,7 +175,7 @@ class BaseValidatorNeuron(BaseNeuron):
         if not isinstance(synapse, BitrecsRequest):
             bt.logging.error(f"Invalid synapse item: {synapse}")
             return False
-        if len(synapse.query) < MIN_QUERY_LENGTH or len(synapse.query) > 100:
+        if len(synapse.query) < CONST.MIN_QUERY_LENGTH or len(synapse.query) > CONST.MAX_QUERY_LENGTH:
             bt.logging.error(f"Invalid synampse Query!: {synapse}")
             return False
         if len(synapse.results) != 0:
@@ -185,7 +184,7 @@ class BaseValidatorNeuron(BaseNeuron):
         if synapse.context is None or synapse.context == "":
             bt.logging.error(f"Context is empty!: {synapse}")
             return False
-        if len(synapse.context) > MAX_CONTEXT_LENGTH:
+        if len(synapse.context) > CONST.MAX_CONTEXT_LENGTH:
             bt.logging.error(f"Context is too long!: {synapse}")
             return False
         if len(synapse.models_used) != 0:
@@ -194,8 +193,8 @@ class BaseValidatorNeuron(BaseNeuron):
         if synapse.site_key is None or synapse.site_key == "":
             bt.logging.error(f"Site key is empty!: {synapse}")
             return False
-        if synapse.num_results < 1 or synapse.num_results > MAX_RECS_PER_REQUEST:
-            bt.logging.error(f"Number of recommendations should be less than {MAX_RECS_PER_REQUEST}!: {synapse}")
+        if synapse.num_results < 1 or synapse.num_results > CONST.MAX_RECS_PER_REQUEST:
+            bt.logging.error(f"Number of recommendations should be less than {CONST.MAX_RECS_PER_REQUEST}!: {synapse}")
             return False
         return True
 
@@ -265,7 +264,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             chosen_axons,
                             api_request,
                             deserialize=False,
-                            timeout=MAX_DENDRITE_TIMEOUT
+                            timeout=CONST.MAX_DENDRITE_TIMEOUT
                         )
 
                         bt.logging.trace(f"Miners responded with {len(responses)} responses")
