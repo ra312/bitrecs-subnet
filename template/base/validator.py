@@ -249,11 +249,8 @@ class BaseValidatorNeuron(BaseNeuron):
                         #available_uids = get_random_uids(self, k=8)
                         bt.logging.trace(f"available_uids: {available_uids}")
 
-                        chosen_uids : list[int] = available_uids.tolist()                        
+                        chosen_uids : list[int] = available_uids.tolist()
                         chosen_uids.append(1) #add local miner for now
-                        
-                        #chosen_uids.append(4) #add local miner for now 
-                        #chosen_uids = [0, 1, 2, 3, 4, 5, 6, 7, 8]                        
                         bt.logging.trace(f"chosen_uids: {chosen_uids}")
 
                         chosen_axons = [self.metagraph.axons[uid] for uid in chosen_uids]
