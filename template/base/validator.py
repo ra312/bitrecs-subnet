@@ -45,7 +45,7 @@ from template.utils.uids import get_random_uids
 from template.validator.reward import get_rewards
 from template.utils.logging import log_miner_responses, write_timestamp, log_miner_responses_to_sql
 from template.utils import constants as CONST
-from template.utils.runtime import execute_periodically
+
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -141,9 +141,7 @@ class BaseValidatorNeuron(BaseNeuron):
         self.should_exit: bool = False
         self.is_running: bool = False
         self.thread: Union[threading.Thread, None] = None
-        self.lock = asyncio.Lock()
-
-        self.loop.run_until_complete(self.validator_loop())
+        self.lock = asyncio.Lock()        
 
     def serve_axon(self):
         """Serve axon to enable external connections."""
@@ -205,12 +203,6 @@ class BaseValidatorNeuron(BaseNeuron):
             return False
         return True
     
-    
-    @execute_periodically(timedelta(minutes=1))
-    async def validator_loop(self):
-        bt.logging.trace(f"\033[1;32m Validator execute_periodically started {int(time.time())}. \033[0m")
-        
-
 
     def run(self):
         """
@@ -240,7 +232,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     api_enabled = self.config.api.enabled
                     api_exclusive = self.config.api.exclusive
-                    bt.logging.info(f"api_enabled: {api_enabled} | api_exclusive {api_exclusive}")
+                    bt.logging.info(f"api_enabled: {api_enabled} | api_exclusive {api_exclusive}")                    
 
                     synapse_with_event: Optional[SynapseWithEvent] = None
                     try:

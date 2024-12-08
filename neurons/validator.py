@@ -25,6 +25,8 @@ from template.base.validator import BaseValidatorNeuron
 from template.validator import forward
 from template.protocol import BitrecsRequest
 from template.utils.gpu import GPUInfo
+from template.utils.runtime import execute_periodically
+
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 load_dotenv()
@@ -43,7 +45,7 @@ class Validator(BaseValidatorNeuron):
 
         bt.logging.info("load_state()")
         self.load_state()
-        self.total_request_in_interval = 0        
+        self.total_request_in_interval = 0
 
 
     async def forward(self, pr : BitrecsRequest = None):
@@ -58,14 +60,22 @@ class Validator(BaseValidatorNeuron):
         - Updating the scores
         """                
         return await forward(self, pr)
+    
+        
+    
+    @execute_periodically(timedelta(minutes=1))
+    async def validator_loop(self):
+        bt.logging.trace(f"\033[1;32m Validator execute_periodically started {int(time.time())}. \033[0m")
+        
 
 
 async def main():     
     GPUInfo.log_gpu_info()
     with Validator() as validator:
-        start_time = time.time()       
-        while True:            
-            bt.logging.info(f"Validator {validator.uid} running... {time.time()}")            
+        start_time = time.time()        
+        while True:
+            await validator.validator_loop()
+            bt.logging.info(f"Validator {validator.uid} running... {time.time()}")
             if time.time() - start_time > 300:
                 bt.logging.info(
                     f"---Total request in last 5 minutes: {validator.total_request_in_interval}"
