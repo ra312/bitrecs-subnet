@@ -73,7 +73,10 @@ class Validator(BaseValidatorNeuron):
     
     async def validator_loop(self):
         while True:
-            await self.loop.run_in_executor(None, await self.validator_callback)
+            loop = asyncio.get_running_loop()
+            executor = loop._create_executors[0]  # Create an executor
+            task = loop.run_in_executor(executor, self.validator_callback)
+            await task
 
     @execute_periodically(timedelta(seconds=30))
     async def validator_callback(self):
