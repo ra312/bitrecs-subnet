@@ -26,8 +26,13 @@ import bittensor as bt
 import time
 import traceback
 import anyio.to_thread
+
+from datetime import datetime, timedelta
 from typing import List, Union, Optional
 from traceback import print_exception
+from dataclasses import dataclass
+from queue import SimpleQueue, Empty
+
 from template.base.neuron import BaseNeuron
 from template.base.utils.weight_utils import (
     process_weights_for_netuid,
@@ -36,12 +41,12 @@ from template.base.utils.weight_utils import (
 from template.utils.config import add_validator_args
 from template.api.api_server import ApiServer
 from template.protocol import BitrecsRequest
-from dataclasses import dataclass
-from queue import SimpleQueue, Empty
 from template.utils.uids import get_random_uids
 from template.validator.reward import get_rewards
 from template.utils.logging import log_miner_responses, write_timestamp, log_miner_responses_to_sql
 from template.utils import constants as CONST
+from template.utils.runtime import execute_periodically
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -197,6 +202,11 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.error(f"Number of recommendations should be less than {CONST.MAX_RECS_PER_REQUEST}!: {synapse}")
             return False
         return True
+    
+    
+    @execute_periodically(timedelta=timedelta(minutes=1))
+    async def validator_loop(self):
+        bt.logging.trace(f"Validator execute_periodically started {int(time.time())}.")
 
 
     def run(self):
@@ -231,7 +241,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     synapse_with_event: Optional[SynapseWithEvent] = None
                     try:
-                        synapse_with_event = api_queue.get(timeout=5)                        
+                        synapse_with_event = api_queue.get(timeout=3)                        
                         bt.logging.info(f"NEW API REQUEST {synapse_with_event.input_synapse.name}")
                     except Empty:
                         # No synapse from API server.
