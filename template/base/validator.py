@@ -206,7 +206,8 @@ class BaseValidatorNeuron(BaseNeuron):
     
     @execute_periodically(timedelta(minutes=1))
     async def validator_loop(self):
-        bt.logging.trace(f"Validator execute_periodically started {int(time.time())}.")
+        bt.logging.trace(f"\033[1;32m Validator execute_periodically started {int(time.time())}. \033[0m")
+        
 
 
     def run(self):
