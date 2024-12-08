@@ -64,8 +64,9 @@ class Validator(BaseValidatorNeuron):
     
     @execute_periodically(timedelta(minutes=1))
     async def validator_loop(self):
-        bt.logging.trace(f"\033[1;32m Validator back loop ran at {int(time.time())}. \033[0m")
-        bt.logging.trace(f"last block {self.block}")
+        async with self.lock:
+            bt.logging.trace(f"\033[1;32m Validator back loop ran at {int(time.time())}. \033[0m")
+            bt.logging.trace(f"last block {self.block}")
         
 
 
