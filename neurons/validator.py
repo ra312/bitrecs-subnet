@@ -20,17 +20,13 @@
 import time
 import bittensor as bt
 import asyncio
-import threading
-
 from template.base.validator import BaseValidatorNeuron
 from template.validator import forward
 from template.protocol import BitrecsRequest
 from template.utils.gpu import GPUInfo
-from template.utils.runtime import execute_periodically
-
-from datetime import datetime, timedelta
 from dotenv import load_dotenv
 load_dotenv()
+
 
 class Validator(BaseValidatorNeuron):
     """

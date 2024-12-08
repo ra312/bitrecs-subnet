@@ -46,8 +46,6 @@ from template.validator.reward import get_rewards
 from template.utils.logging import log_miner_responses, write_timestamp, log_miner_responses_to_sql
 from template.utils import constants as CONST
 from template.utils.runtime import execute_periodically
-
-
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -168,6 +166,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 f"Failed to create Axon initialize with exception: {e}"
             )
             pass
+        
 
     async def concurrent_forward(self):
         coroutines = [
