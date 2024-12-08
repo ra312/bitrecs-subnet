@@ -43,7 +43,8 @@ class Validator(BaseValidatorNeuron):
 
         bt.logging.info("load_state()")
         self.load_state()
-        self.total_request_in_interval = 0        
+        self.total_request_in_interval = 0
+        self.loop.run_in_executor(None, self.execute_periodically())  
 
 
     async def forward(self, pr : BitrecsRequest = None):
@@ -64,7 +65,7 @@ async def main():
     GPUInfo.log_gpu_info()
     with Validator() as validator:
         start_time = time.time()       
-        while True:     
+        while True:            
             bt.logging.info(f"Validator {validator.uid} running... {time.time()}")            
             if time.time() - start_time > 300:
                 bt.logging.info(
