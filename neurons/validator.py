@@ -49,7 +49,7 @@ class Validator(BaseValidatorNeuron):
         self.total_request_in_interval = 0
 
         #self.loop.run_until_complete(self.validator_loop())
-        self.loop.create_task(self.validator_loop())
+        self.loop.ensure_future(self.validator_loop())
       
 
     async def forward(self, pr : BitrecsRequest = None):
