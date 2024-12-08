@@ -78,7 +78,7 @@ class Validator(BaseValidatorNeuron):
 
 
 async def main():     
-    GPUInfo.log_gpu_info()
+    await GPUInfo.log_gpu_info()
     with Validator() as validator:
         start_time = time.time()        
         while True:            

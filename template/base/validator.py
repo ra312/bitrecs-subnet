@@ -141,7 +141,9 @@ class BaseValidatorNeuron(BaseNeuron):
         self.should_exit: bool = False
         self.is_running: bool = False
         self.thread: Union[threading.Thread, None] = None
-        self.lock = asyncio.Lock()        
+        self.lock = asyncio.Lock()
+
+        self.maintenance_thread_is_running : bool = False        
 
     def serve_axon(self):
         """Serve axon to enable external connections."""
