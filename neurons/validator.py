@@ -50,7 +50,7 @@ class Validator(BaseValidatorNeuron):
 
         if not self.maintenance_thread_is_running:
             self.maintenance_thread_is_running = True
-            self.maintenance_thread = threading.Thread(target=self.validator_loop, daemon=True)
+            self.maintenance_thread = threading.Thread(target=self.validator_loop, daemon=True)            
             self.maintenance_thread.start()
 
 
@@ -69,10 +69,9 @@ class Validator(BaseValidatorNeuron):
         
     
     @execute_periodically(timedelta(minutes=1))
-    async def validator_loop(self):
-        async with self.lock:
-            bt.logging.trace(f"\033[1;32m Validator back loop ran at {int(time.time())}. \033[0m")
-            bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
+    def validator_loop(self):    
+        bt.logging.trace(f"\033[1;32m Validator back loop ran at {int(time.time())}. \033[0m")
+        bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
             
         
 
