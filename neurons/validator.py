@@ -47,7 +47,7 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info("load_state()")
         self.load_state()
         self.total_request_in_interval = 0
-        
+
 
     async def forward(self, pr : BitrecsRequest = None):
         """
@@ -75,7 +75,7 @@ async def main():
                 )
                 start_time = time.time()
                 validator.total_request_in_interval = 0
-            await asyncio.sleep(10)
+            await asyncio.sleep(15)
 
 if __name__ == "__main__": 
     asyncio.run(main())
