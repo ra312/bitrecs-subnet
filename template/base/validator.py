@@ -166,7 +166,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 f"Failed to create Axon initialize with exception: {e}"
             )
             pass
-        
+
 
     async def concurrent_forward(self):
         coroutines = [
@@ -336,7 +336,7 @@ class BaseValidatorNeuron(BaseNeuron):
                     self.step += 1
 
                 except Exception as e:
-                    bt.logging.error(f"Failed to run forward with exception: {e}")
+                    bt.logging.error(f"Main validator RUN loop exception: {e}")
                     if synapse_with_event and synapse_with_event.event:
                         synapse_with_event.event.set()
                     time.sleep(60)
