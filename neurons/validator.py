@@ -46,16 +46,8 @@ class Validator(BaseValidatorNeuron):
 
         bt.logging.info("load_state()")
         self.load_state()
-        self.total_request_in_interval = 0        
+        self.total_request_in_interval = 0
         
-        # asyncio.get_event_loop().create_task(self.validator_callback())
-        # print("Validator loop started")
-        def entrypoint(*params):
-            asyncio.run(self.validator_callback())
-
-        t = threading.Thread(target=entrypoint, args=(), daemon=True)
-        t.start()
-      
 
     async def forward(self, pr : BitrecsRequest = None):
         """
@@ -68,14 +60,8 @@ class Validator(BaseValidatorNeuron):
         - Rewarding the miners
         - Updating the scores
         """                
-        return await forward(self, pr)    
-  
-    @execute_periodically(timedelta(seconds=30))
-    async def validator_callback(self):
-        bt.logging.trace(f"\033[1;32m Validator back loop ran at {int(time.time())}. \033[0m")
-        #bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
-        
-
+        return await forward(self, pr)
+    
 
 async def main():     
     await GPUInfo.log_gpu_info()

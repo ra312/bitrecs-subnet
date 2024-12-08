@@ -45,6 +45,7 @@ from template.utils.uids import get_random_uids
 from template.validator.reward import get_rewards
 from template.utils.logging import log_miner_responses, write_timestamp, log_miner_responses_to_sql
 from template.utils import constants as CONST
+from template.utils.runtime import execute_periodically
 
 
 from dotenv import load_dotenv
@@ -142,7 +143,7 @@ class BaseValidatorNeuron(BaseNeuron):
         self.is_running: bool = False
         self.thread: Union[threading.Thread, None] = None
         self.lock = asyncio.Lock()
-               
+
 
     def serve_axon(self):
         """Serve axon to enable external connections."""
@@ -204,6 +205,12 @@ class BaseValidatorNeuron(BaseNeuron):
             return False
         return True
     
+      
+    @execute_periodically(timedelta(seconds=30))
+    async def validator_callback(self):
+        bt.logging.trace(f"\033[1;32m Validator back loop ran at {int(time.time())}. \033[0m")
+        #bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
+        
 
     def run(self):
         """
@@ -218,7 +225,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
         """
         # Check that validator is registered on the network.
-        self.sync()        
+        self.sync()
         
         bt.logging.info(
             f"\033[1;32m 🐸 Running validator on network: {self.config.subtensor.chain_endpoint} with netuid: {self.config.netuid}\033[0m")
@@ -322,6 +329,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     try:                        
                         self.sync()
+                        self.loop.run_until_complete(self.validator_callback())
                     except Exception as e:
                         bt.logging.error(traceback.format_exc())
                         bt.logging.error(f"Failed to sync with exception: {e}")
