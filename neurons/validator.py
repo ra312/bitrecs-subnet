@@ -50,7 +50,7 @@ class Validator(BaseValidatorNeuron):
 
         if not self.maintenance_thread_is_running:
             self.maintenance_thread_is_running = True
-            self.maintenance_thread = threading.Thread(target=asyncio.run, args=(self.validator_loop(),))
+            self.maintenance_thread = threading.Thread(target=self.validator_loop, daemon=True)            
             self.maintenance_thread.start()
 
 
