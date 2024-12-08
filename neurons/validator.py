@@ -43,10 +43,7 @@ class Validator(BaseValidatorNeuron):
 
         bt.logging.info("load_state()")
         self.load_state()
-        self.total_request_in_interval = 0
-
-
-        self.validator_loop()
+        self.total_request_in_interval = 0        
 
 
     async def forward(self, pr : BitrecsRequest = None):
