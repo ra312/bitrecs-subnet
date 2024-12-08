@@ -47,10 +47,10 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info("load_state()")
         self.load_state()
         self.total_request_in_interval = 0
-        self.validator_task = None
-        
-        if not self.validator_task or self.validator_task.done():
-            self.validator_task = asyncio.create_task(self.validator_loop())
+
+        # self.validator_task = None        
+        # if not self.validator_task or self.validator_task.done():
+        #     self.validator_task = asyncio.create_task(self.validator_loop())
       
 
     async def forward(self, pr : BitrecsRequest = None):
