@@ -46,9 +46,9 @@ class Validator(BaseValidatorNeuron):
 
         bt.logging.info("load_state()")
         self.load_state()
-        self.total_request_in_interval = 0
+        self.total_request_in_interval = 0        
         
-        asyncio.create_task(self.validator_loop())
+        asyncio.get_event_loop().create_task(self.validator_callback())
         print("Validator loop started")
       
 
@@ -63,15 +63,8 @@ class Validator(BaseValidatorNeuron):
         - Rewarding the miners
         - Updating the scores
         """                
-        return await forward(self, pr)
-    
-    async def validator_loop(self):
-        while True:
-            loop = asyncio.get_running_loop()            
-            #task = loop.run_in_executor(None, self.validator_callback)
-            task = loop.run_until_complete(self.validator_callback())
-            await task
-
+        return await forward(self, pr)    
+  
     @execute_periodically(timedelta(seconds=30))
     def validator_callback(self):
         bt.logging.trace(f"\033[1;32m Validator back loop ran at {int(time.time())}. \033[0m")
