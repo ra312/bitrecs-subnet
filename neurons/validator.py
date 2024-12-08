@@ -48,8 +48,9 @@ class Validator(BaseValidatorNeuron):
         self.load_state()
         self.total_request_in_interval = 0
 
-        #self.loop.run_until_complete(self.validator_loop())
-        self.loop.ensure_future(self.validator_loop())
+        with self.lock:
+            task = asyncio.create_task(self.validator_loop())
+            print("Validator loop started")
       
 
     async def forward(self, pr : BitrecsRequest = None):
@@ -66,11 +67,18 @@ class Validator(BaseValidatorNeuron):
         return await forward(self, pr)    
         
     
-    @execute_periodically(timedelta(minutes=1))
-    async def validator_loop(self):    
+    # @execute_periodically(timedelta(minutes=1))
+    # async def validator_loop(self):    
+    #     bt.logging.trace(f"\033[1;32m Validator back loop ran at {int(time.time())}. \033[0m")
+    #     bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
+    
+    async def validator_loop(self):
+        while True:
+            await self.loop.run_in_executor(None, lambda: execute_periodically(datetime.timedelta(seconds=30), self.validator_callback))
+
+    async def validator_callback(self):
         bt.logging.trace(f"\033[1;32m Validator back loop ran at {int(time.time())}. \033[0m")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
-            
         
 
 
