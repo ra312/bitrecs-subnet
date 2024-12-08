@@ -48,8 +48,13 @@ class Validator(BaseValidatorNeuron):
         self.load_state()
         self.total_request_in_interval = 0        
         
-        asyncio.get_event_loop().create_task(self.validator_callback())
-        print("Validator loop started")
+        # asyncio.get_event_loop().create_task(self.validator_callback())
+        # print("Validator loop started")
+        def entrypoint(*params):
+            asyncio.run(self.validator_callback())
+
+        t = threading.Thread(target=entrypoint, args=(), daemon=True)
+        t.start()
       
 
     async def forward(self, pr : BitrecsRequest = None):
