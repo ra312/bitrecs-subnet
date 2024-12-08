@@ -46,6 +46,9 @@ class Validator(BaseValidatorNeuron):
         self.total_request_in_interval = 0
 
 
+        self.validator_loop()
+
+
     async def forward(self, pr : BitrecsRequest = None):
         """
         Validator forward pass. Consists of:

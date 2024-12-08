@@ -222,7 +222,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
         """
         # Check that validator is registered on the network.
-        self.sync()
+        self.sync()        
         
         bt.logging.info(
             f"\033[1;32m 🐸 Running validator on network: {self.config.subtensor.chain_endpoint} with netuid: {self.config.netuid}\033[0m")
