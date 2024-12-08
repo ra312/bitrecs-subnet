@@ -73,8 +73,9 @@ class Validator(BaseValidatorNeuron):
     
     async def validator_loop(self):
         while True:
-            await self.loop.run_in_executor(None, lambda: execute_periodically(timedelta(seconds=30), self.validator_callback))
+            await self.loop.run_in_executor(None, self.validator_callback)
 
+    @execute_periodically(timedelta(seconds=30))
     async def validator_callback(self):
         bt.logging.trace(f"\033[1;32m Validator back loop ran at {int(time.time())}. \033[0m")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
