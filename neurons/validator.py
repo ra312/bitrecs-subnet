@@ -20,6 +20,7 @@
 import time
 import bittensor as bt
 import asyncio
+import threading
 
 from template.base.validator import BaseValidatorNeuron
 from template.validator import forward
@@ -46,6 +47,11 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info("load_state()")
         self.load_state()
         self.total_request_in_interval = 0
+
+        if not self.maintenance_thread_is_running:
+            self.maintenance_thread_is_running = True
+            self.maintenance_thread = threading.Thread(target=self.validator_loop, daemon=True)
+            self.maintenance_thread.start()
 
 
     async def forward(self, pr : BitrecsRequest = None):
@@ -75,8 +81,7 @@ async def main():
     GPUInfo.log_gpu_info()
     with Validator() as validator:
         start_time = time.time()        
-        while True:
-            await validator.validator_loop()
+        while True:            
             bt.logging.info(f"Validator {validator.uid} running... {time.time()}")
             if time.time() - start_time > 300:
                 bt.logging.info(
