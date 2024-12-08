@@ -37,7 +37,7 @@ def execute_periodically(period: timedelta):
                     last_operation_date = now
                     return result
                 else:
-                    logging.debug(
+                    bt.logging.debug(
                         f"Skipping {func.__name__}, period has not yet passed."
                     )
                     return None
