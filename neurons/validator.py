@@ -47,10 +47,9 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info("load_state()")
         self.load_state()
         self.total_request_in_interval = 0
-
-        with self.lock:
-            task = asyncio.create_task(self.validator_loop())
-            print("Validator loop started")
+        
+        task = asyncio.create_task(self.validator_loop())
+        print("Validator loop started")
       
 
     async def forward(self, pr : BitrecsRequest = None):
