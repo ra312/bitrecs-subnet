@@ -73,7 +73,7 @@ class Validator(BaseValidatorNeuron):
     
     async def validator_loop(self):
         while True:
-            await self.loop.run_in_executor(None, self.validator_callback)
+            await self.loop.run_in_executor(None, await self.validator_callback)
 
     @execute_periodically(timedelta(seconds=30))
     async def validator_callback(self):
