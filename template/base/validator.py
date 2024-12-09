@@ -210,15 +210,18 @@ class BaseValidatorNeuron(BaseNeuron):
     async def validator_callback(self):
         bt.logging.trace(f"\033[1;32m Validator back loop ran at {int(time.time())}. \033[0m")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
-        available_uids = get_random_uids(self, k=self.config.neuron.sample_size)        
+        available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
         #available_uids = get_random_uids(self, k=8)
+        available_uids.append(1) #add local miner for now
+        
         self.active_miners = []
         bt.logging.trace(f"available_uids: {available_uids}")
         for uid in available_uids:
             if not self.metagraph.axons[uid].is_serving:
-                bt.logging.trace(f"uid: {uid} not serving, skipping")
+                #bt.logging.trace(f"uid: {uid} not serving, skipping")
+                continue
             else:
-                bt.logging.trace(f"uid: {uid} | hotkey: {self.metagraph.hotkeys[uid]} is serving")
+                #bt.logging.trace(f"uid: {uid} | hotkey: {self.metagraph.hotkeys[uid]} is serving")
                 try:
                     status_code, status_msg = await ping_uid(self, uid)
                     if status_code:
