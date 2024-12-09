@@ -218,7 +218,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 bt.logging.trace(f"uid: {uid} not serving, skipping")
             else:
                 bt.logging.trace(f"uid: {uid} | hotkey: {self.metagraph.hotkeys[uid]} is serving")
-                ping = await ping_uid(uid)
+                ping = await ping_uid(self, uid)
                 bt.logging.trace(f"ping: {ping}")
 
         # axons = get_axons(self)
