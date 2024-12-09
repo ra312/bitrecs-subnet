@@ -26,8 +26,13 @@ import bittensor as bt
 import time
 import traceback
 import anyio.to_thread
+
+from datetime import datetime, timedelta
 from typing import List, Union, Optional
 from traceback import print_exception
+from dataclasses import dataclass
+from queue import SimpleQueue, Empty
+
 from template.base.neuron import BaseNeuron
 from template.base.utils.weight_utils import (
     process_weights_for_netuid,
@@ -36,18 +41,19 @@ from template.base.utils.weight_utils import (
 from template.utils.config import add_validator_args
 from template.api.api_server import ApiServer
 from template.protocol import BitrecsRequest
-from dataclasses import dataclass
-from queue import SimpleQueue, Empty
-from template.utils.uids import check_uid_availability, get_random_uids
+from template.utils.uids import get_random_uids, get_axons, ping_uid
 from template.validator.reward import get_rewards
-from template.utils.logging import write_timestamp
+from template.utils.logging import log_miner_responses, write_timestamp, log_miner_responses_to_sql
+from template.utils import constants as CONST
+from template.utils.runtime import execute_periodically
 from dotenv import load_dotenv
 load_dotenv()
 
 api_queue = SimpleQueue() # Queue of SynapseEventPair
-MAX_DENDRITE_TIMEOUT = 10
-MIN_QUERY_LENGTH = 3
-MAX_RECS_PER_REQUEST = 20
+# MAX_DENDRITE_TIMEOUT = 10
+# MIN_QUERY_LENGTH = 3
+# MAX_RECS_PER_REQUEST = 20
+# MAX_CONTEXT_LENGTH = 200000
 
 @dataclass
 class SynapseWithEvent:
@@ -58,10 +64,8 @@ class SynapseWithEvent:
 
 
 async def api_forward(synapse: BitrecsRequest) -> BitrecsRequest:
-    #bt.logging.info(f"api_forward validator synapse: {synapse}")
-    bt.logging.trace(f"API FORWARD validator synapse type: {type(synapse)}")
-    
     """ Forward function for API server. """
+    bt.logging.trace(f"API FORWARD validator synapse type: {type(synapse)}")
     synapse_with_event = SynapseWithEvent(
         input_synapse=synapse,
         event=threading.Event(),
@@ -127,7 +131,7 @@ class BaseValidatorNeuron(BaseNeuron):
             api_server = ApiServer(
                 axon_port=self.config.axon.port,
                 forward_fn=api_forward,
-                api_json=self.config.api_json,                
+                api_json=self.config.api_json,
             )
             api_server.start()            
             bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: {api_server.fast_server.config.host} on Axon: {api_server.fast_server.config.port} \033[0m")
@@ -137,6 +141,8 @@ class BaseValidatorNeuron(BaseNeuron):
         self.is_running: bool = False
         self.thread: Union[threading.Thread, None] = None
         self.lock = asyncio.Lock()
+        self.active_miners = []
+
 
     def serve_axon(self):
         """Serve axon to enable external connections."""
@@ -162,6 +168,7 @@ class BaseValidatorNeuron(BaseNeuron):
             )
             pass
 
+
     async def concurrent_forward(self):
         coroutines = [
             self.forward()
@@ -175,7 +182,7 @@ class BaseValidatorNeuron(BaseNeuron):
         if not isinstance(synapse, BitrecsRequest):
             bt.logging.error(f"Invalid synapse item: {synapse}")
             return False
-        if len(synapse.query) < MIN_QUERY_LENGTH or len(synapse.query) > 100:
+        if len(synapse.query) < CONST.MIN_QUERY_LENGTH or len(synapse.query) > CONST.MAX_QUERY_LENGTH:
             bt.logging.error(f"Invalid synampse Query!: {synapse}")
             return False
         if len(synapse.results) != 0:
@@ -184,7 +191,7 @@ class BaseValidatorNeuron(BaseNeuron):
         if synapse.context is None or synapse.context == "":
             bt.logging.error(f"Context is empty!: {synapse}")
             return False
-        if len(synapse.context) > 100000:
+        if len(synapse.context) > CONST.MAX_CONTEXT_LENGTH:
             bt.logging.error(f"Context is too long!: {synapse}")
             return False
         if len(synapse.models_used) != 0:
@@ -193,10 +200,40 @@ class BaseValidatorNeuron(BaseNeuron):
         if synapse.site_key is None or synapse.site_key == "":
             bt.logging.error(f"Site key is empty!: {synapse}")
             return False
-        if synapse.num_results < 1 or synapse.num_results > MAX_RECS_PER_REQUEST:
-            bt.logging.error(f"Number of recommendations should be less than {MAX_RECS_PER_REQUEST}!: {synapse}")
+        if synapse.num_results < 1 or synapse.num_results > CONST.MAX_RECS_PER_REQUEST:
+            bt.logging.error(f"Number of recommendations should be less than {CONST.MAX_RECS_PER_REQUEST}!: {synapse}")
             return False
         return True
+    
+      
+    @execute_periodically(timedelta(seconds=120))
+    async def validator_callback(self):
+        bt.logging.trace(f"\033[1;32m Validator back loop ran at {int(time.time())}. \033[0m")
+        bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
+        available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+        chosen_uids : list[int] = available_uids.tolist()
+        chosen_uids.append(1) #add local miner for now
+
+        selected_miners = []
+        bt.logging.trace(f"available_uids: {available_uids}")
+        for uid in chosen_uids:
+            if not self.metagraph.axons[uid].is_serving:
+                #bt.logging.trace(f"uid: {uid} not serving, skipping")
+                continue
+            else:
+                #bt.logging.trace(f"uid: {uid} | hotkey: {self.metagraph.hotkeys[uid]} is serving")
+                try:
+                    status_code, status_msg = await ping_uid(self, uid, 3)
+                    if status_code:
+                        bt.logging.trace(f"\033[1;32m ping: {status_code}:{status_msg} \033[0m")
+                        selected_miners.append(int(uid))
+                except Exception as e:
+                    bt.logging.error(f"ping failed with exception: {e}")
+                    continue
+      
+        self.active_miners = selected_miners      
+
+        bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
 
 
     def run(self):
@@ -207,7 +244,8 @@ class BaseValidatorNeuron(BaseNeuron):
         1. Check for registration on the Bittensor network.
         2. Configures an API endpoint which receive organic requests from the API server.
         3. Periodically resynchronizes with the chain; updating the metagraph with the latest network state and setting weights.
-        4. Runs a loop that generates synthetic requests and forwards them to the network.
+        4. Runs a loop that generates synthetic requests and forwards them to the network (if API is disabled).
+        5. Handles organic API requests from bitrecs API to generate recommendations.
 
         """
         # Check that validator is registered on the network.
@@ -226,11 +264,11 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     api_enabled = self.config.api.enabled
                     api_exclusive = self.config.api.exclusive
-                    bt.logging.info(f"api_enabled: {api_enabled} | api_exclusive {api_exclusive}")
+                    bt.logging.info(f"api_enabled: {api_enabled} | api_exclusive {api_exclusive}")                    
 
                     synapse_with_event: Optional[SynapseWithEvent] = None
                     try:
-                        synapse_with_event = api_queue.get(timeout=5)                        
+                        synapse_with_event = api_queue.get(timeout=3)                        
                         bt.logging.info(f"NEW API REQUEST {synapse_with_event.input_synapse.name}")
                     except Empty:
                         # No synapse from API server.
@@ -246,13 +284,18 @@ class BaseValidatorNeuron(BaseNeuron):
                             continue
                 
                         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-                        #available_uids = get_random_uids(self, k=8)
-                        bt.logging.trace(f"available_uids: {available_uids}")
+                        # #available_uids = get_random_uids(self, k=8)
+                        # bt.logging.trace(f"available_uids: {available_uids}")
 
-                        chosen_uids : list[int] = available_uids.tolist()                        
-                        chosen_uids.append(1) #add local miner for now 
-                        #chosen_uids = [0, 1, 2, 3, 4, 5, 6, 7, 8]                        
-                        bt.logging.trace(f"chosen_uids: {chosen_uids}")
+                        chosen_uids : list[int] = available_uids.tolist()
+                        chosen_uids.append(1) #add local miner for now
+                        # bt.logging.trace(f"chosen_uids: {chosen_uids}")
+                        #chosen_uids = self.active_miners
+                        
+                        if len(chosen_uids) == 0:
+                            bt.logging.error("No active miners, skipping - check your connectivity")
+                            synapse_with_event.event.set()
+                            continue
 
                         chosen_axons = [self.metagraph.axons[uid] for uid in chosen_uids]
                         #bt.logging.trace(f"chosen_axons: {chosen_axons}")
@@ -264,7 +307,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             chosen_axons,
                             api_request,
                             deserialize=False,
-                            timeout=MAX_DENDRITE_TIMEOUT
+                            timeout=CONST.MAX_DENDRITE_TIMEOUT
                         )
 
                         bt.logging.trace(f"Miners responded with {len(responses)} responses")
@@ -277,14 +320,15 @@ class BaseValidatorNeuron(BaseNeuron):
                         if not len(chosen_uids) == len(responses) == len(rewards):
                             bt.logging.error("MISMATCH in lengths of chosen_uids, responses and rewards")
                             synapse_with_event.event.set()
-                            continue
+                            continue                     
                             
                         selected_rec = rewards.argmax()
                         elected = responses[selected_rec]
                         elected.context = "" #save bandwidth
 
                         bt.logging.info("SCORING DONE")
-                        bt.logging.info(f"WINNING MINER: {elected.miner_uid}")
+                        bt.logging.info(f"\033[1;32m WINNING MINER: {elected.miner_uid} \033[0m")
+                        bt.logging.info(f"\033[1;32m WINNING MODEL: {elected.models_used} \033[0m")
                         bt.logging.info(f"WINNING RESULT: {elected}")
                         
                         if len(elected.results) == 0:
@@ -296,9 +340,14 @@ class BaseValidatorNeuron(BaseNeuron):
                         synapse_with_event.output_synapse = elected
                         # Mark the synapse as processed, API will then return to the client
                         synapse_with_event.event.set()
+                        self.total_request_in_interval +=1
+                        
+                        if self.config.logging.trace:
+                            log_miner_responses(self.step, responses)
+                            log_miner_responses_to_sql(self.step, responses)
 
                         bt.logging.info(f"Scored responses: {rewards}")
-                        self.update_scores(rewards, chosen_uids) 
+                        self.update_scores(rewards, chosen_uids)
 
                     else:
                         if not api_exclusive: #Regular validator loop                
@@ -310,6 +359,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     try:                        
                         self.sync()
+                        #self.loop.run_until_complete(self.validator_callback())
                     except Exception as e:
                         bt.logging.error(traceback.format_exc())
                         bt.logging.error(f"Failed to sync with exception: {e}")
@@ -317,7 +367,7 @@ class BaseValidatorNeuron(BaseNeuron):
                     self.step += 1
 
                 except Exception as e:
-                    bt.logging.error(f"Failed to run forward with exception: {e}")
+                    bt.logging.error(f"Main validator RUN loop exception: {e}")
                     if synapse_with_event and synapse_with_event.event:
                         synapse_with_event.event.set()
                     time.sleep(60)
@@ -483,16 +533,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 version_key=self.spec_version,
             )
             if result is True:
-                
-                try:
-                    write_timestamp(time.time())
-                except Exception as e:
-                    bt.logging.error(f"write_timestamp failed with exception: {e}")
-                    pass
-
-                print(f"updated timestamp to {time.time()}")
                 bt.logging.info(f"set_weights on chain successfully! msg: {msg}")
-
             else:
                 bt.logging.error(f"set_weights on chain failed {msg}")
         except Exception as e:

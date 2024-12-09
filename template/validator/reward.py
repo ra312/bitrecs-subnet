@@ -26,9 +26,10 @@ from template.protocol import BitrecsRequest
 from template.llms.prompt_factory import PromptFactory
 from typing import List
 from template.commerce.product import Product
+from template.utils import constants as CONST
 
 ALPHA_TIME_DECAY = 0.05
-MIN_CATALOG_SIZE = 10
+
 
 def does_sku_exist(sku: str, store_catalog: List[Product]) -> bool:
     """
@@ -48,7 +49,7 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
     """
     Ensure results from Miner match the required schema
     """
-    if num_recs < 1 or num_recs > 20:
+    if num_recs < 1 or num_recs > CONST.MAX_RECS_PER_REQUEST:
         return False
     if len(results) != num_recs:
         bt.logging.error("Error validate_result_schema mismatch")
@@ -59,7 +60,7 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
         "properties": {
             "sku": {"type": "string"},
             "name": {"type": "string"},
-            "price": {"type": "string"}
+            "price": {"type": ["string", "number"]}
         },
         "required": ["sku", "name", "price"]
     }
@@ -111,9 +112,7 @@ def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest
 
         valid_items = set()
         for result in response.results:
-            try:             
-                #result = result.replace("\'", "\"")
-                #product: Product = json.loads(result)
+            try:
                 product: Product = json_repair.loads(result)
                 #bt.logging.trace(f"{response.miner_uid} response product: {product}")
                 sku = product["sku"]
@@ -171,12 +170,12 @@ def get_rewards(
     - np.ndarray: An array of rewards for the given query and responses.
     """
 
-    if num_recs < 1 or num_recs > 20:
+    if num_recs < 1 or num_recs > CONST.MAX_RECS_PER_REQUEST:
         bt.logging.error(f"Invalid number of recommendations: {num_recs}")
         return np.zeros(len(responses), dtype=float)        
     
     store_catalog: list[Product] = Product.try_parse_context(ground_truth.context)
-    if len(store_catalog) < MIN_CATALOG_SIZE:
+    if len(store_catalog) < CONST.MIN_CATALOG_SIZE:
         bt.logging.error(f"Invalid catalog size: {len(store_catalog)}")
         return np.zeros(len(responses), dtype=float)
         

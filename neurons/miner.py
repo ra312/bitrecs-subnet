@@ -24,6 +24,7 @@ import bittensor as bt
 import template
 import asyncio
 import ast
+import random
 
 from datetime import datetime, timezone
 from template.base.miner import BaseMinerNeuron
@@ -37,11 +38,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-async def do_work(user_prompt: str, 
+async def do_work(user_prompt: str,
                   context: str, 
-                  num_recs, 
-                  server: LLM, 
-                  model: str, 
+                  num_recs: int,
+                  server: LLM,
+                  model: str,
                   system_prompt="You are a helpful assistant.") -> typing.List[str]:
     """
     Do your miner work here. 
@@ -63,14 +64,15 @@ async def do_work(user_prompt: str,
     bt.logging.info(f"do_work Prompt: {user_prompt}")
     bt.logging.info(f"do_work LLM server: {server}")  
     bt.logging.info(f"do_work LLM model: {model}")
+    debug_prompts : bool = False
 
     factory = PromptFactory(sku=user_prompt, 
                             context=context, 
                             num_recs=num_recs, 
                             load_catalog=False, 
-                            debug=False)
+                            debug=debug_prompts)
     
-    prompt = factory.generate_prompt()    
+    prompt = factory.generate_prompt()
     system_prompt = "You are a helpful assistant."
     
     try:        
@@ -81,9 +83,11 @@ async def do_work(user_prompt: str,
 
         llm_response = llm_response.replace("```json", "").replace("```", "").strip()
         parsed_recs = PromptFactory.tryparse_llm(llm_response)
-        #bt.logging.trace(f"LLM response: {parsed_recs}")
-        return parsed_recs
+        if debug_prompts:
+            bt.logging.trace(f" {llm_response} ")
+            bt.logging.trace(f"LLM response: {parsed_recs}")
 
+        return parsed_recs
     except Exception as e:
         bt.logging.error(f"Error calling LLM: {e}")
 
@@ -137,6 +141,7 @@ class Miner(BaseMinerNeuron):
         if self.uid == best_performing_uid:
             bt.logging.info(f"\033[1;32m 🐸 You are the BEST performing miner in the subnet, keep it up!\033[0m")
 
+        self.total_request_in_interval = 0
 
     async def forward(
         self, synapse: BitrecsRequest
@@ -158,12 +163,17 @@ class Miner(BaseMinerNeuron):
         server = self.llm_provider      
         context = synapse.context
         num_recs = synapse.num_results
+        st = time.time()
         try:
             results = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)            
             bt.logging.info(f"LLM {self.model} - Results: count ({len(results)})")
         except Exception as e:
             bt.logging.error(f"\033[31mFATAL ERROR calling do_work: {e!r} \033[0m")
             pass
+        finally:
+            et = time.time()
+            bt.logging.info(f"{self.model} Query - Elapsed Time: {et-st}")
+
 
         utc_now = datetime.now(timezone.utc)
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
@@ -198,9 +208,9 @@ class Miner(BaseMinerNeuron):
             miner_hotkey=synapse.dendrite.hotkey
         )
         
-        bt.logging.info(f"MINER {self.uid} FORWARD PASS RESULT -> {output_synapse}")        
-
-        return output_synapse
+        bt.logging.info(f"MINER {self.uid} FORWARD PASS RESULT -> {output_synapse}")
+        self.total_request_in_interval += 1
+        return output_synapse   
         
 
     async def blacklist(
@@ -321,8 +331,16 @@ class Miner(BaseMinerNeuron):
         """
         match self.llm_provider:
             case LLM.OLLAMA_LOCAL:
-                #model = "llama3.2:3b-instruct-q8_0" #best
-                model = "llama3.1" #great
+
+                model = "llama3.1" #great/fast
+                #model = "llama3.2" #good
+                #model = "llama3.2:3b-instruct-q8_0" #good
+
+                #model = "llama3.1:70b" #slow
+                #model = "mistral-nemo:latest" #good
+                #model = "qwen2.5" #good/fast
+                #model = "qwen2.5-coder:latest" #good/slow                
+                #model = "gemma2:27b" #slow
 
                 #model = "nemotron:latest" #slow
                 #model = "llama3.1:70b" #slow
@@ -330,7 +348,9 @@ class Miner(BaseMinerNeuron):
                 #model = "qwen2.5:32b" #invalid results
                 #model = "qwen2.5:32b-instruct" #inaccurate
                 #model = "qwq" #slow
-                #model = "mistral-nemo" #inaccurate
+                #model = "mistral-nemo" #slow
+                #model = "nemotron-mini:latest" #inaccurate
+
             case LLM.OPEN_ROUTER:
                 model = "google/gemini-flash-1.5-8b" #best
                 #model = "meta-llama/llama-3.1-70b-instruct:free" #ok
@@ -342,13 +362,16 @@ class Miner(BaseMinerNeuron):
             case _:
                 bt.logging.error("Unknown LLM server")
                 raise ValueError("Unknown LLM server")
+            
+        if self.config.llm.model and len(self.config.llm.model) > 2:
+            model = self.config.llm.model
              
         bt.logging.info(f"Miner Warmup: {self.llm} - Model: {model}")
         try:
             result = LLMFactory.query_llm(server=self.llm_provider, 
                                  model=model, 
                                  system_prompt="You are a helpful assistant", 
-                                 temp=0.1, user_prompt="Tell me a joke")
+                                 temp=0.1, user_prompt="Tell me a sarcastic joke")
             self.model = model
             bt.logging.info(f"Warmup SUCCESS: {self.model} - Result: {result}")
             return True
@@ -361,11 +384,27 @@ class Miner(BaseMinerNeuron):
 async def main():
     await GPUInfo.log_gpu_info()
     with Miner() as miner:
-        #start_time = time.time()
-        while True:
-            bt.logging.info(f"Miner {miner.uid} running... {time.time()}")
-            await asyncio.sleep(15)
+        start_time = time.time()
+        while True:            
+            bt.logging.info(f"Miner {miner.uid} running... {time.time()}")            
+            if time.time() - start_time > 300:
+                bt.logging.info(
+                    f"---Total request in last 5 minutes: {miner.total_request_in_interval}"
+                )
+                start_time = time.time()
+                miner.total_request_in_interval = 0
 
+                # try:
+                #     bt.logging.debug("Syncing metagraph")
+                #     if miner.should_sync_metagraph():
+                #         miner.resync_metagraph()
+                #         bt.logging.debug("Synced metagraph")
+                #     else:
+                #         bt.logging.debug("No need to sync metagraph")
+                # except Exception as e:                    
+                #     bt.logging.error(f"Error syncing metagraph: {e}")
+
+            await asyncio.sleep(15)
 
 if __name__ == "__main__":  
     asyncio.run(main())

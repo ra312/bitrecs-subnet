@@ -20,14 +20,13 @@
 import time
 import bittensor as bt
 import asyncio
-
 from template.base.validator import BaseValidatorNeuron
 from template.validator import forward
 from template.protocol import BitrecsRequest
 from template.utils.gpu import GPUInfo
-from datetime import datetime, timedelta
 from dotenv import load_dotenv
 load_dotenv()
+
 
 class Validator(BaseValidatorNeuron):
     """
@@ -43,8 +42,8 @@ class Validator(BaseValidatorNeuron):
 
         bt.logging.info("load_state()")
         self.load_state()
+        self.total_request_in_interval = 0
 
-        # TODO(developer): Anything specific to your use case you can do here
 
     async def forward(self, pr : BitrecsRequest = None):
         """
@@ -60,17 +59,19 @@ class Validator(BaseValidatorNeuron):
         return await forward(self, pr)
     
 
-
 async def main():     
-    GPUInfo.log_gpu_info()
+    await GPUInfo.log_gpu_info()
     with Validator() as validator:
-        while True:
-            bt.logging.info(f"Validator {validator.uid} running ... {int(time.time())}")
-            current_time = datetime.now()            
-            if current_time.minute % 15 == 0 and (current_time.second >= 0 or current_time.minute > 14):
-                print(f"Current minute is {current_time.minute}, it's a special quarter!")
-            await asyncio.sleep(5)
-
+        start_time = time.time()        
+        while True:            
+            bt.logging.info(f"Validator {validator.uid} running... {time.time()}")
+            if time.time() - start_time > 300:
+                bt.logging.info(
+                    f"---Total request in last 5 minutes: {validator.total_request_in_interval}"
+                )
+                start_time = time.time()
+                validator.total_request_in_interval = 0
+            await asyncio.sleep(15)
 
 if __name__ == "__main__": 
     asyncio.run(main())

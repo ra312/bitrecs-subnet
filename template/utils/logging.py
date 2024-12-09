@@ -1,6 +1,16 @@
+
 import os
 import logging
+import bittensor as bt
+import pandas as pd
+import sqlite3
+from datetime import datetime, timezone
+
+from typing_extensions import List
 from logging.handlers import RotatingFileHandler
+
+from template.protocol import BitrecsRequest
+
 
 EVENTS_LEVEL_NUM = 38
 DEFAULT_LOG_BACKUP_COUNT = 10
@@ -58,3 +68,60 @@ def read_timestamp():
 def remove_timestamp_file():
     if os.path.exists(timestamp_file):
         os.remove(timestamp_file)
+
+
+def log_miner_responses(step: int, responses: List[BitrecsRequest]) -> None:
+    try:        
+        frames = []
+        for response in responses:
+            headers = response.to_headers()
+            df = pd.json_normalize(headers)          
+            frames.append(df)
+        final = pd.concat(frames)
+        cwd = os.getcwd()
+        p = os.path.join(cwd, 'miner_responses')
+        if not os.path.exists(p):
+            os.makedirs(p)        
+        if len(final) > 0:
+            utc_now = datetime.now(timezone.utc)
+            created_at = utc_now.strftime("%Y-%m-%d_%H-%M-%S")
+            full_path = os.path.join(p, f'miner_responses_step_{step}_{created_at}.csv')
+            final.to_csv(full_path, index=False)
+        bt.logging.info(f"Miner responses logged {len(final)}")
+    except Exception as e:
+        bt.logging.error(f"Error in logging miner responses: {e}")
+        pass
+
+
+def log_miner_responses_to_sql(step: int, responses: List[BitrecsRequest]) -> None:
+    try:
+        frames = []
+        for response in responses:
+            headers = response.to_headers()
+            df = pd.json_normalize(headers)          
+            frames.append(df)
+        final = pd.concat(frames)
+
+        if len(final) > 0:
+            utc_now = datetime.now(timezone.utc)
+            created_at = utc_now.strftime("%Y-%m-%d %H:%M:%S")            
+            db_path = os.path.join(os.getcwd(), 'miner_responses.db')            
+            conn = sqlite3.connect(db_path)
+            try:
+                final['step'] = step
+                final['created_at'] = created_at                
+                dtype_dict = {col: 'TEXT' for col in final.columns}                
+                cursor = conn.cursor()
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='miner_responses';")
+                table_exists = cursor.fetchone() is not None
+                if not table_exists:                    
+                    final.to_sql('miner_responses', conn, index=False, dtype=dtype_dict)
+                else:                    
+                    final.to_sql('miner_responses', conn, index=False, if_exists='append', dtype=dtype_dict)
+
+            finally:
+                conn.close()
+
+        bt.logging.info(f"Miner responses logged {len(final)}")
+    except Exception as e:
+        bt.logging.error(f"Error in logging miner responses: {e}")

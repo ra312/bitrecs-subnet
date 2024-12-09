@@ -4,7 +4,7 @@ from google.analytics.data_v1beta.types import (
     DateRange,
     Dimension,
     Metric,
-    RunReportRequest,
+    RunReportRequest, FilterExpression, Filter
 )
 import asyncio
 
@@ -50,6 +50,39 @@ class GAFetch:
         for row in response.rows:
             print(row.dimension_values[0].value, row.metric_values[0].value)
 
+    def display_add_to_carts(self, property_id):
+        if not property_id:
+            raise ValueError("property_id is required")
+        client = BetaAnalyticsDataClient()   
+        request = RunReportRequest(
+            property=f"properties/{property_id}",
+            dimensions=[
+                {"name": "eventName"},
+                {"name": "itemName"},
+                {"name": "itemCategory"},
+            ],
+            metrics=[
+                # {"name": "eventCount"},
+                {"name": "itemRevenue"}
+            ],
+            date_ranges=[{"start_date": "7daysAgo", "end_date": "today"}],
+
+            dimension_filter=FilterExpression(
+                filter=Filter(
+                    field_name="eventName",
+                    string_filter=Filter.StringFilter(value="add_to_cart"),
+                )
+            )
+        )
+
+        response = client.run_report(request)
+
+        print("Report result:")
+        for row in response.rows:
+            print(row)
+            print(row.dimension_values[0].value, row.metric_values[0].value)
+
+
 
 if __name__ == '__main__':
     async def main():
@@ -61,7 +94,7 @@ if __name__ == '__main__':
         site_id = SITES[0]
         print(f"Loading data for site_id {site_id}")
 
-        ga_fetch.sample_run_report(site_id)
+        ga_fetch.display_add_to_carts(site_id)
 
         print("GA FETCH - END")
 

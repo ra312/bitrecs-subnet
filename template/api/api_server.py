@@ -13,6 +13,9 @@ from fastapi.middleware.gzip import GZipMiddleware
 from bittensor.core.axon import FastAPIThreadedServer
 from template.protocol import BitrecsRequest
 from template.commerce.product import Product
+from template.api.api_counter import APICounter
+from template.api.utils import api_key_validator
+from template.utils import constants as CONST
 
 ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 
@@ -22,86 +25,14 @@ request_counts = {}
 SECRET_KEY = "change-me"
 
 
-def is_api_data_valid(data) -> tuple[bool, str]:
-    if not isinstance(data, dict):
-        return False, "Not a dictionary"
-
-    if "keys" not in data.keys():
-        return False, "Missing users key"
-
-    if not isinstance(data["keys"], dict):
-        return False, "Keys field is not a dict"
-
-    for key, value in data["keys"].items():
-        if not isinstance(value, dict):
-            return False, "Key value is not a dictionary"
-        if "requests_per_min" not in value.keys():
-            return False, "Missing requests_per_min field"
-        if not isinstance(value["requests_per_min"], int):
-            return False, "requests_per_min is not an int"
-
-    return True, "Formatting is good"
-
-
-def load_api_config() -> Optional[dict]:
-    bt.logging.trace("Loading API config")
-    try:
-        if not os.path.exists("template/api/api.json"):
-            raise Exception(f"{'template/api/api.json'} does not exist")
-
-        with open("template/api/api.json", 'r') as file:
-            api_data = json.load(file)
-            #bt.logging.trace("api_data", api_data)
-            valid, reason = is_api_data_valid(api_data)
-            if not valid:
-                raise Exception(f"{'api/api.json'} is poorly formatted. {reason}")
-            if "change-me" in api_data["keys"]:
-                bt.logging.error("YOU ARE USING THE DEFAULT API KEY. CHANGE IT FOR SECURITY REASONS.")
-        return api_data
-    except Exception as e:
-        bt.logging.error("Error loading API config:", e)
-        traceback.print_exc()
-
-
-def _get_api_key(request: Request) -> Any:
-    auth_header = request.headers.get("Authorization")
-    if not auth_header:
-        return None
-    if auth_header.startswith("Bearer "):
-        return auth_header.split(" ")[1]
-    return auth_header
-
-
-async def api_key_validator(request, call_next) -> Response:
-    if request.url.path in ["/favicon.ico"]:
-        return await call_next(request)
-
-    api_key = _get_api_key(request)
-    if not api_key:
-        bt.logging.error(f"ERROR - Request has no Authorization {request.client.host}")
-        return JSONResponse(status_code=400, content={"detail": "Authorization is missing"})
-
-    api_key_info = load_api_config()
-    if api_key_info is None:
-        bt.logging.error(f"ERROR - MISSING API request key {request.client.host}")
-        return JSONResponse(status_code=401, content={"detail": "Invalid API key config"})
-    
-    if api_key not in api_key_info["keys"]:
-        bt.logging.error(f"ERROR - INVALID API request key {request.client.host}")        
-        return JSONResponse(status_code=401, content={"detail": "Invalid API key request"})
-
-    response: Response = await call_next(request)
-    return response
-
-
 async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str):
     """
     Verify HMAC signature of the request   
    
     """
 
-    bt.logging.trace(f"API verify_request x_signature: {x_signature}")
-    bt.logging.trace(f"API verify_request x_timestamp: {x_timestamp}")
+    # bt.logging.trace(f"API verify_request x_signature: {x_signature}")
+    # bt.logging.trace(f"API verify_request x_timestamp: {x_timestamp}")
 
     d = {
         'created_at': request.created_at,
@@ -115,10 +46,8 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
         'miner_uid': request.miner_uid,
         'miner_hotkey': request.miner_hotkey
     }
-    body_str = json.dumps(d, sort_keys=True)
-    # Recreate string that was signed
-    string_to_sign = f"{x_timestamp}.{body_str}"
-    # Calculate expected signature
+    body_str = json.dumps(d, sort_keys=True)    
+    string_to_sign = f"{x_timestamp}.{body_str}"    
     expected_signature = hmac.new(
         SECRET_KEY.encode('utf-8'),
         string_to_sign.encode('utf-8'),
@@ -134,16 +63,15 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
     if current_time - timestamp > 300:  # 5 minutes
         raise HTTPException(status_code=401, detail="Request expired")
     
-    bt.logging.info(f"\033[1;32m Signature Verified\033[0m")
-        
+    bt.logging.info(f"\033[1;32m Signature Verified\033[0m")        
     
 
 
-class ApiServer:    
+class ApiServer:
     app: FastAPI
     fast_server: FastAPIThreadedServer
     router: APIRouter
-    forward_fn: ForwardFn  
+    forward_fn: ForwardFn
 
     def __init__(self, axon_port: int, forward_fn: ForwardFn, api_json: str):
         self.forward_fn = forward_fn
@@ -161,17 +89,21 @@ class ApiServer:
         self.router = APIRouter()
         self.router.add_api_route(
             "/ping", 
-            self.ping,            
+            self.ping,
             methods=["GET"],
         )
         self.router.add_api_route(
-            "/rec", 
+            "/rec",
             self.generate_product_rec,
-            methods=["POST"]  
-        )       
+            methods=["POST"]
+        )
         self.app.include_router(self.router)
-        self.api_json = api_json
-        self.tunnel = None
+        self.api_json = api_json #TODO not used        
+
+        self.api_counter = APICounter(
+            os.path.join(self.app.root_path, "api_counter.json")
+        )
+        bt.logging.info(f"\033[1;33m API Counter set {self.api_counter.save_path} \033[0m")
         bt.logging.info(f"\033[1;32m API Server initialized \033[0m")
 
     
@@ -185,32 +117,31 @@ class ApiServer:
             request: BitrecsRequest,
             x_signature: str = Header(...),
             x_timestamp: str = Header(...)
-    ):        
-        #bt.logging.debug(f"API generate_product_rec request:  {request.computed_body_hash}")
-        #bt.logging.debug(f"API generate_product_rec request type:  {type(request)}")
+    ):  
         
         # headers = request.to_headers()
         # bt.logging.info(f"{headers}")
 
-        try:            
+        try:
           
             await verify_request(request, x_signature, x_timestamp)
 
             stuff = Product.try_parse_context(request.context)
             catalog_size = len(stuff)
             bt.logging.trace(f"REQUEST CATALOG SIZE: {catalog_size}")
-            if catalog_size < 10:
+            if catalog_size < CONST.MIN_CATALOG_SIZE:
                 bt.logging.error(f"API generate_product_rec catalog size too small")
+                self.log_counter(False)
                 return JSONResponse(status_code=500,
-                                    content={"detail": "error", "status_code": 500})
+                                    content={"detail": "error - invalid catalog", "status_code": 500})
             
             st = time.time()
             response = await self.forward_fn(request)
-            et = time.time()
-            total_time = et - st
+            total_time = time.time() - st
 
             if len(response.results) == 0:
                 bt.logging.error(f"API generate_product_rec response has no results")
+                self.log_counter(False)
                 return JSONResponse(status_code=500,
                                     content={"detail": "error", "status_code": 500})
 
@@ -219,9 +150,9 @@ class ApiServer:
             # Remove single quotes from the string and convert items to JSON objects
             final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
             #bt.logging.trace(f"API generate_product_rec final_recs: {final_recs}")
-            response_text = "Bitrecs Took {:.2f} seconds to process request".format(total_time)
+            response_text = "Bitrecs Took {:.2f} seconds to process this request".format(total_time)
 
-            bitrecs_rec = {
+            response = {
                 "user": response.user, 
                 "original_query": response.query,
                 "status_code": "200",
@@ -236,11 +167,13 @@ class ApiServer:
                 "reasoning": "testing"
             }
 
+            self.log_counter(True)
             #bt.logging.debug(f"API generate_product_rec JSONResponse bitrecs_rec: {bitrecs_rec}")
-            return JSONResponse(status_code=200, content=bitrecs_rec)
+            return JSONResponse(status_code=200, content=response)
 
         except Exception as e:
-            bt.logging.error(f"API generate_product_rec error:  {e}")
+            bt.logging.error(f"ERROR API generate_product_rec error:  {e}")
+            self.log_counter(False)
             return JSONResponse(status_code=500,
                                 content={"detail": "error", "status_code": 500})
 
@@ -252,28 +185,14 @@ class ApiServer:
     def stop(self):
         self.fast_server.stop()
         bt.logging.info("API server stopped")
-   
 
-    @staticmethod
-    async def print_req(request: Request):        
-        # Get request method
-        method = request.method
-        # Get request headers
-        headers = request.headers
-        # Get query parameters
-        query_params = request.query_params
-        # Get the body (awaitable for POST requests)
-        body = await request.body()
-        # Get the JSON body (if JSON is expected)
-        try:
-            json_body = await request.json()
+
+    def log_counter(self, success: bool) -> None:
+        try: 
+            self.api_counter.update(is_success=success)
+            self.api_counter.save()
         except Exception as e:
-            json_body = None  # Not JSON or failed parsing
-        return {
-            "method": method,
-            "headers": dict(headers),
-            "query_params": dict(query_params),
-            "body": body.decode("utf-8") if body else None,
-            "json_body": json_body,
-        }
+            bt.logging.error(f"ERROR API could not update counter log:  {e}")
+            pass  
 
+   
