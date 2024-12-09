@@ -221,10 +221,12 @@ class BaseValidatorNeuron(BaseNeuron):
                 bt.logging.trace(f"uid: {uid} | hotkey: {self.metagraph.hotkeys[uid]} is serving")
                 try:
                     status_code, status_msg = await ping_uid(self, uid)
-                    bt.logging.trace(f"\033[1;32m ping: {status_code}:{status_msg} \033[0m")
-                    self.active_miners.append(uid)
+                    if status_code:
+                        bt.logging.trace(f"\033[1;32m ping: {status_code}:{status_msg} \033[0m")
+                        self.active_miners.append(uid)
                 except Exception as e:
                     bt.logging.error(f"ping failed with exception: {e}")
+                    continue
 
         # axons = get_axons(self)
         # bt.logging.trace(f"AXON CHECK : {axons}")
