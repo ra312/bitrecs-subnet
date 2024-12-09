@@ -294,15 +294,15 @@ class BaseValidatorNeuron(BaseNeuron):
                             synapse_with_event.event.set()
                             continue
                 
-                        available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-                        #available_uids = get_random_uids(self, k=8)
-                        bt.logging.trace(f"available_uids: {available_uids}")
+                        # available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+                        # #available_uids = get_random_uids(self, k=8)
+                        # bt.logging.trace(f"available_uids: {available_uids}")
 
-                        chosen_uids : list[int] = available_uids.tolist()
-                        chosen_uids.append(1) #add local miner for now
-                        bt.logging.trace(f"chosen_uids: {chosen_uids}")
+                        # chosen_uids : list[int] = available_uids.tolist()
+                        # chosen_uids.append(1) #add local miner for now
+                        # bt.logging.trace(f"chosen_uids: {chosen_uids}")
 
-                        chosen_axons = [self.metagraph.axons[uid] for uid in chosen_uids]
+                        chosen_axons = [self.metagraph.axons[uid] for uid in self.active_miners]
                         #bt.logging.trace(f"chosen_axons: {chosen_axons}")
 
                         api_request = synapse_with_event.input_synapse
