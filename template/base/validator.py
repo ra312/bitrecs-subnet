@@ -220,9 +220,12 @@ class BaseValidatorNeuron(BaseNeuron):
                 bt.logging.trace(f"uid: {uid} | hotkey: {self.metagraph.hotkeys[uid]} is serving")
 
         axons = get_axons(self)
+        bt.logging.trace(f"AXON CHECK : {axons}")
+        bt.logging.trace(f"Found {len(axons)} axons connected to this validator.")
+
         for axon in axons:
             if axon.is_serving:
-                bt.logging.trace(f"axon: {axon.ip} is serving")
+                bt.logging.trace(f"\033[1;32m axon: {axon.ip} is serving \033[0m")
             else:
                 bt.logging.trace(f"axon: {axon.ip} not serving, skipping")
 
