@@ -41,7 +41,7 @@ from template.base.utils.weight_utils import (
 from template.utils.config import add_validator_args
 from template.api.api_server import ApiServer
 from template.protocol import BitrecsRequest
-from template.utils.uids import get_random_uids
+from template.utils.uids import get_random_uids, get_axons
 from template.validator.reward import get_rewards
 from template.utils.logging import log_miner_responses, write_timestamp, log_miner_responses_to_sql
 from template.utils import constants as CONST
@@ -211,13 +211,19 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)        
         #available_uids = get_random_uids(self, k=8)
-        
+
         bt.logging.trace(f"available_uids: {available_uids}")
         for uid in available_uids:
             if not self.metagraph.axons[uid].is_serving:
                 bt.logging.trace(f"uid: {uid} not serving, skipping")
             else:
                 bt.logging.trace(f"uid: {uid} | hotkey: {self.metagraph.hotkeys[uid]} is serving")
+
+        for axon in get_axons(self, *available_uids):
+            if axon.is_serving:
+                bt.logging.trace(f"axon: {axon} is serving")
+            else:
+                bt.logging.trace(f"axon: {axon} not serving, skipping")
 
 
     def run(self):

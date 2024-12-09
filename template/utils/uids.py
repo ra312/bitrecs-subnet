@@ -3,6 +3,8 @@ import bittensor as bt
 import numpy as np
 from typing import List
 
+from template.base.neuron import BaseNeuron
+
 
 def check_uid_availability(
     metagraph: "bt.metagraph.Metagraph", uid: int, vpermit_tao_limit: int
@@ -61,15 +63,22 @@ def get_random_uids(self, k: int, exclude: List[int] = None) -> np.ndarray:
     uids = np.array(random.sample(available_uids, k))
     return uids
 
-def clamp(min: int, max: int, x: int) -> int:
-    """ Clamp `x` into the range `[min,max]`. """
-
-    if x<min:
-        return min
-    if x>max:
-        return max
-    return x
 
 def best_uid(metagraph: bt.metagraph) -> int:
     """Returns the best performing UID in the metagraph."""
     return max(range(metagraph.n), key=lambda uid: metagraph.I[uid].item())
+
+
+def get_axons(
+    self: BaseNeuron,
+    *hotkeys,
+    not_check_self: bool = False,
+    include_hotkeys: bool = False,
+):
+    result = [
+        self.metagraph.axons[uid]
+        for uid in range(self.metagraph.n.item())
+        if (not_check_self or uid != self.uid)
+        and (include_hotkeys or self.metagraph.axons[uid].hotkey in hotkeys)
+    ]
+    return result
