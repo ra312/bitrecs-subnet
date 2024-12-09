@@ -84,7 +84,7 @@ def get_axons(
     return result
 
 
-async def ping_uid(self: BaseNeuron, uid):
+async def ping_uid(self: BaseNeuron, uid, timeout=5):
     """
     Ping a UID to check their availability.
     Returns True if successful, false otherwise
@@ -97,7 +97,7 @@ async def ping_uid(self: BaseNeuron, uid):
             self.metagraph.axons[uid], 
             bt.synapse(),
             deserialize=False,
-            timeout=5,
+            timeout=timeout,
         )
 
         status_code = response.dendrite.status_code

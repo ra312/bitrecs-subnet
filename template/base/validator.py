@@ -214,7 +214,7 @@ class BaseValidatorNeuron(BaseNeuron):
         chosen_uids : list[int] = available_uids.tolist()
         chosen_uids.append(1) #add local miner for now
 
-        self.active_miners = []
+        selected_miners = []
         bt.logging.trace(f"available_uids: {available_uids}")
         for uid in chosen_uids:
             if not self.metagraph.axons[uid].is_serving:
@@ -223,10 +223,10 @@ class BaseValidatorNeuron(BaseNeuron):
             else:
                 #bt.logging.trace(f"uid: {uid} | hotkey: {self.metagraph.hotkeys[uid]} is serving")
                 try:
-                    status_code, status_msg = await ping_uid(self, uid)
+                    status_code, status_msg = await ping_uid(self, uid, 3)
                     if status_code:
                         bt.logging.trace(f"\033[1;32m ping: {status_code}:{status_msg} \033[0m")
-                        self.active_miners.append(int(uid))
+                        selected_miners.append(int(uid))
                 except Exception as e:
                     bt.logging.error(f"ping failed with exception: {e}")
                     continue
@@ -240,7 +240,9 @@ class BaseValidatorNeuron(BaseNeuron):
         #         bt.logging.trace(f"\033[1;32m axon: {axon.ip} is serving \033[0m")
         #     else:
         #         bt.logging.trace(f"axon: {axon.ip} not serving, skipping")
-
+        with self.lock:
+            self.active_miners = selected_miners
+                        
         bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
 
 
