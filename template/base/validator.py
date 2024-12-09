@@ -41,7 +41,7 @@ from template.base.utils.weight_utils import (
 from template.utils.config import add_validator_args
 from template.api.api_server import ApiServer
 from template.protocol import BitrecsRequest
-from template.utils.uids import get_random_uids, get_axons
+from template.utils.uids import get_random_uids, get_axons, ping_uid
 from template.validator.reward import get_rewards
 from template.utils.logging import log_miner_responses, write_timestamp, log_miner_responses_to_sql
 from template.utils import constants as CONST
@@ -218,16 +218,19 @@ class BaseValidatorNeuron(BaseNeuron):
                 bt.logging.trace(f"uid: {uid} not serving, skipping")
             else:
                 bt.logging.trace(f"uid: {uid} | hotkey: {self.metagraph.hotkeys[uid]} is serving")
+                ping = await ping_uid(uid)
+                bt.logging.trace(f"ping: {ping}")
 
-        axons = get_axons(self)
-        bt.logging.trace(f"AXON CHECK : {axons}")
-        bt.logging.trace(f"Found {len(axons)} axons connected to this validator.")
+        # axons = get_axons(self)
+        # bt.logging.trace(f"AXON CHECK : {axons}")
+        # bt.logging.trace(f"Found {len(axons)} axons connected to this validator.")
 
-        for axon in axons:
-            if axon.is_serving:
-                bt.logging.trace(f"\033[1;32m axon: {axon.ip} is serving \033[0m")
-            else:
-                bt.logging.trace(f"axon: {axon.ip} not serving, skipping")
+        # for axon in axons:
+        #     if axon.is_serving:
+        #         bt.logging.trace(f"\033[1;32m axon: {axon.ip} is serving \033[0m")
+        #     else:
+        #         bt.logging.trace(f"axon: {axon.ip} not serving, skipping")
+    
 
 
     def run(self):

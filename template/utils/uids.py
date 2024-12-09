@@ -82,3 +82,29 @@ def get_axons(
         and (include_hotkeys or self.metagraph.axons[uid].hotkey in hotkeys)
     ]
     return result
+
+
+async def ping_uid(self: BaseNeuron, uid):
+    """
+    Ping a UID to check their availability.
+    Returns True if successful, false otherwise
+    """
+    status_code = None
+    status_message = None
+
+    try:
+        response = await self.dendrite(
+            self.metagraph.axons[uid], 
+            bt.synapse(),
+            deserialize=False,
+            timeout=5,
+        )
+
+        status_code = response.dendrite.status_code
+        status_message = response.dendrite.status_message
+
+        return status_code == 200, status_message
+    except Exception as e:
+        bt.logging.error(f"Dendrite ping failed: {e}")
+
+    return False, None
