@@ -219,11 +219,12 @@ class BaseValidatorNeuron(BaseNeuron):
             else:
                 bt.logging.trace(f"uid: {uid} | hotkey: {self.metagraph.hotkeys[uid]} is serving")
 
-        for axon in get_axons(self, *available_uids):
+        axons = get_axons(self)
+        for axon in axons:
             if axon.is_serving:
-                bt.logging.trace(f"axon: {axon} is serving")
+                bt.logging.trace(f"axon: {axon.ip} is serving")
             else:
-                bt.logging.trace(f"axon: {axon} not serving, skipping")
+                bt.logging.trace(f"axon: {axon.ip} not serving, skipping")
 
 
     def run(self):
