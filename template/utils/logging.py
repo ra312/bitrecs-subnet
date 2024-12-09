@@ -108,21 +108,17 @@ def log_miner_responses_to_sql(step: int, responses: List[BitrecsRequest]) -> No
             db_path = os.path.join(os.getcwd(), 'miner_responses.db')            
             conn = sqlite3.connect(db_path)
             try:
-                # Add a 'step' and 'created_at' column to the DataFrame
                 final['step'] = step
-                final['created_at'] = created_at
-                # Define data types for all columns as TEXT
-                dtype_dict = {col: 'TEXT' for col in final.columns}
-                # Check if the table already exists
+                final['created_at'] = created_at                
+                dtype_dict = {col: 'TEXT' for col in final.columns}                
                 cursor = conn.cursor()
                 cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='miner_responses';")
                 table_exists = cursor.fetchone() is not None
-                if not table_exists:
-                    # If the table does not exist, create it and write the data
+                if not table_exists:                    
                     final.to_sql('miner_responses', conn, index=False, dtype=dtype_dict)
-                else:
-                    # If the table exists, append the new data
+                else:                    
                     final.to_sql('miner_responses', conn, index=False, if_exists='append', dtype=dtype_dict)
+
             finally:
                 conn.close()
 
