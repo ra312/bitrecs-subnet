@@ -223,7 +223,7 @@ class BaseValidatorNeuron(BaseNeuron):
                     status_code, status_msg = await ping_uid(self, uid)
                     if status_code:
                         bt.logging.trace(f"\033[1;32m ping: {status_code}:{status_msg} \033[0m")
-                        self.active_miners.append(uid)
+                        self.active_miners.append(int(uid))
                 except Exception as e:
                     bt.logging.error(f"ping failed with exception: {e}")
                     continue
