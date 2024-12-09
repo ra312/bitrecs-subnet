@@ -167,4 +167,12 @@ testing/
 /node_modules/
 Bitrecs GA-d6b6394fbaa4.json
 .dependencies_installed
+.DS_Store
+
+
+miner_responses/*.*
+miner_responses*.*
+api_counter.json
+proxy_counter.json
+timestamp.txt
 
