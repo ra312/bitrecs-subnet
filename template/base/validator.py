@@ -240,9 +240,11 @@ class BaseValidatorNeuron(BaseNeuron):
         #         bt.logging.trace(f"\033[1;32m axon: {axon.ip} is serving \033[0m")
         #     else:
         #         bt.logging.trace(f"axon: {axon.ip} not serving, skipping")
-        lock = asyncio.Lock()
-        async with lock:
-            self.active_miners = selected_miners
+        self.lock.acquire()
+        #lock = asyncio.Lock()
+        #lock.acquire()        
+        self.active_miners = selected_miners
+        self.lock.release()
 
         bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
 
