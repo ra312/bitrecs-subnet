@@ -12,7 +12,7 @@
 </div>
 
 ## Introduction
-Bitrecs is an enterprise grade recommendation engine built on the Bittensor network. Our implementation provides a framework for serving e-commerce recommendations (recs) via state of the art LLMs (large language models). Miners are encouraged to experiement with their own implementations to improve latency and quality. 
+Bitrecs is a novel recommendation engine built on the Bittensor network. Our implementation provides a framework for serving e-commerce recommendations (recs) via state of the art LLMs (large language models). Miners are encouraged to experiement with their own implementations to improve latency and quality. 
 
 ## Product
 The subnet operates through an incentive mechanism where miners produce arrays of product SKUs from a given input SKUs, a catalogue of store inventory and (when applicable) supplementary user browsing history. The protocol enables:
@@ -24,9 +24,11 @@ The subnet operates through an incentive mechanism where miners produce arrays o
 ## Incentive
 The incentive mechanism ranks miner responses by qualitative metrics and sales events like
 
+- Diversity of recs
 - Latency to response
-- Quality of responses (recs cannot be hallucinated, recs cannot be dupes, etc) 
-- Were any products added to cart, clicked on, purchased
+- Quality of responses (recs cannot be hallucinated, recs cannot be dupes, etc)
+- Coherence to prompt parameters (seasonality, gender etc)
+- End user actions such as add to cart and order checkout
 
 ## Getting Started
 
