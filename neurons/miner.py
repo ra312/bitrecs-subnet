@@ -64,7 +64,7 @@ async def do_work(user_prompt: str,
     bt.logging.info(f"do_work Prompt: {user_prompt}")
     bt.logging.info(f"do_work LLM server: {server}")  
     bt.logging.info(f"do_work LLM model: {model}")
-    debug_prompts : bool = False
+    debug_prompts : bool = True
 
     factory = PromptFactory(sku=user_prompt, 
                             context=context, 
@@ -340,7 +340,7 @@ class Miner(BaseMinerNeuron):
                 #model = "llama3.1:70b" #slow
                 #model = "mistral-nemo:latest" #good
                 #model = "qwen2.5" #good/fast
-                #model = "qwen2.5-coder:latest" #good/slow                
+                #model = "qwen2.5-coder:latest" #good/slow
                 #model = "gemma2:27b" #slow
 
                 #model = "nemotron:latest" #slow
@@ -350,7 +350,7 @@ class Miner(BaseMinerNeuron):
                 #model = "qwen2.5:32b-instruct" #inaccurate
                 #model = "qwq" #slow
                 #model = "mistral-nemo" #slow
-                #model = "nemotron-mini:latest" #inaccurate
+                #model = "nemotron-mini:latest"
 
             case LLM.OPEN_ROUTER:
                 model = "google/gemini-flash-1.5-8b" #best
