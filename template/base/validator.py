@@ -177,8 +177,7 @@ class BaseValidatorNeuron(BaseNeuron):
         await asyncio.gather(*coroutines)
 
 
-    def validate_br_request(self, synapse: BitrecsRequest) -> bool:
-        """Checks request item for validity."""
+    def validate_br_request(self, synapse: BitrecsRequest) -> bool:        
         if not isinstance(synapse, BitrecsRequest):
             bt.logging.error(f"Invalid synapse item: {synapse}")
             return False

@@ -142,6 +142,9 @@ def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest
         headers = response.to_headers()
         if "bt_header_dendrite_process_time" in headers:
             dendrite_time = headers["bt_header_dendrite_process_time"] #0.000132  1.2
+            
+            bt.logging.trace(f"REWARD dendrite_time: {dendrite_time}")
+
             score = score - ALPHA_TIME_DECAY * float(dendrite_time)
         else:
             bt.logging.error(f"Error in reward: dendrite_time not found in headers")
