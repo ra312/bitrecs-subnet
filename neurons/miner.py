@@ -43,7 +43,8 @@ async def do_work(user_prompt: str,
                   num_recs: int,
                   server: LLM,
                   model: str,
-                  system_prompt="You are a helpful assistant.") -> typing.List[str]:
+                  system_prompt="You are a helpful assistant.", 
+                  debug_prompts=False) -> typing.List[str]:
     """
     Do your miner work here. 
     This function is called by the forward function to generate recs.
@@ -64,7 +65,7 @@ async def do_work(user_prompt: str,
     bt.logging.info(f"do_work Prompt: {user_prompt}")
     bt.logging.info(f"do_work LLM server: {server}")  
     bt.logging.info(f"do_work LLM model: {model}")
-    debug_prompts : bool = False
+    #debug_prompts : bool = False
 
     factory = PromptFactory(sku=user_prompt, 
                             context=context, 
@@ -126,7 +127,10 @@ class Miner(BaseMinerNeuron):
         if self.llm_provider == LLM.VLLM:
             bt.logging.info(f"\033[1;35m Please ensure vLLM Server is running\033[0m")
         elif self.llm_provider == LLM.OLLAMA_LOCAL:
-            bt.logging.info(f"\033[1;35m Please ensure Ollama Local Server is running\033[0m")
+            bt.logging.info(f"\033[1;35m Please ensure Ollama Server is running\033[0m")
+        else:
+            bt.logging.info(f"\033[1;35m Please ensure your API keys are set in the environment\033[0m")
+             
 
         bt.logging.info(f"\033[1;35m Miner is warming up\033[0m")
         warmup_result = self.warmup()
@@ -142,6 +146,10 @@ class Miner(BaseMinerNeuron):
             bt.logging.info(f"\033[1;32m 🐸 You are the BEST performing miner in the subnet, keep it up!\033[0m")
 
         self.total_request_in_interval = 0
+        
+        if(self.config.logging.trace):
+            bt.logging.trace(f"TRACE ENABLED Miner {self.uid} - {self.llm_provider} - {self.model}")
+
 
     async def forward(
         self, synapse: BitrecsRequest
@@ -164,24 +172,22 @@ class Miner(BaseMinerNeuron):
         context = synapse.context
         num_recs = synapse.num_results
         st = time.time()
+        debug_prompts = self.config.logging.trace
         try:
-            results = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model)            
+            results = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model, debug_prompts=debug_prompts)            
             bt.logging.info(f"LLM {self.model} - Results: count ({len(results)})")
         except Exception as e:
             bt.logging.error(f"\033[31mFATAL ERROR calling do_work: {e!r} \033[0m")
-            pass
         finally:
             et = time.time()
             bt.logging.info(f"{self.model} Query - Elapsed Time: {et-st}")
-
 
         utc_now = datetime.now(timezone.utc)
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")
 
         #Do some cleanup - schema is validated in the reward function
         final_results = []
-        for item in results:
-            #bt.logging.trace(f"Item: {item}")            
+        for item in results:            
             cleaned_item = str(item).replace("\\'", "'")  # Fix escaped single quotes            
             dictionary_item = ast.literal_eval(cleaned_item)
             if "name" not in dictionary_item:
@@ -189,7 +195,6 @@ class Miner(BaseMinerNeuron):
                 continue
             dictionary_item["name"] = dictionary_item["name"].replace("'", "-")  # Remove single quotes
             recommendation = str(dictionary_item)
-            #bt.logging.trace(f"recommendation: {recommendation}")
             final_results.append(recommendation)
       
         output_synapse=BitrecsRequest(
@@ -326,32 +331,14 @@ class Miner(BaseMinerNeuron):
 
     def warmup(self):
         """
-        On startup, try querying the LLM to ensure it is working and loaded into memory.
-        Below model results tested on a 3090
+        On startup, try querying the LLM to ensure it is working and loaded into memory.      
 
         """
         match self.llm_provider:
             case LLM.OLLAMA_LOCAL:
-
                 model = "llama3.1" #great/fast
                 #model = "llama3.2" #good
-                #model = "llama3.2:3b-instruct-q8_0" #good
-
-                #model = "llama3.1:70b" #slow
-                #model = "mistral-nemo:latest" #good
-                #model = "qwen2.5" #good/fast
-                #model = "qwen2.5-coder:latest" #good/slow
-                #model = "gemma2:27b" #slow
-
-                #model = "nemotron:latest" #slow
-                #model = "llama3.1:70b" #slow
-                #model = "llama3.1:70b-instruct-q4_0" #slow
-                #model = "qwen2.5:32b" #invalid results
-                #model = "qwen2.5:32b-instruct" #inaccurate
-                #model = "qwq" #slow
-                #model = "mistral-nemo" #slow
-                #model = "nemotron-mini:latest"
-
+                #model = "llama3.2:3b-instruct-q8_0" #good            
             case LLM.OPEN_ROUTER:
                 model = "google/gemini-flash-1.5-8b" #best
                 #model = "meta-llama/llama-3.1-70b-instruct:free" #ok
@@ -364,14 +351,14 @@ class Miner(BaseMinerNeuron):
                 #model = "gemini-1.5-flash"
                 model = "gemini-2.0-flash-exp"
             case LLM.GROK:
-                model = "grok-1.5"
+                model = "grok-beta"
             case LLM.CLAUDE:
-                model = "claude-1.5"
+                model = "anthropic/claude-3.5-haiku"
             case _:
                 bt.logging.error("Unknown LLM server")
                 raise ValueError("Unknown LLM server")
                 
-            
+        #If user specified model override it here
         if self.config.llm.model and len(self.config.llm.model) > 2:
             model = self.config.llm.model
              
@@ -395,7 +382,7 @@ async def main():
     with Miner() as miner:
         start_time = time.time()
         while True:            
-            bt.logging.info(f"Miner {miner.uid} running... {time.time()}")            
+            bt.logging.info(f"Miner {miner.uid} running, waiting for work ... {int(time.time())}")
             if time.time() - start_time > 300:
                 bt.logging.info(
                     f"---Total request in last 5 minutes: {miner.total_request_in_interval}"

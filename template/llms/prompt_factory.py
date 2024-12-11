@@ -8,6 +8,13 @@ import bittensor as bt
 class PromptFactory:
     """
     Creates a bitrecs prompt for a given SKU and context.
+
+    Args:
+        sku (str): The SKU to generate recommendations for.
+        context (str): The context to generate recommendations from.
+        num_recs (int): The number of recommendations to generate.
+        load_catalog (bool): Whether to load the catalog from a file.
+        debug (bool): Whether to trace write the prompts.
     
     """
     def __init__(self, sku, context, num_recs=5, load_catalog=False, debug=False):        
