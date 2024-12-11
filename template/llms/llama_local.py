@@ -23,8 +23,7 @@ class OllamaLocal():
         with open(file_path, "rb") as file:
             return base64.b64encode(file.read()).decode("utf-8")
 
-    def ask_ollama(self, prompt) -> str:
-        #print("ask_ollama: {}".format(prompt))
+    def ask_ollama(self, prompt) -> str:        
         data = {
             "model": self.model,
             "messages": [
@@ -44,8 +43,7 @@ class OllamaLocal():
         # print(data)
         return self.call_ollama(data)
 
-    def get_ollama_caption(self, file_path) -> str:
-        #print("get_ollama_caption checking image: {}".format(file_path))
+    def get_ollama_caption(self, file_path) -> str:        
         base64_image = self.file_to_base64(file_path)
         data = {
             "model": self.model,
@@ -67,11 +65,9 @@ class OllamaLocal():
         # print(data)
         return self.call_ollama(data)
 
-    def route_intention(self, file_path) -> str:
-        #print("route_intention checking image: {}".format(file_path))
+    def route_intention(self, file_path) -> str:        
         prompt = "What is this? : "
-        file_extension = file_path.split('.')[-1]
-        #print(file_extension)
+        file_extension = file_path.split('.')[-1]        
 
         if file_extension.lower() in ['txt']:
             print("processing TXT")            
@@ -130,11 +126,9 @@ class OllamaLocal():
 
         return self.call_ollama(data)
 
-    def call_ollama(self, data) -> str:
-        #print("called llama ")
-        response = requests.post(self.ollama_url, json=data)
-        # print(response)
-        print(response.status_code)
+    def call_ollama(self, data) -> str:        
+        response = requests.post(self.ollama_url, json=data)        
+        #print(response.status_code)
         if response.status_code == 200:
             response_json = response.json()
             message = response_json["message"]

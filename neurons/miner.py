@@ -64,7 +64,7 @@ async def do_work(user_prompt: str,
     bt.logging.info(f"do_work Prompt: {user_prompt}")
     bt.logging.info(f"do_work LLM server: {server}")  
     bt.logging.info(f"do_work LLM model: {model}")
-    debug_prompts : bool = True
+    debug_prompts : bool = False
 
     factory = PromptFactory(sku=user_prompt, 
                             context=context, 

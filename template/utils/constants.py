@@ -2,7 +2,7 @@
 Global constants
 
 Constants:
-    MAX_DENDRITE_TIMEOUT (int): Length of time given to miners to respond to a dendrite request.
+    MAX_DENDRITE_TIMEOUT (int): Length of seconds given to miners to respond to a dendrite request.
     MIN_QUERY_LENGTH (int): Minimum length of a query.
     MAX_QUERY_LENGTH (int): Maximum length of a query.
     MAX_RECS_PER_REQUEST (int): Maximum number of recommendations per request.
