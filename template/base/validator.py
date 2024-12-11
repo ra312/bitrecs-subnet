@@ -287,9 +287,9 @@ class BaseValidatorNeuron(BaseNeuron):
                         # bt.logging.trace(f"available_uids: {available_uids}")
 
                         chosen_uids : list[int] = available_uids.tolist()
-                        chosen_uids.append(1) #add local miner for now
-                        # bt.logging.trace(f"chosen_uids: {chosen_uids}")
-                        #chosen_uids = self.active_miners
+                        chosen_uids.append(1) #add local miner for now                        
+                        chosen_uids = list(set(chosen_uids))
+                        bt.logging.trace(f"chosen_uids: {chosen_uids}")                        
                         
                         if len(chosen_uids) == 0:
                             bt.logging.error("No active miners, skipping - check your connectivity")
@@ -301,7 +301,8 @@ class BaseValidatorNeuron(BaseNeuron):
 
                         api_request = synapse_with_event.input_synapse
                         number_of_recs_desired = api_request.num_results
-                        # Send request to the miner population
+                        
+                        # Send request to the miner population syncronous
                         responses = self.dendrite.query(
                             chosen_axons,
                             api_request,
