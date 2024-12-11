@@ -6,6 +6,7 @@ import bittensor as bt
 from datetime import datetime, timezone
 from enum import Enum
 
+from template.llms.gemini import Gemini
 from template.llms.llama_local import OllamaLocal
 from template.llms.open_router import OpenRouter
 from template.llms.chat_gpt import ChatGPT
@@ -17,6 +18,9 @@ class LLM(Enum):
     OPEN_ROUTER = 2
     CHAT_GPT = 3
     VLLM = 4
+    GEMINI = 5
+    GROK = 6
+    CLAUDE = 7
 
 
 class LLMFactory:
@@ -34,6 +38,8 @@ class LLMFactory:
                 return ChatGPTInterface(model, system_prompt, temp).query(user_prompt)
             case LLM.VLLM:
                 return VllmInterface(model, system_prompt, temp).query(user_prompt)
+            case LLM.GEMINI:
+                return GeminiInterface(model, system_prompt, temp).query(user_prompt)
             case _:
                 raise ValueError("Unknown LLM server")
             
@@ -48,6 +54,8 @@ class LLMFactory:
                 return LLM.CHAT_GPT
             case "VLLM":
                 return LLM.VLLM
+            case "GEMINI":
+                return LLM.GEMINI
             case _:
                 raise ValueError("Unknown LLM server")
         
@@ -110,3 +118,18 @@ class VllmInterface:
         router = vLLM(key=self.VLLM_API_KEY, model=self.model, 
                       system_prompt=self.system_prompt, temp=self.temp)
         return router.call_vllm(user_prompt)
+    
+    
+class GeminiInterface:
+    def __init__(self, model, system_prompt, temp):
+        self.model = model
+        self.system_prompt = system_prompt
+        self.temp = temp
+        self.GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+        if not self.GEMINI_API_KEY:            
+            raise ValueError("GEMINI_API_KEY is not set")
+        
+    def query(self, user_prompt) -> str:
+        router = Gemini(self.GEMINI_API_KEY, model=self.model, 
+                         system_prompt=self.system_prompt, temp=self.temp)
+        return router.call_gemini(user_prompt)

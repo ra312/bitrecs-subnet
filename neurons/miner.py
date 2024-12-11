@@ -326,7 +326,8 @@ class Miner(BaseMinerNeuron):
 
     def warmup(self):
         """
-        On startup, try querying the LLM to ensure it is working and loaded into memory.        
+        On startup, try querying the LLM to ensure it is working and loaded into memory.
+        Below model results tested on a 3090
 
         """
         match self.llm_provider:
@@ -359,9 +360,17 @@ class Miner(BaseMinerNeuron):
             case LLM.VLLM:
                 model = "NousResearch/Meta-Llama-3-8B-Instruct"
                 #model = "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF"
+            case LLM.GEMINI:
+                #model = "gemini-1.5-flash"
+                model = "gemini-2.0-flash-exp"
+            case LLM.GROK:
+                model = "grok-1.5"
+            case LLM.CLAUDE:
+                model = "claude-1.5"
             case _:
                 bt.logging.error("Unknown LLM server")
                 raise ValueError("Unknown LLM server")
+                
             
         if self.config.llm.model and len(self.config.llm.model) > 2:
             model = self.config.llm.model

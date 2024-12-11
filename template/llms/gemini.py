@@ -1,25 +1,27 @@
 import os
 from openai import OpenAI
 
-class ChatGPT:
+class Gemini:
     def __init__(self, 
-                 key,
-                 model="gpt-4o-mini", 
+                 key, 
+                 model="gemini-1.5-flash", 
                  system_prompt="You are a helpful AI assistant.", 
                  temp=0.0):
         
-        self.CHATGPT_API_KEY = key
-        if not self.CHATGPT_API_KEY:
-            raise ValueError("CHATGPT_API_KEY is not set")
+        self.GEMINI_API_KEY = key
+        if not self.GEMINI_API_KEY:
+            raise ValueError("GEMINI_API_KEY is not set")
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp
+        
 
-    def call_chat_gpt(self, prompt) -> str:
+    def call_gemini(self, prompt) -> str:
         if not prompt or len(prompt) < 10:
             raise ValueError()
 
-        client = OpenAI(api_key=self.CHATGPT_API_KEY)
+        client = OpenAI(api_key=self.GEMINI_API_KEY,
+                        base_url="https://generativelanguage.googleapis.com/v1beta/openai/")
 
         completion = client.chat.completions.create(
             extra_headers={
@@ -28,6 +30,7 @@ class ChatGPT:
             }, 
             model=self.model,
             messages=[
+            {"role": "system", "content": self.system_prompt},
             {
                 "role": "user",
                 "content": prompt,
