@@ -203,43 +203,43 @@ class BaseValidatorNeuron(BaseNeuron):
         return True
     
       
-    def validator_miner_sync(self):
-        async def sync_task():
-            if self.step < 1:
-                return
+    @execute_periodically(timedelta(seconds=45))
+    async def validator_miner_sync(self):
+        if self.step < 1:
+            return
+        
+        bt.logging.trace(f"\033[1;32m Validator validator_miner_sync ran at {int(time.time())}. \033[0m")
+        bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
+        available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+        bt.logging.trace(f"available_uids: {available_uids}")
+        chosen_uids : list[int] = available_uids.tolist()
+        bt.logging.trace(f"chosen_uids: {chosen_uids}")
 
-            bt.logging.trace(f"\033[1;32m Validator validator_miner_sync ran at {int(time.time())}. \033[0m")
-            bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
-            available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-            bt.logging.trace(f"available_uids: {available_uids}")
-            chosen_uids: list[int] = available_uids.tolist()
-            bt.logging.trace(f"chosen_uids: {chosen_uids}")
+        # available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+        if len(chosen_uids) == 0:
+            bt.logging.error("No active miners, skipping - check your connectivity")
+            return        
+        
+        selected_miners = []
+        for uid in chosen_uids:
+            if not self.metagraph.axons[uid].is_serving:
+                #bt.logging.trace(f"uid: {uid} not serving, skipping")
+                continue
+            try:
+                status_code, status_msg = await ping_uid(self, uid, 3)
+                if status_code:
+                    bt.logging.trace(f"\033[1;32m ping: {status_code}:{status_msg} \033[0m")
+                    selected_miners.append(int(uid))
+            except Exception as e:
+                bt.logging.error(f"ping failed with exception: {e}")
+                continue
 
-            if len(chosen_uids) == 0:
-                bt.logging.error("No active nodes, skipping - check your connectivity")
-                return
-
-            selected_miners = []
-            for uid in chosen_uids:
-                if not self.metagraph.axons[uid].is_serving:
-                    continue
-                try:
-                    status_code, status_msg = await ping_uid(self, uid, 3)
-                    if status_code:
-                        bt.logging.trace(f"\033[1;32m ping: {status_code}:{status_msg} \033[0m")
-                        selected_miners.append(int(uid))
-                except Exception as e:
-                    bt.logging.error(f"ping failed with exception: {e}")
-                    continue
-
-            if len(selected_miners) == 0:
-                bt.logging.error("No active miners, skipping - check your connectivity")
-                return
-
-            self.active_miners = list(set(selected_miners))
-            bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
-
-        threading.Thread(target=lambda: asyncio.run(sync_task()), daemon=True).start()
+        if len(selected_miners) == 0:
+            bt.logging.error("No active miners, skipping - check your connectivity")
+            return
+        
+        self.active_miners = list(set(selected_miners))
+        bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
 
 
     def run(self):
@@ -354,7 +354,8 @@ class BaseValidatorNeuron(BaseNeuron):
                     else:
                         if not api_exclusive: #Regular validator loop                
                             bt.logging.info("Processing synthetic concurrent forward")
-                            self.loop.run_until_complete(self.concurrent_forward())
+                            #self.loop.run_until_complete(self.concurrent_forward())
+                            self.loop.create_task(self.validator_miner_sync())
 
                     if self.should_exit:
                         return
