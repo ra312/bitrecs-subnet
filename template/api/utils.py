@@ -2,9 +2,10 @@ import os
 import json
 import bittensor as bt
 import traceback
+import requests
 
 from typing import Any, Dict, Optional
-from fastapi import Request, Response, requests
+from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 
 
