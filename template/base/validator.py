@@ -50,10 +50,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 api_queue = SimpleQueue() # Queue of SynapseEventPair
-# MAX_DENDRITE_TIMEOUT = 10
-# MIN_QUERY_LENGTH = 3
-# MAX_RECS_PER_REQUEST = 20
-# MAX_CONTEXT_LENGTH = 200000
 
 @dataclass
 class SynapseWithEvent:
@@ -135,6 +131,8 @@ class BaseValidatorNeuron(BaseNeuron):
             )
             api_server.start()            
             bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: {api_server.fast_server.config.host} on Axon: {api_server.fast_server.config.port} \033[0m")
+        else:            
+            bt.logging.info(f"\033[1;31m No API Endpoint \033[0m")
 
         # Instantiate runners
         self.should_exit: bool = False
@@ -210,8 +208,8 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.trace(f"\033[1;32m Validator back loop ran at {int(time.time())}. \033[0m")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-        chosen_uids : list[int] = available_uids.tolist()
-        chosen_uids.append(1) #add local miner for now
+        chosen_uids : list[int] = available_uids.tolist().append(1) #add local miner for now
+        chosen_uids = list(set(chosen_uids))
 
         selected_miners = []
         bt.logging.trace(f"available_uids: {available_uids}")
@@ -219,18 +217,18 @@ class BaseValidatorNeuron(BaseNeuron):
             if not self.metagraph.axons[uid].is_serving:
                 #bt.logging.trace(f"uid: {uid} not serving, skipping")
                 continue
-            else:
-                #bt.logging.trace(f"uid: {uid} | hotkey: {self.metagraph.hotkeys[uid]} is serving")
-                try:
-                    status_code, status_msg = await ping_uid(self, uid, 3)
-                    if status_code:
-                        bt.logging.trace(f"\033[1;32m ping: {status_code}:{status_msg} \033[0m")
-                        selected_miners.append(int(uid))
-                except Exception as e:
-                    bt.logging.error(f"ping failed with exception: {e}")
-                    continue
+            
+            #bt.logging.trace(f"uid: {uid} | hotkey: {self.metagraph.hotkeys[uid]} is serving")
+            try:
+                status_code, status_msg = await ping_uid(self, uid, 3)
+                if status_code:
+                    bt.logging.trace(f"\033[1;32m ping: {status_code}:{status_msg} \033[0m")
+                    selected_miners.append(int(uid))
+            except Exception as e:
+                bt.logging.error(f"ping failed with exception: {e}")
+                continue
       
-        self.active_miners = selected_miners      
+        self.active_miners = selected_miners
 
         bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
 
@@ -359,7 +357,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     try:                        
                         self.sync()
-                        #self.loop.run_until_complete(self.validator_callback())
+                        self.loop.run_until_complete(self.validator_callback())
                     except Exception as e:
                         bt.logging.error(traceback.format_exc())
                         bt.logging.error(f"Failed to sync with exception: {e}")
