@@ -203,7 +203,7 @@ class BaseValidatorNeuron(BaseNeuron):
         return True
     
       
-    @execute_periodically(timedelta(seconds=120))
+    @execute_periodically(timedelta(seconds=45))
     async def validator_callback(self):
         if self.step < 1:
             return
@@ -234,8 +234,8 @@ class BaseValidatorNeuron(BaseNeuron):
                 bt.logging.error(f"ping failed with exception: {e}")
                 continue        
         
-        
-        self.active_miners = selected_miners
+        with self.lock:
+            self.active_miners = selected_miners
 
         bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
 
