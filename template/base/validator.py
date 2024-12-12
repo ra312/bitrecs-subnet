@@ -201,7 +201,7 @@ class BaseValidatorNeuron(BaseNeuron):
             try:
                 ip = self.metagraph.axons[uid].ip
                 port = self.metagraph.axons[uid].port
-                if check_server_status(ip, port, timeout=3):
+                if await check_server_status(ip, port, timeout=3):
                     bt.logging.trace(f"\033[1;32m ping: {ip}:OK \033[0m")
                     selected_miners.append(int(uid))
                 # if ping_uid(self, uid, 3):
