@@ -203,7 +203,7 @@ class BaseValidatorNeuron(BaseNeuron):
         return True
     
       
-    #@execute_periodically(timedelta(seconds=45))
+    @execute_periodically(timedelta(seconds=60))
     async def validator_miner_sync(self):
         if self.step < 1:
             return
