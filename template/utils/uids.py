@@ -92,14 +92,17 @@ async def ping_uid(self: BaseNeuron, uid, timeout=5):
     status_code = None
     status_message = None
     try:
-        response = await self.dendrite(
+        response = await self.dendrite.query(
             self.metagraph.axons[uid], 
             bt.synapse(),
             deserialize=False,
             timeout=timeout,
         )
         status_code = response.dendrite.status_code
-        status_message = response.dendrite.status_message
+        status_message = response.dendrite.status_message       
+        
+        await self.dendrite.close_session()
+
         return status_code == 200, status_message
     except Exception as e:
         bt.logging.error(f"Dendrite ping failed: {e}")

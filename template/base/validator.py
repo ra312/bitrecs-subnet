@@ -233,7 +233,7 @@ class BaseValidatorNeuron(BaseNeuron):
             except Exception as e:
                 bt.logging.error(f"ping failed with exception: {e}")
                 continue
-
+            
         if len(selected_miners) == 0:
             bt.logging.error("No active miners, skipping - check your connectivity")
             return
@@ -355,7 +355,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         if not api_exclusive: #Regular validator loop                
                             bt.logging.info("Processing synthetic concurrent forward")
                             #self.loop.run_until_complete(self.concurrent_forward())
-                            self.loop.create_task(self.validator_miner_sync())
+                            self.loop.run_until_complete(self.validator_miner_sync())
 
                     if self.should_exit:
                         return
