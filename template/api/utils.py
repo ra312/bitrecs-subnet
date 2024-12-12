@@ -110,7 +110,7 @@ async def check_server_status(ip, port, timeout=3) -> bool:
         #     "keys": {"xxx-me": {"requests_per_min":  60}}
         # }        
 
-        key = list(api_key_info["keys"].keys())[0]
+        key = api_key_info["keys"].keys()[0]
         r = requests.get(f"http://{ip}:{port}/ping", 
                          timeout=timeout,
                          headers={"Authorization", f"Bearer {key}"})
