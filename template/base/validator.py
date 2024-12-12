@@ -46,6 +46,7 @@ from template.validator.reward import get_rewards
 from template.utils.logging import log_miner_responses, write_timestamp, log_miner_responses_to_sql
 from template.utils import constants as CONST
 from template.utils.runtime import execute_periodically
+from template.validator.rules import validate_br_request
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -172,41 +173,11 @@ class BaseValidatorNeuron(BaseNeuron):
             self.forward()
             for _ in range(self.config.neuron.num_concurrent_forwards)
         ]
-        await asyncio.gather(*coroutines)
-
-
-    def validate_br_request(self, synapse: BitrecsRequest) -> bool:        
-        if not isinstance(synapse, BitrecsRequest):
-            bt.logging.error(f"Invalid synapse item: {synapse}")
-            return False
-        if len(synapse.query) < CONST.MIN_QUERY_LENGTH or len(synapse.query) > CONST.MAX_QUERY_LENGTH:
-            bt.logging.error(f"Invalid synampse Query!: {synapse}")
-            return False
-        if len(synapse.results) != 0:
-            bt.logging.error(f"Results it not empty!: {synapse}")
-            return False
-        if synapse.context is None or synapse.context == "":
-            bt.logging.error(f"Context is empty!: {synapse}")
-            return False
-        if len(synapse.context) > CONST.MAX_CONTEXT_LENGTH:
-            bt.logging.error(f"Context is too long!: {synapse}")
-            return False
-        if len(synapse.models_used) != 0:
-            bt.logging.error(f"Models used is not empty!: {synapse}")
-            return False
-        if synapse.site_key is None or synapse.site_key == "":
-            bt.logging.error(f"Site key is empty!: {synapse}")
-            return False
-        if synapse.num_results < 1 or synapse.num_results > CONST.MAX_RECS_PER_REQUEST:
-            bt.logging.error(f"Number of recommendations should be less than {CONST.MAX_RECS_PER_REQUEST}!: {synapse}")
-            return False
-        return True
+        await asyncio.gather(*coroutines)    
     
       
     @execute_periodically(timedelta(seconds=300))
-    async def miner_sync(self):
-        if self.step < 1:
-            return
+    async def miner_sync(self):        
         
         bt.logging.trace(f"\033[1;32m Validator miner_sync ran at {int(time.time())}. \033[0m")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
@@ -214,8 +185,6 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.trace(f"available_uids: {available_uids}")
         chosen_uids : list[int] = available_uids.tolist()
         bt.logging.trace(f"chosen_uids: {chosen_uids}")
-
-        # available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
         if len(chosen_uids) == 0:
             bt.logging.error("No active miners, skipping - check your connectivity")
             return
@@ -223,14 +192,11 @@ class BaseValidatorNeuron(BaseNeuron):
         chosen_uids = list(set(chosen_uids))
         selected_miners = []
         for uid in chosen_uids:
-            if not self.metagraph.axons[uid].is_serving:
-                
+            if not self.metagraph.axons[uid].is_serving:                
                 continue
-
             if self.metagraph.S[uid] > self.config.neuron.vpermit_tao_limit:
                 bt.logging.trace(f"uid: {uid} stake > {self.config.neuron.vpermit_tao_limit}T, skipping")
                 continue
-
             try:
                 if ping_uid(self, uid, 3):
                     bt.logging.trace(f"\033[1;32m ping: {self.metagraph.axons[uid].ip}:OK \033[0m")
@@ -238,7 +204,6 @@ class BaseValidatorNeuron(BaseNeuron):
             except Exception as e:
                 bt.logging.error(f"ping failed with exception: {e}")
                 continue
-
         if len(selected_miners) == 0:
             bt.logging.error("No active miners, skipping - check your connectivity")
             return
@@ -289,7 +254,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.info("** Processing synapse from API server **")
 
                         # Validate the input synapse
-                        if not self.validate_br_request(synapse_with_event.input_synapse):
+                        if not validate_br_request(synapse_with_event.input_synapse):
                             bt.logging.error("Request failed Validation, skipped.")
                             synapse_with_event.event.set()
                             continue
