@@ -33,7 +33,6 @@ from traceback import print_exception
 from dataclasses import dataclass
 from queue import SimpleQueue, Empty
 
-from template.api.utils import check_server_status
 from template.base.neuron import BaseNeuron
 from template.base.utils.weight_utils import (
     process_weights_for_netuid,
@@ -42,7 +41,7 @@ from template.base.utils.weight_utils import (
 from template.utils.config import add_validator_args
 from template.api.api_server import ApiServer
 from template.protocol import BitrecsRequest
-from template.utils.uids import get_random_uids, get_axons, ping_uid
+from template.utils.uids import get_random_uids, ping_uid
 from template.validator.reward import get_rewards
 from template.utils.logging import log_miner_responses, write_timestamp, log_miner_responses_to_sql
 from template.utils import constants as CONST
