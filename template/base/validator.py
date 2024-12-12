@@ -218,8 +218,9 @@ class BaseValidatorNeuron(BaseNeuron):
         # available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
         if len(chosen_uids) == 0:
             bt.logging.error("No active miners, skipping - check your connectivity")
-            return        
+            return
         
+        chosen_uids = list(set(chosen_uids))        
         selected_miners = []
         for uid in chosen_uids:
             if not self.metagraph.axons[uid].is_serving:

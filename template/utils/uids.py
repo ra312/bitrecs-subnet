@@ -86,28 +86,6 @@ def get_axons(
     return result
 
 
-async def ping_uid2(self: BaseNeuron, uid, timeout=5):
-    """
-    Ping a UID to check their availability.
-    Returns True if successful, false otherwise
-    """
-    status_code = None
-    status_message = None
-    try:
-        response = await self.dendrite.query(
-            self.metagraph.axons[uid], 
-            BitrecsRequest(),
-            deserialize=False,
-            timeout=timeout,
-        )
-        status_code = response.dendrite.status_code
-        status_message = response.dendrite.status_message
-        return status_code == 200, status_message
-    except Exception as e:
-        bt.logging.error(f"Dendrite ping failed: {e}")
-    return False, None
-
-
 def ping_uid(self: BaseNeuron, uid, timeout=5) -> bool:
     """
     Ping a UID to check their availability.
@@ -122,28 +100,18 @@ def ping_uid(self: BaseNeuron, uid, timeout=5) -> bool:
         bt.logging.trace("Ignoring localhost ping.")
         return False    
 
-    try:
-        # Create a socket object
+    try:        
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        
-        # Set a timeout of 1 second
-        sock.settimeout(timeout)
-        # Try to connect to the specified IP and port
-        sock.connect((ip, port))
-        # If no exception is raised, the port is connected
+        sock.settimeout(timeout)        
+        sock.connect((ip, port))        
         return True
-    except ConnectionRefusedError:
-        # If a ConnectionRefusedError is raised, the port is not connected
-        #print(f"Port {port} on IP {ip} is not connected.")
+    except ConnectionRefusedError:        
         bt.logging.error(f"Port {port} on IP {ip} is not connected.")
         return False
-    except socket.timeout:
-        # If a timeout occurs, the port is likely not connected or does not respond
-        #print(f"No response from Port {port} on IP {ip}.")
+    except socket.timeout:        
         bt.logging.error(f"No response from Port {port} on IP {ip}.")
         return False
-    except Exception as e:
-        # For any other exceptions, print an error message and return False
-        #print(f"An error occurred: {e}")
+    except Exception as e:        
         bt.logging.error(f"An error occurred: {e}")
         return False
 
