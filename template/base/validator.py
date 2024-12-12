@@ -41,7 +41,7 @@ from template.base.utils.weight_utils import (
 from template.utils.config import add_validator_args
 from template.api.api_server import ApiServer
 from template.protocol import BitrecsRequest
-from template.utils.uids import get_random_uids, get_axons, ping_uid, ping_uid2
+from template.utils.uids import get_random_uids, get_axons, ping_uid
 from template.validator.reward import get_rewards
 from template.utils.logging import log_miner_responses, write_timestamp, log_miner_responses_to_sql
 from template.utils import constants as CONST
