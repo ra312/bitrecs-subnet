@@ -4,7 +4,7 @@ import bittensor as bt
 import traceback
 
 from typing import Any, Dict, Optional
-from fastapi import Request, Response
+from fastapi import Request, Response, requests
 from fastapi.responses import JSONResponse
 
 
@@ -79,21 +79,41 @@ async def api_key_validator(request, call_next) -> Response:
     response: Response = await call_next(request)
     return response
 
-
  
-async def print_req(request: Request) -> Dict:    
-    method = request.method    
-    headers = request.headers    
-    query_params = request.query_params    
-    body = await request.body()    
+# async def print_req(request: Request) -> Dict:    
+#     method = request.method    
+#     headers = request.headers    
+#     query_params = request.query_params    
+#     body = await request.body()    
+#     try:
+#         json_body = await request.json()
+#     except Exception as e:
+#         json_body = None  # Not JSON or failed parsing
+#     return {
+#         "method": method,
+#         "headers": dict(headers),
+#         "query_params": dict(query_params),
+#         "body": body.decode("utf-8") if body else None,
+#         "json_body": json_body,
+#     }
+
+
+async def check_server_status(ip, port, timeout=3) -> bool:
     try:
-        json_body = await request.json()
+        api_key_info = load_api_config()
+        if api_key_info is None or "keys" not in api_key_info:
+            bt.logging.error(f"ERROR - MISSING API request key")
+            return False
+        
+        # {
+        #     "keys": {"xxx-me": {"requests_per_min":  60}}
+        # }        
+
+        key = list(api_key_info["keys"].keys())[0]
+        r = requests.get(f"http://{ip}:{port}/ping", 
+                         timeout=timeout,
+                         headers={"Authorization", f"Bearer {key}"})
+        return r.status_code == 200
     except Exception as e:
-        json_body = None  # Not JSON or failed parsing
-    return {
-        "method": method,
-        "headers": dict(headers),
-        "query_params": dict(query_params),
-        "body": body.decode("utf-8") if body else None,
-        "json_body": json_body,
-    }
+        bt.logging.error(f"Error checking server status: {e}")
+        return False

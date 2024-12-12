@@ -33,6 +33,7 @@ from traceback import print_exception
 from dataclasses import dataclass
 from queue import SimpleQueue, Empty
 
+from template.api.utils import check_server_status
 from template.base.neuron import BaseNeuron
 from template.base.utils.weight_utils import (
     process_weights_for_netuid,
@@ -176,7 +177,7 @@ class BaseValidatorNeuron(BaseNeuron):
         await asyncio.gather(*coroutines)    
     
       
-    @execute_periodically(timedelta(seconds=300))
+    @execute_periodically(timedelta(seconds=45))
     async def miner_sync(self):        
         
         bt.logging.trace(f"\033[1;32m Validator miner_sync ran at {int(time.time())}. \033[0m")
@@ -198,9 +199,14 @@ class BaseValidatorNeuron(BaseNeuron):
                 bt.logging.trace(f"uid: {uid} stake > {self.config.neuron.vpermit_tao_limit}T, skipping")
                 continue
             try:
-                if ping_uid(self, uid, 3):
-                    bt.logging.trace(f"\033[1;32m ping: {self.metagraph.axons[uid].ip}:OK \033[0m")
+                ip = self.metagraph.axons[uid].ip
+                port = self.metagraph.axons[uid].port
+                if check_server_status(ip, port, timeout=3):
+                    bt.logging.trace(f"\033[1;32m ping: {ip}:OK \033[0m")
                     selected_miners.append(int(uid))
+                # if ping_uid(self, uid, 3):
+                #     bt.logging.trace(f"\033[1;32m ping: {ip}:OK \033[0m")
+                #     selected_miners.append(int(uid))
             except Exception as e:
                 bt.logging.error(f"ping failed with exception: {e}")
                 continue
