@@ -176,9 +176,12 @@ class BaseValidatorNeuron(BaseNeuron):
         await asyncio.gather(*coroutines)    
     
       
-    @execute_periodically(timedelta(seconds=45))
-    async def miner_sync(self):        
-        
+    @execute_periodically(timedelta(seconds=CONST.MINER_BATTERY_INTERVAL))
+    async def miner_sync(self):
+        """
+            Checks the miners in the metagraph and updates the active miners list.
+
+        """        
         bt.logging.trace(f"\033[1;32m Validator miner_sync ran at {int(time.time())}. \033[0m")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
