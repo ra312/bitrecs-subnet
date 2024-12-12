@@ -205,27 +205,26 @@ class BaseValidatorNeuron(BaseNeuron):
       
     @execute_periodically(timedelta(seconds=120))
     async def validator_callback(self):
-        if self.step < 2:
+        if self.step < 1:
             return
         
         bt.logging.trace(f"\033[1;32m Validator back loop ran at {int(time.time())}. \033[0m")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-        if len(available_uids) == 0:
-            bt.logging.error("No active miners, skipping - check your connectivity")
-            return
-        
-        chosen_uids : list[int] = available_uids.tolist().append(1) #add local miner for now
-        chosen_uids = list(set(chosen_uids))
-
-        selected_miners = []
         bt.logging.trace(f"available_uids: {available_uids}")
+        chosen_uids : list[int] = available_uids.tolist()
+        bt.logging.trace(f"chosen_uids: {chosen_uids}")
+
+        # available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+        if len(chosen_uids) == 0:
+            bt.logging.error("No active miners, skipping - check your connectivity")
+            return        
+        
+        selected_miners = []
         for uid in chosen_uids:
             if not self.metagraph.axons[uid].is_serving:
                 #bt.logging.trace(f"uid: {uid} not serving, skipping")
                 continue
-            
-            #bt.logging.trace(f"uid: {uid} | hotkey: {self.metagraph.hotkeys[uid]} is serving")
             try:
                 status_code, status_msg = await ping_uid(self, uid, 3)
                 if status_code:
@@ -233,8 +232,9 @@ class BaseValidatorNeuron(BaseNeuron):
                     selected_miners.append(int(uid))
             except Exception as e:
                 bt.logging.error(f"ping failed with exception: {e}")
-                continue
-      
+                continue        
+        
+        
         self.active_miners = selected_miners
 
         bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
