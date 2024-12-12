@@ -106,7 +106,7 @@ async def check_server_status(ip, port, timeout=3) -> bool:
             bt.logging.error(f"ERROR - MISSING API request key")
             return False        
         
-        d = api_key_info["keys"]
+        d = api_key_info["keys"][0]
         key = next(iter(d))
 
         r = requests.get(f"http://{ip}:{port}/ping", 
