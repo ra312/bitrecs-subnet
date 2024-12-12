@@ -226,6 +226,11 @@ class BaseValidatorNeuron(BaseNeuron):
             if not self.metagraph.axons[uid].is_serving:
                 #bt.logging.trace(f"uid: {uid} not serving, skipping")
                 continue
+
+            if self.metagraph.S[uid] > self.config.neuron.vpermit_tao_limit:
+                bt.logging.trace(f"uid: {uid} stake > {self.config.neuron.vpermit_tao_limit}T, skipping")
+                continue
+
             try:
                 if ping_uid(self, uid, 3):
                     bt.logging.trace(f"\033[1;32m ping: {self.metagraph.axons[uid].ip}:OK \033[0m")
