@@ -204,11 +204,11 @@ class BaseValidatorNeuron(BaseNeuron):
     
       
     @execute_periodically(timedelta(seconds=300))
-    async def miner_check(self):
-        # if self.step < 1:
-        #     return
+    async def miner_sync(self):
+        if self.step < 1:
+            return
         
-        bt.logging.trace(f"\033[1;32m Validator miner_check ran at {int(time.time())}. \033[0m")
+        bt.logging.trace(f"\033[1;32m Validator miner_sync ran at {int(time.time())}. \033[0m")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
         bt.logging.trace(f"available_uids: {available_uids}")
@@ -223,7 +223,8 @@ class BaseValidatorNeuron(BaseNeuron):
         chosen_uids = list(set(chosen_uids))
         selected_miners = []
         for uid in chosen_uids:
-            if not self.metagraph.axons[uid].is_serving:                
+            if not self.metagraph.axons[uid].is_serving:
+                
                 continue
 
             if self.metagraph.S[uid] > self.config.neuron.vpermit_tao_limit:
@@ -260,7 +261,6 @@ class BaseValidatorNeuron(BaseNeuron):
         """
         # Check that validator is registered on the network.
         self.sync()
-        self.loop.run_until_complete(self.miner_check())
         
         bt.logging.info(
             f"\033[1;32m 🐸 Running validator on network: {self.config.subtensor.chain_endpoint} with netuid: {self.config.netuid}\033[0m")
@@ -359,15 +359,14 @@ class BaseValidatorNeuron(BaseNeuron):
                     else:
                         if not api_exclusive: #Regular validator loop                
                             bt.logging.info("Processing synthetic concurrent forward")
-                            #self.loop.run_until_complete(self.concurrent_forward())
-                            self.loop.run_until_complete(self.miner_check())
+                            self.loop.run_until_complete(self.concurrent_forward())                            
 
                     if self.should_exit:
                         return
 
                     try:                        
                         self.sync()
-                        self.loop.run_until_complete(self.validator_miner_sync())
+                        self.loop.run_until_complete(self.miner_sync())
                     except Exception as e:
                         bt.logging.error(traceback.format_exc())
                         bt.logging.error(f"Failed to sync with exception: {e}")
