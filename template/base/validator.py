@@ -203,7 +203,7 @@ class BaseValidatorNeuron(BaseNeuron):
         return True
     
       
-    @execute_periodically(timedelta(seconds=60))
+    @execute_periodically(timedelta(seconds=300))
     async def validator_miner_sync(self):
         if self.step < 1:
             return
@@ -220,11 +220,10 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.error("No active miners, skipping - check your connectivity")
             return
         
-        chosen_uids = list(set(chosen_uids))        
+        chosen_uids = list(set(chosen_uids))
         selected_miners = []
         for uid in chosen_uids:
-            if not self.metagraph.axons[uid].is_serving:
-                #bt.logging.trace(f"uid: {uid} not serving, skipping")
+            if not self.metagraph.axons[uid].is_serving:                
                 continue
 
             if self.metagraph.S[uid] > self.config.neuron.vpermit_tao_limit:
