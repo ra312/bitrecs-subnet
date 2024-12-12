@@ -107,7 +107,8 @@ async def ping_uid2(self: BaseNeuron, uid, timeout=5):
         bt.logging.error(f"Dendrite ping failed: {e}")
     return False, None
 
-async def ping_uid(self: BaseNeuron, uid, timeout=5) -> bool:
+
+def ping_uid(self: BaseNeuron, uid, timeout=5) -> bool:
     """
     Ping a UID to check their availability.
     Returns True if successful, false otherwise
@@ -150,5 +151,4 @@ async def ping_uid(self: BaseNeuron, uid, timeout=5) -> bool:
         # Close the socket regardless of whether an exception was raised
         if 'sock' in locals():
             sock.close()
-
    

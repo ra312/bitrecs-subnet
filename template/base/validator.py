@@ -226,9 +226,8 @@ class BaseValidatorNeuron(BaseNeuron):
                 #bt.logging.trace(f"uid: {uid} not serving, skipping")
                 continue
             try:
-                status_code, status_msg = await ping_uid2(self, uid, 3)
-                if status_code:
-                    bt.logging.trace(f"\033[1;32m ping: {status_code}:{status_msg} \033[0m")
+                if ping_uid(self, uid, 3):
+                    bt.logging.trace(f"\033[1;32m ping: {self.metagraph.axons[uid].ip}:OK \033[0m")
                     selected_miners.append(int(uid))
             except Exception as e:
                 bt.logging.error(f"ping failed with exception: {e}")
