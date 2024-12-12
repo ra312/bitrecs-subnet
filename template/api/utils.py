@@ -107,7 +107,8 @@ async def check_server_status(ip, port, timeout=3) -> bool:
             return False
         
         #key = list(api_key_info["keys"].keys())[0]
-        key = str(next(iter(api_key_info["keys"])))
+        #key = str(next(iter(api_key_info["keys"])))
+        key = "change-me"
 
         r = requests.get(f"http://{ip}:{port}/ping", 
                          timeout=timeout,
