@@ -204,11 +204,11 @@ class BaseValidatorNeuron(BaseNeuron):
     
       
     @execute_periodically(timedelta(seconds=45))
-    async def validator_callback(self):
+    async def validator_miner_sync(self):
         if self.step < 1:
             return
         
-        bt.logging.trace(f"\033[1;32m Validator back loop ran at {int(time.time())}. \033[0m")
+        bt.logging.trace(f"\033[1;32m Validator validator_miner_sync ran at {int(time.time())}. \033[0m")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
         bt.logging.trace(f"available_uids: {available_uids}")
@@ -217,7 +217,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
         # available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
         if len(chosen_uids) == 0:
-            bt.logging.error("No active miners, skipping - check your connectivity")
+            bt.logging.error("No active nodes, skipping - check your connectivity")
             return        
         
         selected_miners = []
@@ -233,8 +233,12 @@ class BaseValidatorNeuron(BaseNeuron):
             except Exception as e:
                 bt.logging.error(f"ping failed with exception: {e}")
                 continue
-            
-        self.active_miners = selected_miners
+
+        if len(selected_miners) == 0:
+            bt.logging.error("No active miners, skipping - check your connectivity")
+            return
+        
+        self.active_miners = list(set(selected_miners))
         bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
 
 
@@ -284,24 +288,20 @@ class BaseValidatorNeuron(BaseNeuron):
                             bt.logging.error("Request failed Validation, skipped.")
                             synapse_with_event.event.set()
                             continue
-                
-                        available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-                        # #available_uids = get_random_uids(self, k=8)
-                        # bt.logging.trace(f"available_uids: {available_uids}")
-
-                        chosen_uids : list[int] = available_uids.tolist()
-                        chosen_uids.append(1) #add local miner for now                        
-                        chosen_uids = list(set(chosen_uids))
-                        bt.logging.trace(f"chosen_uids: {chosen_uids}")                        
                         
+                        chosen_uids : list[int] = self.active_miners or []
+                        if len(chosen_uids) == 0:
+                            available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+                            chosen_uids : list[int] = available_uids.tolist()
+                            chosen_uids.append(1) #add local miner for now
+                            chosen_uids = list(set(chosen_uids))
                         if len(chosen_uids) == 0:
                             bt.logging.error("No active miners, skipping - check your connectivity")
                             synapse_with_event.event.set()
                             continue
+                        bt.logging.trace(f"chosen_uids: {chosen_uids}")
 
-                        chosen_axons = [self.metagraph.axons[uid] for uid in chosen_uids]
-                        #bt.logging.trace(f"chosen_axons: {chosen_axons}")
-
+                        chosen_axons = [self.metagraph.axons[uid] for uid in chosen_uids]                        
                         api_request = synapse_with_event.input_synapse
                         number_of_recs_desired = api_request.num_results
                         
@@ -312,7 +312,6 @@ class BaseValidatorNeuron(BaseNeuron):
                             deserialize=False,
                             timeout=CONST.MAX_DENDRITE_TIMEOUT
                         )
-
                         bt.logging.trace(f"Miners responded with {len(responses)} responses")
 
                         # Adjust the scores based on responses from miners.
@@ -362,7 +361,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     try:                        
                         self.sync()
-                        self.loop.run_until_complete(self.validator_callback())
+                        self.loop.run_until_complete(self.validator_miner_sync())
                     except Exception as e:
                         bt.logging.error(traceback.format_exc())
                         bt.logging.error(f"Failed to sync with exception: {e}")
