@@ -232,11 +232,9 @@ class BaseValidatorNeuron(BaseNeuron):
                     selected_miners.append(int(uid))
             except Exception as e:
                 bt.logging.error(f"ping failed with exception: {e}")
-                continue        
-        
-        with self.lock:
-            self.active_miners = selected_miners
-
+                continue
+            
+        self.active_miners = selected_miners
         bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
 
 
