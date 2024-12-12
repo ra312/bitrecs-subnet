@@ -80,39 +80,16 @@ async def api_key_validator(request, call_next) -> Response:
     response: Response = await call_next(request)
     return response
 
- 
-# async def print_req(request: Request) -> Dict:    
-#     method = request.method    
-#     headers = request.headers    
-#     query_params = request.query_params    
-#     body = await request.body()    
-#     try:
-#         json_body = await request.json()
-#     except Exception as e:
-#         json_body = None  # Not JSON or failed parsing
-#     return {
-#         "method": method,
-#         "headers": dict(headers),
-#         "query_params": dict(query_params),
-#         "body": body.decode("utf-8") if body else None,
-#         "json_body": json_body,
-#     }
 
-
-async def check_server_status(ip, port, timeout=3) -> bool:
+async def check_validator_status(ip, port, timeout=3) -> bool:
     try:
         api_key_info = load_api_config()
         if api_key_info is None or "keys" not in api_key_info:
             bt.logging.error(f"ERROR - MISSING API request key")
             return False
-        
-        #key = list(api_key_info["keys"].keys())[0]
         key = str(next(iter(api_key_info["keys"])))
-        
-        #key = "change-me"
         url = f"http://{ip}:{port}/ping"
         headers = {"Authorization": f"Bearer {key}"}
-
         r = requests.get(url, headers=headers, timeout=timeout)
         return r.status_code == 200
     except Exception as e:

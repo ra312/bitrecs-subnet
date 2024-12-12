@@ -88,7 +88,7 @@ def get_axons(
 
 def ping_uid(self: BaseNeuron, uid, timeout=5) -> bool:
     """
-    Ping a UID to check their availability.
+    Connect to a UID to check their availability.
     Returns True if successful, false otherwise
     """
     hk = self.metagraph.axons[uid].hotkey

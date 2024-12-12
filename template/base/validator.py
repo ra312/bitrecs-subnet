@@ -199,14 +199,10 @@ class BaseValidatorNeuron(BaseNeuron):
                 bt.logging.trace(f"uid: {uid} stake > {self.config.neuron.vpermit_tao_limit}T, skipping")
                 continue
             try:
-                ip = self.metagraph.axons[uid].ip
-                port = self.metagraph.axons[uid].port
-                if await check_server_status(ip, port, timeout=3):
+                ip = self.metagraph.axons[uid].ip              
+                if ping_uid(self, uid, 3):
                     bt.logging.trace(f"\033[1;32m ping: {ip}:OK \033[0m")
                     selected_miners.append(int(uid))
-                # if ping_uid(self, uid, 3):
-                #     bt.logging.trace(f"\033[1;32m ping: {ip}:OK \033[0m")
-                #     selected_miners.append(int(uid))
             except Exception as e:
                 bt.logging.error(f"ping failed with exception: {e}")
                 continue
