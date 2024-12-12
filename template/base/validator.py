@@ -275,7 +275,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             continue
                         bt.logging.trace(f"chosen_uids: {chosen_uids}")
 
-                        chosen_axons = [self.metagraph.axons[uid] for uid in chosen_uids]                        
+                        chosen_axons = [self.metagraph.axons[uid] for uid in chosen_uids]
                         api_request = synapse_with_event.input_synapse
                         number_of_recs_desired = api_request.num_results
                         
