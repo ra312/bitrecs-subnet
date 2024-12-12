@@ -203,7 +203,7 @@ class BaseValidatorNeuron(BaseNeuron):
         return True
     
       
-    @execute_periodically(timedelta(seconds=45))
+    #@execute_periodically(timedelta(seconds=45))
     async def validator_miner_sync(self):
         if self.step < 1:
             return
@@ -233,7 +233,7 @@ class BaseValidatorNeuron(BaseNeuron):
             except Exception as e:
                 bt.logging.error(f"ping failed with exception: {e}")
                 continue
-            
+
         if len(selected_miners) == 0:
             bt.logging.error("No active miners, skipping - check your connectivity")
             return
