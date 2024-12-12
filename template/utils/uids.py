@@ -5,6 +5,7 @@ import numpy as np
 from typing import List
 
 from template.base.neuron import BaseNeuron
+from template.protocol import BitrecsRequest
 
 
 def check_uid_availability(
@@ -85,26 +86,26 @@ def get_axons(
     return result
 
 
-# async def ping_uid(self: BaseNeuron, uid, timeout=5):
-#     """
-#     Ping a UID to check their availability.
-#     Returns True if successful, false otherwise
-#     """
-#     status_code = None
-#     status_message = None
-#     try:
-#         response = await self.dendrite.query(
-#             self.metagraph.axons[uid], 
-#             bt.synapse(),
-#             deserialize=False,
-#             timeout=timeout,
-#         )
-#         status_code = response.dendrite.status_code
-#         status_message = response.dendrite.status_message
-#         return status_code == 200, status_message
-#     except Exception as e:
-#         bt.logging.error(f"Dendrite ping failed: {e}")
-#     return False, None
+async def ping_uid2(self: BaseNeuron, uid, timeout=5):
+    """
+    Ping a UID to check their availability.
+    Returns True if successful, false otherwise
+    """
+    status_code = None
+    status_message = None
+    try:
+        response = await self.dendrite.query(
+            self.metagraph.axons[uid], 
+            BitrecsRequest(),
+            deserialize=False,
+            timeout=timeout,
+        )
+        status_code = response.dendrite.status_code
+        status_message = response.dendrite.status_message
+        return status_code == 200, status_message
+    except Exception as e:
+        bt.logging.error(f"Dendrite ping failed: {e}")
+    return False, None
 
 async def ping_uid(self: BaseNeuron, uid, timeout=5) -> bool:
     """
@@ -114,7 +115,7 @@ async def ping_uid(self: BaseNeuron, uid, timeout=5) -> bool:
     hk = self.metagraph.axons[uid].hotkey
     ip = self.metagraph.axons[uid].ip
     port = self.metagraph.axons[uid].port
-    
+
     ignored = ["localhost", "127.0.0.1", "0.0.0.0"]
     if ip in ignored:
         bt.logging.trace("Ignoring localhost ping.")

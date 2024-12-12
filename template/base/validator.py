@@ -41,7 +41,7 @@ from template.base.utils.weight_utils import (
 from template.utils.config import add_validator_args
 from template.api.api_server import ApiServer
 from template.protocol import BitrecsRequest
-from template.utils.uids import get_random_uids, get_axons, ping_uid
+from template.utils.uids import get_random_uids, get_axons, ping_uid, ping_uid2
 from template.validator.reward import get_rewards
 from template.utils.logging import log_miner_responses, write_timestamp, log_miner_responses_to_sql
 from template.utils import constants as CONST
@@ -226,7 +226,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 #bt.logging.trace(f"uid: {uid} not serving, skipping")
                 continue
             try:
-                status_code, status_msg = await ping_uid(self, uid, 3)
+                status_code, status_msg = await ping_uid2(self, uid, 3)
                 if status_code:
                     bt.logging.trace(f"\033[1;32m ping: {status_code}:{status_msg} \033[0m")
                     selected_miners.append(int(uid))
