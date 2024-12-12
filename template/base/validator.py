@@ -204,11 +204,11 @@ class BaseValidatorNeuron(BaseNeuron):
     
       
     @execute_periodically(timedelta(seconds=300))
-    async def validator_miner_sync(self):
-        if self.step < 1:
-            return
+    async def miner_check(self):
+        # if self.step < 1:
+        #     return
         
-        bt.logging.trace(f"\033[1;32m Validator validator_miner_sync ran at {int(time.time())}. \033[0m")
+        bt.logging.trace(f"\033[1;32m Validator miner_check ran at {int(time.time())}. \033[0m")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
         bt.logging.trace(f"available_uids: {available_uids}")
@@ -260,6 +260,7 @@ class BaseValidatorNeuron(BaseNeuron):
         """
         # Check that validator is registered on the network.
         self.sync()
+        self.loop.run_until_complete(self.miner_check())
         
         bt.logging.info(
             f"\033[1;32m 🐸 Running validator on network: {self.config.subtensor.chain_endpoint} with netuid: {self.config.netuid}\033[0m")
@@ -359,7 +360,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         if not api_exclusive: #Regular validator loop                
                             bt.logging.info("Processing synthetic concurrent forward")
                             #self.loop.run_until_complete(self.concurrent_forward())
-                            self.loop.run_until_complete(self.validator_miner_sync())
+                            self.loop.run_until_complete(self.miner_check())
 
                     if self.should_exit:
                         return
