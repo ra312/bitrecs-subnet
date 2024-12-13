@@ -1,9 +1,11 @@
 import random
+import socket
 import bittensor as bt
 import numpy as np
 from typing import List
 
 from template.base.neuron import BaseNeuron
+from template.protocol import BitrecsRequest
 
 
 def check_uid_availability(
@@ -84,23 +86,37 @@ def get_axons(
     return result
 
 
-async def ping_uid(self: BaseNeuron, uid, timeout=5):
+def ping_uid(self: BaseNeuron, uid, timeout=5) -> bool:
     """
-    Ping a UID to check their availability.
+    Connect to a UID to check their availability.
     Returns True if successful, false otherwise
     """
-    status_code = None
-    status_message = None
-    try:
-        response = await self.dendrite(
-            self.metagraph.axons[uid], 
-            bt.synapse(),
-            deserialize=False,
-            timeout=timeout,
-        )
-        status_code = response.dendrite.status_code
-        status_message = response.dendrite.status_message
-        return status_code == 200, status_message
-    except Exception as e:
-        bt.logging.error(f"Dendrite ping failed: {e}")
-    return False, None
+    hk = self.metagraph.axons[uid].hotkey
+    ip = self.metagraph.axons[uid].ip
+    port = self.metagraph.axons[uid].port
+
+    ignored = ["localhost", "127.0.0.1", "0.0.0.0"]
+    if ip in ignored:
+        bt.logging.trace("Ignoring localhost ping.")
+        return False    
+
+    try:        
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        
+        sock.settimeout(timeout)        
+        sock.connect((ip, port))        
+        return True
+    except ConnectionRefusedError:        
+        bt.logging.error(f"Port {port} on IP {ip} is not connected.")
+        return False
+    except socket.timeout:        
+        bt.logging.error(f"No response from Port {port} on IP {ip}.")
+        return False
+    except Exception as e:        
+        bt.logging.error(f"An error occurred: {e}")
+        return False
+
+    finally:
+        # Close the socket regardless of whether an exception was raised
+        if 'sock' in locals():
+            sock.close()
+   

@@ -8,6 +8,7 @@ Constants:
     MAX_RECS_PER_REQUEST (int): Maximum number of recommendations per request.
     MAX_CONTEXT_LENGTH (int): Maximum length of a context.
     MIN_CATALOG_SIZE (int): Minimum size of a request catalog.
+    MINER_BATTERY_INTERVAL (int): Length of seconds between miner checks.
     
 """
 
@@ -17,3 +18,4 @@ MAX_QUERY_LENGTH = 100
 MAX_RECS_PER_REQUEST = 20
 MAX_CONTEXT_LENGTH = 200000
 MIN_CATALOG_SIZE = 10
+MINER_BATTERY_INTERVAL = 300

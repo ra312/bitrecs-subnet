@@ -64,7 +64,7 @@ async def main():
     with Validator() as validator:
         start_time = time.time()        
         while True:            
-            bt.logging.info(f"Validator {validator.uid} running... {time.time()}")
+            bt.logging.info(f"Validator {validator.uid} running... {int(time.time())}")
             if time.time() - start_time > 300:
                 bt.logging.info(
                     f"---Total request in last 5 minutes: {validator.total_request_in_interval}"

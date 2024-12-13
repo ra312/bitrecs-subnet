@@ -63,7 +63,7 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
     if current_time - timestamp > 300:  # 5 minutes
         raise HTTPException(status_code=401, detail="Request expired")
     
-    bt.logging.info(f"\033[1;32m Signature Verified\033[0m")        
+    bt.logging.info(f"\033[1;32m Signature Verified\033[0m")
     
 
 
@@ -98,7 +98,7 @@ class ApiServer:
             methods=["POST"]
         )
         self.app.include_router(self.router)
-        self.api_json = api_json #TODO not used        
+        self.api_json = api_json #TODO not used
 
         self.api_counter = APICounter(
             os.path.join(self.app.root_path, "api_counter.json")
