@@ -43,10 +43,17 @@ from template.api.api_server import ApiServer
 from template.protocol import BitrecsRequest
 from template.utils.uids import get_random_uids, ping_uid
 from template.validator.reward import get_rewards
-from template.utils.logging import log_miner_responses, read_timestamp, write_timestamp, log_miner_responses_to_sql
+from template.utils.logging import (
+    log_miner_responses, 
+    read_timestamp, 
+    write_timestamp, 
+    log_miner_responses_to_sql
+)
 from template.utils import constants as CONST
 from template.utils.runtime import execute_periodically
 from template.validator.rules import validate_br_request
+from template.commerce.user_action import UserAction
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -88,7 +95,7 @@ async def api_forward(synapse: BitrecsRequest) -> BitrecsRequest:
 
 class BaseValidatorNeuron(BaseNeuron):
     """
-    Base class for Bittensor validators. Your validator should inherit from this class.
+    Validator for Bitrecs
     """
 
     neuron_type: str = "ValidatorNeuron"
@@ -140,12 +147,12 @@ class BaseValidatorNeuron(BaseNeuron):
         self.is_running: bool = False
         self.thread: Union[threading.Thread, None] = None
         self.lock = asyncio.Lock()
-        self.active_miners = []
+        self.active_miners = List[int] = []
+        self.user_actions = List[UserAction] = []
 
 
     def serve_axon(self):
         """Serve axon to enable external connections."""
-
         bt.logging.info("serving ip to chain...")
         try:
             self.axon = bt.axon(wallet=self.wallet, config=self.config, port=self.config.axon.port)
@@ -162,9 +169,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 pass
 
         except Exception as e:
-            bt.logging.error(
-                f"Failed to create Axon initialize with exception: {e}"
-            )
+            bt.logging.error(f"Failed to create Axon initialize with exception: {e}")
             pass
 
 
@@ -214,6 +219,12 @@ class BaseValidatorNeuron(BaseNeuron):
         
         self.active_miners = list(set(selected_miners))
         bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
+
+        bt.logging.trace(f"Gathering user actions")          
+        sd, ed = UserAction.get_default_range(days_ago=7)
+        bt.logging.trace(f"User actions range: {sd} to {ed}")                
+        self.user_actions = UserAction.get_actions_range(from_dt=sd, to_dt=ed)
+        bt.logging.trace(f"User actions size: {len(self.user_actions)}")
 
 
     def run(self):

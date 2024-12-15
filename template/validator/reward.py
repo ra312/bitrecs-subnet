@@ -22,9 +22,8 @@ import numpy as np
 import bittensor as bt
 import jsonschema
 import json_repair
-from template.commerce.user_action import BitrecsActionResponse
+from template.commerce.user_action import UserAction
 from template.protocol import BitrecsRequest
-from template.llms.prompt_factory import PromptFactory
 from typing import List
 from template.commerce.product import Product
 from template.utils import constants as CONST
@@ -94,7 +93,7 @@ def calculate_miner_boost(from_dt: float, to_dt: float) -> float:
     result = []
     try:
         score = 0.01
-        actions = BitrecsActionResponse.get_actions_range(from_dt, to_dt)
+        actions = UserAction.get_actions_range(from_dt, to_dt)
 
 
         return score
