@@ -184,9 +184,10 @@ class BaseValidatorNeuron(BaseNeuron):
     @execute_periodically(timedelta(seconds=CONST.MINER_BATTERY_INTERVAL))
     async def miner_sync(self):
         """
-            Checks the miners in the metagraph and updates the active miners list.
+            Checks the miners in the metagraph for connectivity and updates the active miners list.
+            Additonally stores user actions for scoring.
 
-        """        
+        """
         bt.logging.trace(f"\033[1;32m Validator miner_sync ran at {int(time.time())}. \033[0m")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
@@ -219,7 +220,10 @@ class BaseValidatorNeuron(BaseNeuron):
         
         self.active_miners = list(set(selected_miners))
         bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
-        
+
+
+    @execute_periodically(timedelta(seconds=120))
+    async def action_sync(self):
         sd, ed = UserAction.get_default_range(days_ago=7)
         bt.logging.trace(f"Gathering user actions for range: {sd} to {ed}")
         try:
@@ -252,7 +256,7 @@ class BaseValidatorNeuron(BaseNeuron):
             f"Axon: {self.axon}"
         
         bt.logging.info(f"Validator starting at block: {self.block}")
-        bt.logging.info(f"Validator SAMPLE SIZE: {self.config.neuron.sample_size}")        
+        bt.logging.info(f"Validator SAMPLE SIZE: {self.config.neuron.sample_size}")
         try:
             while True:
                 try:
@@ -351,6 +355,7 @@ class BaseValidatorNeuron(BaseNeuron):
                     try:                        
                         self.sync()
                         self.loop.run_until_complete(self.miner_sync())
+                        self.loop.run_until_complete(self.action_sync())
                     except Exception as e:
                         bt.logging.error(traceback.format_exc())
                         bt.logging.error(f"Failed to sync with exception: {e}")
