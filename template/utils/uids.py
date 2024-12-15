@@ -4,8 +4,8 @@ import bittensor as bt
 import numpy as np
 from typing import List
 
-from template.base.neuron import BaseNeuron
-from template.protocol import BitrecsRequest
+#from template.base.neuron import BaseNeuron
+#from template.protocol import BitrecsRequest
 
 
 def check_uid_availability(
@@ -72,7 +72,7 @@ def best_uid(metagraph: bt.metagraph) -> int:
 
 
 def get_axons(
-    self: BaseNeuron,
+    self,
     *hotkeys,
     not_check_self: bool = False,
     include_hotkeys: bool = False,
@@ -86,7 +86,7 @@ def get_axons(
     return result
 
 
-def ping_uid(self: BaseNeuron, uid, timeout=5) -> bool:
+def ping_uid(self, uid, timeout=5) -> bool:
     """
     Connect to a UID to check their availability.
     Returns True if successful, false otherwise
