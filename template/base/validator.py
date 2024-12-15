@@ -43,7 +43,7 @@ from template.api.api_server import ApiServer
 from template.protocol import BitrecsRequest
 from template.utils.uids import get_random_uids, ping_uid
 from template.validator.reward import get_rewards
-from template.utils.logging import log_miner_responses, write_timestamp, log_miner_responses_to_sql
+from template.utils.logging import log_miner_responses, read_timestamp, write_timestamp, log_miner_responses_to_sql
 from template.utils import constants as CONST
 from template.utils.runtime import execute_periodically
 from template.validator.rules import validate_br_request
@@ -326,9 +326,9 @@ class BaseValidatorNeuron(BaseNeuron):
                         self.update_scores(rewards, chosen_uids)
 
                     else:
-                        if not api_exclusive: #Regular validator loop                
+                        if not api_exclusive: #Regular validator loop  
                             bt.logging.info("Processing synthetic concurrent forward")
-                            self.loop.run_until_complete(self.concurrent_forward())                            
+                            self.loop.run_until_complete(self.concurrent_forward())
 
                     if self.should_exit:
                         return
@@ -349,7 +349,7 @@ class BaseValidatorNeuron(BaseNeuron):
                     time.sleep(60)
                 finally:
                     if api_enabled and api_exclusive:
-                        bt.logging.info(f"forward finished, ready for next request")                        
+                        bt.logging.info(f"forward finished, ready for next request")
                         pass
                     else:
                         bt.logging.info(f"forward finished, sleep for {10} seconds")
@@ -619,6 +619,10 @@ class BaseValidatorNeuron(BaseNeuron):
         # self.step = state["step"]
         # self.scores = state["scores"]
         # self.hotkeys = state["hotkeys"]
-        pass
+        ts = read_timestamp()
+        if not ts:
+            bt.logging.error("NO STATE FOUND - first step")
+        else:
+            bt.logging.info(f"Last state loaded at {ts}")
 
 

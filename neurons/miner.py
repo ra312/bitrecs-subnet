@@ -47,8 +47,9 @@ async def do_work(user_prompt: str,
                   debug_prompts=False) -> typing.List[str]:
     """
     Do your miner work here. 
-    This function is called by the forward function to generate recs.
-    You can use any method you prefer to generate recommendations.
+    This function is called by the forward function to generate recommendations.
+    You can use any method you prefer to generate the data.
+    The default setup will use Open Router.
 
     Args:
         user_prompt (str): The user query (generally the SKU they are browsing)
@@ -64,8 +65,7 @@ async def do_work(user_prompt: str,
     """
     bt.logging.info(f"do_work Prompt: {user_prompt}")
     bt.logging.info(f"do_work LLM server: {server}")  
-    bt.logging.info(f"do_work LLM model: {model}")
-    #debug_prompts : bool = False
+    bt.logging.info(f"do_work LLM model: {model}")    
 
     factory = PromptFactory(sku=user_prompt, 
                             context=context, 

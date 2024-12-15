@@ -22,6 +22,7 @@ import numpy as np
 import bittensor as bt
 import jsonschema
 import json_repair
+from template.commerce.user_action import BitrecsActionResponse
 from template.protocol import BitrecsRequest
 from template.llms.prompt_factory import PromptFactory
 from typing import List
@@ -86,6 +87,22 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
     return count == len(results)
 
 
+def calculate_miner_boost(from_dt: float, to_dt: float) -> float:
+    """
+    At certain epoch, fetch miner stats and adjust the rewards
+    """ 
+    result = []
+    try:
+        score = 0.01
+        actions = BitrecsActionResponse.get_actions_range(from_dt, to_dt)
+
+
+        return score
+    except Exception as e:
+        return 0.0
+
+
+
 def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest) -> float:
     """
     Score the Miner's response to the BitrecsRequest 
@@ -100,9 +117,12 @@ def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest
     """    
     
     bt.logging.trace("*************** VALIDATOR REWARD *************************")
-
+    
     try:
         score = 0.0
+        if not response.is_success:
+            return 0.0
+        
         if len(response.results) != num_recs:            
             return 0.0
 
