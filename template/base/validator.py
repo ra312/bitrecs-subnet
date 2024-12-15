@@ -147,8 +147,8 @@ class BaseValidatorNeuron(BaseNeuron):
         self.is_running: bool = False
         self.thread: Union[threading.Thread, None] = None
         self.lock = asyncio.Lock()
-        self.active_miners = List[int] = []
-        self.user_actions = List["UserAction"] = []
+        self.active_miners: List[int] = []
+        self.user_actions: List["UserAction"] = []
 
 
     def serve_axon(self):
