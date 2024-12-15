@@ -228,10 +228,10 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.trace(f"Gathering user actions for range: {sd} to {ed}")
         try:
             self.user_actions = UserAction.get_actions_range(start_date=sd, end_date=ed)
-            bt.logging.trace(f"Success - User actions size: {len(self.user_actions)}")
+            bt.logging.trace(f"Success - User actions size: \033[1;32m {len(self.user_actions)} \033[0m")
         except Exception as e:
             bt.logging.error(f"Failed to get user actions with exception: {e}")
-            pass
+        return
         
 
 

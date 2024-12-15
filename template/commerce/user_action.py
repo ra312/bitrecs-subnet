@@ -1,8 +1,7 @@
 import bittensor as bt
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, field
-from neurons.miner import Miner
 
 
 @dataclass
@@ -52,8 +51,8 @@ class UserAction:
     def get_default_range(days_ago=7) -> tuple:
         """
         Get the default range for the actions
-        """
-        end_date = datetime.now()
+        """        
+        end_date = datetime.now(timezone.utc)
         start_date = end_date - timedelta(days=days_ago)
         return start_date, end_date
         
