@@ -219,12 +219,16 @@ class BaseValidatorNeuron(BaseNeuron):
         
         self.active_miners = list(set(selected_miners))
         bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
-
-        bt.logging.trace(f"Gathering user actions")          
+        
         sd, ed = UserAction.get_default_range(days_ago=7)
-        bt.logging.trace(f"User actions range: {sd} to {ed}")                
-        self.user_actions = UserAction.get_actions_range(from_dt=sd, to_dt=ed)
-        bt.logging.trace(f"User actions size: {len(self.user_actions)}")
+        bt.logging.trace(f"Gathering user actions for range: {sd} to {ed}")
+        try:
+            self.user_actions = UserAction.get_actions_range(start_date=sd, end_date=ed)
+            bt.logging.trace(f"Success - User actions size: {len(self.user_actions)}")
+        except Exception as e:
+            bt.logging.error(f"Failed to get user actions with exception: {e}")
+            pass
+        
 
 
     def run(self):
