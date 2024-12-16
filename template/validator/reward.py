@@ -111,9 +111,9 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
             bt.logging.trace(f"Miner {hotkey} has no actions")
             return 0.0
 
-        views = [v for v in miner_actions if v["action"] == ActionType.VIEW_PRODUCT]
-        add_to_carts = [a for a in miner_actions if a["action"] == ActionType.ADD_TO_CART]
-        purchases = [p for p in miner_actions if p["action"] == ActionType.PURCHASE]
+        views = [v for v in miner_actions if v["action"] == ActionType.VIEW_PRODUCT.name]
+        add_to_carts = [a for a in miner_actions if a["action"] == ActionType.ADD_TO_CART.name]
+        purchases = [p for p in miner_actions if p["action"] == ActionType.PURCHASE.name]
 
         if len(views) == 0 and len(add_to_carts) == 0 and len(purchases) == 0:
             bt.logging.trace(f"Miner {hotkey} has no parsed actions")
