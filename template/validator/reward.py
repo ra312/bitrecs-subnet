@@ -16,6 +16,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import math
 import time
 import json
 import numpy as np
@@ -90,9 +91,8 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
 def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
     """
     Reward miners which generate positive actions on the ecommerce sites
-    """ 
-    result = []
     
+    """     
     ACTION_WEIGHTS = {
         ActionType.VIEW_PRODUCT.value: 0.1,
         ActionType.ADD_TO_CART.value: 0.3,
@@ -118,13 +118,14 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
 
         total_boost = view_factor + add_to_cart_factor + purchase_factor
 
-        # Apply diminishing returns using a logarithmic scale
+        # miner has no actions this round
+        if total_boost == 0:
+            return 0.0
+
+        # Apply diminishing returns using a sigmoid function
         MAX_BOOST = 0.20
         if total_boost > BASE_BOOST:
-            total_boost = BASE_BOOST + (
-                (MAX_BOOST - BASE_BOOST) * 
-                (1 - 1 / (1 + total_boost - BASE_BOOST))
-            )
+            return MAX_BOOST / (1 + math.exp(-total_boost + BASE_BOOST))
 
         # Ensure boost stays within bounds
         return min(max(total_boost, 0.0), MAX_BOOST)
