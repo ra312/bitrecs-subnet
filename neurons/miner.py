@@ -195,7 +195,7 @@ class Miner(BaseMinerNeuron):
                 continue
             dictionary_item["name"] = dictionary_item["name"].replace("'", "-")  # Remove single quotes
             recommendation = str(dictionary_item)
-            final_results.append(recommendation)
+            final_results.append(recommendation)        
       
         output_synapse=BitrecsRequest(
             name=synapse.name, 
@@ -210,7 +210,7 @@ class Miner(BaseMinerNeuron):
             results=final_results,
             models_used=[self.model],
             miner_uid=str(self.uid),
-            miner_hotkey=self.wallet.hotkey,
+            miner_hotkey=self.metagraph.hotkeys[self.uid]
         )
         
         bt.logging.info(f"MINER {self.uid} FORWARD PASS RESULT -> {output_synapse}")
