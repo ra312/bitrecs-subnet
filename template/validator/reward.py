@@ -207,7 +207,7 @@ def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest
         # Adjust the rewards based on the actions
         boost = calculate_miner_boost(response.miner_hotkey, actions)
         if boost > 0:
-            bt.logging.info(f"Miner {response.miner_uid} has boost: {boost}")
+            bt.logging.info(f"\033[1;32m Miner {response.miner_uid} has boost: {boost} \033[0m")
             score += boost
 
         bt.logging.info(f"Final {score}")
