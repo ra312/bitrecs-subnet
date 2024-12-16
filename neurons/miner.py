@@ -210,7 +210,7 @@ class Miner(BaseMinerNeuron):
             results=final_results,
             models_used=[self.model],
             miner_uid=str(self.uid),
-            miner_hotkey=synapse.dendrite.hotkey
+            miner_hotkey=self.wallet.hotkey,
         )
         
         bt.logging.info(f"MINER {self.uid} FORWARD PASS RESULT -> {output_synapse}")

@@ -33,6 +33,12 @@ from template.utils import constants as CONST
 ALPHA_TIME_DECAY = 0.05
 BASE_BOOST = 1/256
 
+ACTION_WEIGHTS = {
+    ActionType.VIEW_PRODUCT.value: 0.1,
+    ActionType.ADD_TO_CART.value: 0.3,
+    ActionType.PURCHASE.value: 0.6,
+}
+
 
 def does_sku_exist(sku: str, store_catalog: List[Product]) -> bool:
     """
@@ -94,15 +100,7 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
     Reward miners which generate positive actions on ecommerce sites
 
     """
-    
-    ACTION_WEIGHTS = {
-        ActionType.VIEW_PRODUCT.value: 0.1,
-        ActionType.ADD_TO_CART.value: 0.3,
-        ActionType.PURCHASE.value: 0.6,
-    }
-
     try:
-        
         if not actions or len(actions) == 0:
             return 0.0
 
@@ -116,16 +114,14 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
         purchases = [p for p in miner_actions if p["action"] == ActionType.PURCHASE.name]
 
         if len(views) == 0 and len(add_to_carts) == 0 and len(purchases) == 0:
-            bt.logging.trace(f"Miner {hotkey} has no parsed actions")
+            bt.logging.trace(f"Miner {hotkey} has no parsed actions - skipping boost")
             return 0.0
         
-        view_factor = ACTION_WEIGHTS[ActionType.VIEW_PRODUCT.value] * len(views)
-        add_to_cart_factor = ACTION_WEIGHTS[ActionType.ADD_TO_CART.value] * len(add_to_carts)
-        purchase_factor = ACTION_WEIGHTS[ActionType.PURCHASE.value] * len(purchases)
-
-        total_boost = view_factor + add_to_cart_factor + purchase_factor
-
-        bt.logging.trace(f"Miner {hotkey} has total_boost: {total_boost} from views: {len(views)} add_to_carts: {len(add_to_carts)} purchases: {len(purchases)}")    
+        vf = ACTION_WEIGHTS[ActionType.VIEW_PRODUCT.value] * len(views)
+        af = ACTION_WEIGHTS[ActionType.ADD_TO_CART.value] * len(add_to_carts)
+        pf = ACTION_WEIGHTS[ActionType.PURCHASE.value] * len(purchases)
+        total_boost = vf + af + pf
+        bt.logging.trace(f"Miner {hotkey} total_boost: {total_boost} from views: ({len(views)}) add_to_carts: ({len(add_to_carts)}) purchases: ({len(purchases)})")
 
         # miner has no actions this round
         if total_boost == 0:
@@ -147,7 +143,12 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
 
 
 
-def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest,  actions: List[UserAction]) -> float:
+def reward(
+        num_recs: int, 
+        store_catalog: list[Product], 
+        response: BitrecsRequest,
+        actions: List[UserAction]
+) -> float:
     """
     Score the Miner's response to the BitrecsRequest 
 
