@@ -109,9 +109,9 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
         if len(miner_actions) == 0:
             return 0.0
 
-        views = [v for v in miner_actions if v["action"] == ActionType.VIEW_PRODUCT]
-        add_to_carts = [a for a in miner_actions if a["action"] == ActionType.ADD_TO_CART]
-        purchases = [p for p in miner_actions if p["action"] == ActionType.PURCHASE]
+        views = [v for v in miner_actions if v and  v["action"] == ActionType.VIEW_PRODUCT]
+        add_to_carts = [a for a in miner_actions if a and  a["action"] == ActionType.ADD_TO_CART]
+        purchases = [p for p in miner_actions if p and p["action"] == ActionType.PURCHASE]
         
         view_factor = ACTION_WEIGHTS[ActionType.VIEW_PRODUCT] * len(views)
         add_to_cart_factor = ACTION_WEIGHTS[ActionType.ADD_TO_CART] * len(add_to_carts)
