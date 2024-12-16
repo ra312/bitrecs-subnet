@@ -119,6 +119,8 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
 
         total_boost = view_factor + add_to_cart_factor + purchase_factor
 
+        bt.logging.trace(f"Miner {hotkey} has total_boost: {total_boost} from views: {len(views)} add_to_carts: {len(add_to_carts)} purchases: {len(purchases)}")    
+
         # miner has no actions this round
         if total_boost == 0:
             return 0.0
