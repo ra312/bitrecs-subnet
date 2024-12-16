@@ -29,7 +29,7 @@ from template.commerce.product import Product
 from template.utils import constants as CONST
 
 ALPHA_TIME_DECAY = 0.05
-BASE_BOOST = 1/196
+BASE_BOOST = 1/256
 
 
 def does_sku_exist(sku: str, store_catalog: List[Product]) -> bool:
@@ -100,7 +100,7 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
     }
 
     try:
-        #boost_factor = 0.00
+        
         if not actions or len(actions) == 0:
             return 0.0
 
@@ -112,9 +112,9 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
         add_to_carts = [a for a in result if result["action"] == ActionType.ADD_TO_CART]
         purchases = [p for p in result if result["action"] == ActionType.PURCHASE]
         
-        view_factor = ACTION_WEIGHTS[ActionType.ADD_TO_CART.value] * len(views)
-        add_to_cart_factor = ACTION_WEIGHTS[ActionType.ADD_TO_CART.value] * len(add_to_carts)
-        count_factor = ACTION_WEIGHTS[ActionType.PURCHASE.value] * len(purchases)
+        view_factor = ACTION_WEIGHTS[ActionType.ADD_TO_CART] * len(views)
+        add_to_cart_factor = ACTION_WEIGHTS[ActionType.ADD_TO_CART] * len(add_to_carts)
+        count_factor = ACTION_WEIGHTS[ActionType.PURCHASE] * len(purchases)
 
         total_boost = view_factor + add_to_cart_factor + count_factor
 
@@ -206,7 +206,7 @@ def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest
         if boost > 0:
             bt.logging.info(f"Miner {response.miner_uid} has boost: {boost}")
             score += boost
-            
+
         bt.logging.info(f"Final {score}")
         return score
     except Exception as e:        
