@@ -126,7 +126,7 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
         # Apply diminishing returns using a sigmoid function
         MAX_BOOST = 0.20
         if total_boost > BASE_BOOST:
-            return MAX_BOOST / (1 + math.exp(-total_boost + BASE_BOOST))
+            total_boost = MAX_BOOST / (1 + math.exp(-total_boost + BASE_BOOST))
 
         # Ensure boost stays within bounds
         return min(max(total_boost, 0.0), MAX_BOOST)
