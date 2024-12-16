@@ -128,6 +128,7 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
             return 0.0
 
         # Apply diminishing returns using a sigmoid function
+        #TODO review this 
         MAX_BOOST = 0.20
         if total_boost > BASE_BOOST:
             total_boost = MAX_BOOST / (1 + math.exp(-total_boost + BASE_BOOST))
@@ -139,8 +140,6 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
         bt.logging.error(f"Error in calculate_miner_boost: {e}")
         traceback.print_exc()
         return 0.0
-
-
 
 
 def reward(
@@ -156,6 +155,7 @@ def reward(
     Recommendations must exist in the original catalog
     Unique recommendations in the response is expected
     Malformed JSON or invliad skus will result in a 0.0 reward
+    Miner rewards are boosted based on end-user actions on the ecommerce sites to encourage positive recs
 
     Returns:
     - float: The reward value for the miner.
@@ -217,11 +217,13 @@ def reward(
         boost = calculate_miner_boost(response.miner_hotkey, actions)
         if boost > 0:
             bt.logging.info(f"\033[1;32m Miner {response.miner_uid} has boost: {boost} \033[0m")
+            bt.logging.info(f"\033[1;32m previous: {score} \033[0m")
             score += boost
+            bt.logging.info(f"\033[1;32m after: {score} \033[0m")
 
         bt.logging.info(f"Final {score}")
         return score
-    except Exception as e:        
+    except Exception as e:
         bt.logging.error(f"Error in rewards: {e}, miner data: {response}")
         return 0.0
 
