@@ -19,6 +19,7 @@
 import math
 import time
 import json
+import traceback
 import numpy as np
 import bittensor as bt
 import jsonschema
@@ -91,7 +92,7 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
 def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
     """
     Reward miners which generate positive actions on the ecommerce sites
-    
+
     """     
     ACTION_WEIGHTS = {
         ActionType.VIEW_PRODUCT.value: 0.1,
@@ -132,6 +133,7 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
     
     except Exception as e:
         bt.logging.error(f"Error in calculate_miner_boost: {e}")
+        traceback.print_exc()
         return 0.0
 
 
