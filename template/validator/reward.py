@@ -91,9 +91,10 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
 
 def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
     """
-    Reward miners which generate positive actions on the ecommerce sites
+    Reward miners which generate positive actions on ecommerce sites
 
-    """     
+    """
+    
     ACTION_WEIGHTS = {
         ActionType.VIEW_PRODUCT.value: 0.1,
         ActionType.ADD_TO_CART.value: 0.3,
@@ -105,7 +106,7 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
         if not actions or len(actions) == 0:
             return 0.0
 
-        miner_actions = [a for a in actions if a["hot_key"] == hotkey]
+        miner_actions = [a for a in actions if a["hot_key"].lower() == hotkey.lower()]
         if len(miner_actions) == 0:
             bt.logging.trace(f"Miner {hotkey} has no actions")
             return 0.0
@@ -113,6 +114,10 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
         views = [v for v in miner_actions if v["action"] == ActionType.VIEW_PRODUCT]
         add_to_carts = [a for a in miner_actions if a["action"] == ActionType.ADD_TO_CART]
         purchases = [p for p in miner_actions if p["action"] == ActionType.PURCHASE]
+
+        if len(views) == 0 and len(add_to_carts) == 0 and len(purchases) == 0:
+            bt.logging.trace(f"Miner {hotkey} has no parsed actions")
+            return 0.0
         
         view_factor = ACTION_WEIGHTS[ActionType.VIEW_PRODUCT.value] * len(views)
         add_to_cart_factor = ACTION_WEIGHTS[ActionType.ADD_TO_CART.value] * len(add_to_carts)
@@ -248,7 +253,7 @@ def get_rewards(
         return np.zeros(len(responses), dtype=float)
     
     if not actions or len(actions) == 0:
-        bt.logging.warning(f"WARNING - no user actions found in get_rewards")
+        bt.logging.warning(f"\033[1;31m WARNING - actions found in get_rewards \033[0m")
 
         
     return np.array(
