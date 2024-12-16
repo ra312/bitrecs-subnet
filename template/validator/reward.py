@@ -240,7 +240,8 @@ def get_rewards(
     Args:
     - num_recs (int): The number of results expected per miner response.
     - ground_truth (BitrecsRequest): The original ground truth which contains the catalog and query
-    - responses (List[float]): A list of responses from the miner.
+    - responses (List[float]): A list of responses from the miners.
+    - actions (List[UserAction]): A list of user actions across all miners. 
 
     Returns:
     - np.ndarray: An array of rewards for the given query and responses.
@@ -256,8 +257,7 @@ def get_rewards(
         return np.zeros(len(responses), dtype=float)
     
     if not actions or len(actions) == 0:
-        bt.logging.warning(f"\033[1;31m WARNING - actions found in get_rewards \033[0m")
-
+        bt.logging.warning(f"\033[1;31m WARNING - no actions found in get_rewards \033[0m")
         
     return np.array(
         [reward(num_recs, store_catalog, response, actions) for response in responses], dtype=float
