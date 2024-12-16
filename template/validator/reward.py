@@ -96,7 +96,7 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
         if not actions or len(actions) == 0:
             return boost_factor
 
-        [result.append(action) for action in actions if action.hot_key == hotkey]
+        [result.append(action) for action in actions if action["hot_key"] == hotkey]
         if len(result) == 0:
             return boost_factor
 
