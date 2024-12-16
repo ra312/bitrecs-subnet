@@ -210,7 +210,7 @@ class Miner(BaseMinerNeuron):
             results=final_results,
             models_used=[self.model],
             miner_uid=str(self.uid),
-            miner_hotkey=self.metagraph.hotkeys[self.uid]
+            miner_hotkey=self.wallet.hotkey.ss58_address
         )
         
         bt.logging.info(f"MINER {self.uid} FORWARD PASS RESULT -> {output_synapse}")
