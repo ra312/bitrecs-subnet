@@ -104,19 +104,19 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
         if not actions or len(actions) == 0:
             return 0.0
 
-        miner_actions = [a for a in actions if actions["hot_key"] == hotkey]
+        miner_actions = [a for a in actions if a["hot_key"] == hotkey]
         if len(miner_actions) == 0:
             return 0.0
 
-        views = [v for v in result if result["action"] == ActionType.VIEW_PRODUCT]
-        add_to_carts = [a for a in result if result["action"] == ActionType.ADD_TO_CART]
-        purchases = [p for p in result if result["action"] == ActionType.PURCHASE]
+        views = [v for v in miner_actions if v["action"] == ActionType.VIEW_PRODUCT]
+        add_to_carts = [a for a in miner_actions if a["action"] == ActionType.ADD_TO_CART]
+        purchases = [p for p in miner_actions if p["action"] == ActionType.PURCHASE]
         
-        view_factor = ACTION_WEIGHTS[ActionType.ADD_TO_CART] * len(views)
+        view_factor = ACTION_WEIGHTS[ActionType.VIEW_PRODUCT] * len(views)
         add_to_cart_factor = ACTION_WEIGHTS[ActionType.ADD_TO_CART] * len(add_to_carts)
-        count_factor = ACTION_WEIGHTS[ActionType.PURCHASE] * len(purchases)
+        purchase_factor = ACTION_WEIGHTS[ActionType.PURCHASE] * len(purchases)
 
-        total_boost = view_factor + add_to_cart_factor + count_factor
+        total_boost = view_factor + add_to_cart_factor + purchase_factor
 
         # Apply diminishing returns using a logarithmic scale
         MAX_BOOST = 0.20
