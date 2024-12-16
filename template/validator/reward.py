@@ -86,23 +86,30 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
     return count == len(results)
 
 
-def calculate_miner_boost(from_dt: float, to_dt: float) -> float:
+def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
     """
-    At certain epoch, fetch miner stats and adjust the rewards
+    Reward miners which generate positive actions on the ecommerce sites
     """ 
     result = []
     try:
-        score = 0.01
-        actions = UserAction.get_actions_range(from_dt, to_dt)
+        boost_factor = 0.00
+        if not actions or len(actions) == 0:
+            return boost_factor
 
+        [result.append(action) for action in actions if action.hot_key == hotkey]
+        if len(result) == 0:
+            return boost_factor
 
-        return score
+        boost_factor = 0.05
+        return boost_factor
+    
     except Exception as e:
+        bt.logging.error(f"Error in calculate_miner_boost: {e}")
         return 0.0
 
 
 
-def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest) -> float:
+def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest,  actions: List[UserAction]) -> float:
     """
     Score the Miner's response to the BitrecsRequest 
 
@@ -167,7 +174,11 @@ def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest
             bt.logging.error(f"Error in reward: dendrite_time not found in headers")
             return 0.0
         
-        
+        # Adjust the rewards based on the actions
+        boost = calculate_miner_boost(response.miner_hotkey, actions)
+        if boost > 0:
+            bt.logging.info(f"Miner {response.miner_uid} has boost: {boost}")
+            score += boost
 
         return score
     except Exception as e:        
@@ -204,10 +215,10 @@ def get_rewards(
     
     if not actions or len(actions) == 0:
         bt.logging.warning(f"WARNING - no user actions found in get_rewards")
-        
+
         
     return np.array(
-        [reward(num_recs, store_catalog, response) for response in responses], dtype=float
+        [reward(num_recs, store_catalog, response, actions) for response in responses], dtype=float
     )
 
 
