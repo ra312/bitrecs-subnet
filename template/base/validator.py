@@ -226,6 +226,9 @@ class BaseValidatorNeuron(BaseNeuron):
 
     @execute_periodically(timedelta(seconds=120))
     async def action_sync(self):
+        """
+        Periodically fetch user actions 
+        """
         sd, ed = UserAction.get_default_range(days_ago=7)
         bt.logging.trace(f"Gathering user actions for range: {sd} to {ed}")
         try:
@@ -312,7 +315,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         # Adjust the scores based on responses from miners.
                         rewards = get_rewards(num_recs=number_of_recs_desired,
                                               ground_truth=api_request,
-                                              responses=responses)
+                                              responses=responses, actions=self.user_actions)
                         
                         if not len(chosen_uids) == len(responses) == len(rewards):
                             bt.logging.error("MISMATCH in lengths of chosen_uids, responses and rewards")

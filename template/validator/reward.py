@@ -166,6 +166,8 @@ def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest
         else:
             bt.logging.error(f"Error in reward: dendrite_time not found in headers")
             return 0.0
+        
+        
 
         return score
     except Exception as e:        
@@ -177,6 +179,7 @@ def get_rewards(
     num_recs: int,
     ground_truth: BitrecsRequest,
     responses: List[BitrecsRequest],
+    actions: List[UserAction] = None
 ) -> np.ndarray:
     """
     Returns an array of rewards for the given query and responses.
@@ -198,6 +201,10 @@ def get_rewards(
     if len(store_catalog) < CONST.MIN_CATALOG_SIZE:
         bt.logging.error(f"Invalid catalog size: {len(store_catalog)}")
         return np.zeros(len(responses), dtype=float)
+    
+    if not actions or len(actions) == 0:
+        bt.logging.warning(f"WARNING - no user actions found in get_rewards")
+        
         
     return np.array(
         [reward(num_recs, store_catalog, response) for response in responses], dtype=float

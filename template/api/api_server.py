@@ -164,7 +164,7 @@ class ApiServer:
                 "catalog_size": str(catalog_size),
                 "miner_uid": response.miner_uid,
                 "miner_hotkey": response.miner_hotkey,
-                "reasoning": "testing"
+                "reasoning": "Bitrecs AI"
             }
 
             self.log_counter(True)
