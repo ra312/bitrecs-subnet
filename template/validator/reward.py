@@ -22,13 +22,14 @@ import numpy as np
 import bittensor as bt
 import jsonschema
 import json_repair
-from template.commerce.user_action import UserAction
+from template.commerce.user_action import UserAction, ActionType
 from template.protocol import BitrecsRequest
 from typing import List
 from template.commerce.product import Product
 from template.utils import constants as CONST
 
 ALPHA_TIME_DECAY = 0.05
+BASE_BOOST = 1/196
 
 
 def does_sku_exist(sku: str, store_catalog: List[Product]) -> bool:
@@ -91,21 +92,47 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
     Reward miners which generate positive actions on the ecommerce sites
     """ 
     result = []
+    
+    ACTION_WEIGHTS = {
+        ActionType.VIEW_PRODUCT.value: 0.1,
+        ActionType.ADD_TO_CART.value: 0.3,
+        ActionType.PURCHASE.value: 0.6,
+    }
+
     try:
-        boost_factor = 0.00
+        #boost_factor = 0.00
         if not actions or len(actions) == 0:
-            return boost_factor
+            return 0.0
 
-        [result.append(action) for action in actions if action["hot_key"] == hotkey]
-        if len(result) == 0:
-            return boost_factor
+        miner_actions = [a for a in actions if actions["hot_key"] == hotkey]
+        if len(miner_actions) == 0:
+            return 0.0
 
-        boost_factor = 0.05
-        return boost_factor
+        views = [v for v in result if result["action"] == ActionType.VIEW_PRODUCT]
+        add_to_carts = [a for a in result if result["action"] == ActionType.ADD_TO_CART]
+        purchases = [p for p in result if result["action"] == ActionType.PURCHASE]
+        
+        view_factor = ACTION_WEIGHTS[ActionType.ADD_TO_CART.value] * len(views)
+        add_to_cart_factor = ACTION_WEIGHTS[ActionType.ADD_TO_CART.value] * len(add_to_carts)
+        count_factor = ACTION_WEIGHTS[ActionType.PURCHASE.value] * len(purchases)
+
+        total_boost = view_factor + add_to_cart_factor + count_factor
+
+        # Apply diminishing returns using a logarithmic scale
+        MAX_BOOST = 0.20
+        if total_boost > BASE_BOOST:
+            total_boost = BASE_BOOST + (
+                (MAX_BOOST - BASE_BOOST) * 
+                (1 - 1 / (1 + total_boost - BASE_BOOST))
+            )
+
+        # Ensure boost stays within bounds
+        return min(max(total_boost, 0.0), MAX_BOOST)
     
     except Exception as e:
         bt.logging.error(f"Error in calculate_miner_boost: {e}")
         return 0.0
+
 
 
 
@@ -179,7 +206,8 @@ def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest
         if boost > 0:
             bt.logging.info(f"Miner {response.miner_uid} has boost: {boost}")
             score += boost
-
+            
+        bt.logging.info(f"Final {score}")
         return score
     except Exception as e:        
         bt.logging.error(f"Error in rewards: {e}, miner data: {response}")

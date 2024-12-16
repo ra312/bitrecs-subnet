@@ -1,8 +1,16 @@
+
 import bittensor as bt
 import requests
+from enum import Enum
 from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, field
 
+
+class ActionType(Enum):
+    VIEW_PRODUCT = "VIEW_PRODUCT"
+    ADD_TO_CART = "ADD_TO_CART"
+    PURCHASE = "PURCHASE"
+    
 
 @dataclass
 class UserAction:
