@@ -97,7 +97,7 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
 
 def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
     """
-    Reward miners which generate positive actions on ecommerce sites
+    Reward miners who generate positive actions on ecommerce sites
 
     """
     try:
@@ -111,7 +111,7 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
 
         views = [v for v in miner_actions if v["action"] == ActionType.VIEW_PRODUCT.name]
         add_to_carts = [a for a in miner_actions if a["action"] == ActionType.ADD_TO_CART.name]
-        purchases = [p for p in miner_actions if p["action"] == ActionType.PURCHASE.name]
+        purchases = [p for p in miner_actions if p["action"] == ActionType.PURCHASE.name]        
 
         if len(views) == 0 and len(add_to_carts) == 0 and len(purchases) == 0:
             bt.logging.trace(f"Miner {hotkey} has no parsed actions - skipping boost")
@@ -143,10 +143,10 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
 
 
 def reward(
-        num_recs: int, 
-        store_catalog: list[Product], 
-        response: BitrecsRequest,
-        actions: List[UserAction]
+    num_recs: int, 
+    store_catalog: list[Product], 
+    response: BitrecsRequest,
+    actions: List[UserAction]
 ) -> float:
     """
     Score the Miner's response to the BitrecsRequest 
@@ -203,7 +203,7 @@ def reward(
         score = 0.80        
         bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response.miner_hotkey}")
 
-        #Check ttl time        
+        #Check duration        
         headers = response.to_headers()
         if "bt_header_dendrite_process_time" in headers:
             dendrite_time = headers["bt_header_dendrite_process_time"] #0.000132  1.2            
@@ -216,12 +216,12 @@ def reward(
         # Adjust the rewards based on the actions
         boost = calculate_miner_boost(response.miner_hotkey, actions)
         if boost > 0:
-            bt.logging.info(f"\033[1;32m Miner {response.miner_uid} has boost: {boost} \033[0m")
-            bt.logging.info(f"\033[1;32m previous: {score} \033[0m")
-            score += boost
-            bt.logging.info(f"\033[1;32m after: {score} \033[0m")
+            bt.logging.trace(f"\033[1;32m Miner {response.miner_uid} has boost: {boost} \033[0m")
+            bt.logging.trace(f"\033[1;32m previous: {score} \033[0m")
+            score  = score + boost
+            bt.logging.trace(f"\033[1;32m after: {score} \033[0m")
 
-        bt.logging.info(f"Final {score}")
+        bt.logging.trace(f"Final {score}")
         return score
     except Exception as e:
         bt.logging.error(f"Error in rewards: {e}, miner data: {response}")

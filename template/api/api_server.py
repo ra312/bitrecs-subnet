@@ -132,8 +132,8 @@ class ApiServer:
             if catalog_size < CONST.MIN_CATALOG_SIZE:
                 bt.logging.error(f"API generate_product_rec catalog size too small")
                 self.log_counter(False)
-                return JSONResponse(status_code=500,
-                                    content={"detail": "error - invalid catalog", "status_code": 500})
+                return JSONResponse(status_code=400,
+                                    content={"detail": "error - invalid catalog", "status_code": 400})
             
             st = time.time()
             response = await self.forward_fn(request)
