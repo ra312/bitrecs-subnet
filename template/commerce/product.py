@@ -33,6 +33,22 @@ class Product:
             return []
         
         
+    # @staticmethod
+    # def deduplicate_list(obj_list):
+    #     seen = set()
+    #     return [x for x in obj_list if not (id(x) in seen or seen.add(id(x)))]
+    
+    @staticmethod
+    def dedupe(products: list["Product"]):
+        seen = set()
+        for product in products:
+            sku = product.sku
+            if sku in seen:
+                continue
+            seen.add(sku)
+        return [product for product in products if product.sku in seen]
+        
+        
     @staticmethod
     def convert(context: str, provider: CatalogProvider) -> list["Product"]:
         """

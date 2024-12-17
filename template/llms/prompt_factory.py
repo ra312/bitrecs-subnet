@@ -1,3 +1,4 @@
+import ast
 import json
 import re
 import os
@@ -113,28 +114,52 @@ class PromptFactory:
         #     10) Never explain yourself.
         #     11) Return in JSON.
 
+        # prompt += """\n
+        #     # FINAL INSTRUCTIONS
+            
+        #     1) Load <persona> and <context> into your memory.
+        #     2) Observe the user <query>.
+        #     3) Find recommended products in the <context> and make a list of {} recommended products that compliment the query.
+        #     4) The products recommended could be products a customer would buy after they have purchased the product from <query>.
+        #     5) The products recommended could also be products the customer would buy before they purchased the product from <query>.
+        #     6) Think step by step and consider the customer journey.
+        #     7) Return recommendations in a JSON array.
+        #     8) The order of the recommendations is important. The first recommendation should be the most relevant to the <query>.
+        #     9) Double check the potential return array for empty fields, invalid values or syntax errors or invalid string quotes or invalid characters.
+        #     10) Never explain yourself, no small talk, just return the final data in the correct array format. 
+        #     11) Your final response should only be an array of recommendations in JSON format.                        
+        #     12) Do not alter the context JSON, return all fields as they are.
+        #     13) Each recommendation should have a 'sku', 'name' and 'price' field.
+        #     14) Never say 'Based on the provided query' or 'I have determined'. 
+        #     15) Never explain yourself.
+        #     16) You must return a JSON array with exacty {} elements, remember arrays are 0 indexed.
+        #     17) Ensure all skus are unique in the final return JSON. My life depends on this. VERY IMPORTANT.
+        #     18) Return in JSON.
+
         prompt += """\n
-            # FINAL INSTRUCTIONS
+        # FINAL INSTRUCTIONS
+        
+        1) Load <persona> and <context> into your memory.
+        2) Observe the user <query>.
+        3) Find {} unique recommended products in the <context> that compliment the <query and return a unique set.
+        4) The products recommended could be products a customer would buy **after** they have purchased the product from <query>.
+        5) The products recommended could also be products the customer would buy **before** they purchased the product from <query>.
+        6) Think step by step and consider the entire customer journey.        
+        7) The order of the recommendations is important. The first recommendation should be the most relevant to the <query>.
+        8) Double check the potential return array for empty fields, invalid values or syntax errors or invalid string quotes or invalid characters.
+        9) Never explain yourself, no small talk, just return the final data in the correct array format. 
+        10) Your final response should be a single JSON array of the recommendations.
+        11) Do not alter the context JSON, return all fields as they are.
+        12) Each recommendation should have a 'sku', 'name' and 'price' field.
+        13) Each recommendation should be unique (use 'sku' as the key field for uniqueness).
+        14) Never say 'Based on the provided query' or 'I have determined'. 
+        15) Never explain yourself.
+        16) assert each recommendation is unique ('sku' is the key).
+        17) assert len(recommendations) == {}. If not, start over until it matches.
+        18) Return in JSON.
             
-            1) Load <persona> and <context> into your memory.
-            2) Observe the user <query>.
-            3) Find recommended products in the <context> and make a list of {} recommended products that compliment the query.
-            4) The products recommended could be products a customer would buy after they have purchased the product from <query>.
-            5) The products recommended could also be products the customer would buy before they purchased the product from <query>.
-            6) Think step by step and consider the customer journey.
-            7) Return recommendations in a JSON array.
-            8) The order of the recommendations is important. The first recommendation should be the most relevant to the <query>.
-            9) Double check the potential return array for empty fields, invalid values or syntax errors or invalid string quotes or invalid characters.
-            10) Never explain yourself, no small talk, just return the final data in the correct array format. 
-            11) Your final response should only be an array of recommendations in JSON format.                        
-            12) Do not alter the context JSON, return all fields as they are.
-            13) Each recommendation should have a 'sku', 'name' and 'price' field.
-            14) Never say 'Based on the provided query' or 'I have determined'. 
-            15) Never explain yourself.
-            16) Return in JSON.
             
-            
-        """.format(self.num_recs)
+        """.format(self.num_recs, self.num_recs)
 
         #print(prompt)
         #bt.logging.info("generated prompt: {}".format(prompt))
@@ -188,6 +213,19 @@ class PromptFactory:
         except Exception as e:
             bt.logging.error(str(e))
             return []
+        
+
+    # @staticmethod
+    # def parse_llm(input_str: str) -> list:
+    #     final_results = PromptFactory.tryparse_llm(input_str)
+    #     for item in final_results:
+    #         cleaned_item = str(item).replace("\\'", "'")  # Fix escaped single quotes            
+    #         dictionary_item = ast.literal_eval(cleaned_item)
+    #         if "name" in dictionary_item:
+    #             dictionary_item["name"] = dictionary_item["name"].replace("'", "-")  # Remove single quotes
+    #         recommendation = str(dictionary_item)
+    #         final_results.append(recommendation)
+    #     return final_results
 
 
     def catalog_to_json(self) -> str:
