@@ -36,7 +36,7 @@ class Product:
     @staticmethod
     def convert(context: str, provider: CatalogProvider) -> list["Product"]:
         """
-            Generaly context should be the store catalog in the Product format
+            context should be the store catalog in Product format (sku, name, price)
             If its not in bitrecs format and from a known provider, we can convert it
 
         """

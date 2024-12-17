@@ -252,7 +252,7 @@ def get_rewards(
         return np.zeros(len(responses), dtype=float)        
     
     store_catalog: list[Product] = Product.try_parse_context(ground_truth.context)
-    if len(store_catalog) < CONST.MIN_CATALOG_SIZE:
+    if len(store_catalog) < CONST.MIN_CATALOG_SIZE or len(store_catalog) > CONST.MAX_CATALOG_SIZE:
         bt.logging.error(f"Invalid catalog size: {len(store_catalog)}")
         return np.zeros(len(responses), dtype=float)
     
