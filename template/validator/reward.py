@@ -34,9 +34,9 @@ ALPHA_TIME_DECAY = 0.05
 BASE_BOOST = 1/256
 
 ACTION_WEIGHTS = {
-    ActionType.VIEW_PRODUCT.value: 0.1,
-    ActionType.ADD_TO_CART.value: 0.3,
-    ActionType.PURCHASE.value: 0.6,
+    ActionType.VIEW_PRODUCT.value: 0.05,
+    ActionType.ADD_TO_CART.value: 0.10,
+    ActionType.PURCHASE.value: 0.85,
 }
 
 

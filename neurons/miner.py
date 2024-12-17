@@ -331,17 +331,18 @@ class Miner(BaseMinerNeuron):
 
     def warmup(self):
         """
-        On startup, try querying the LLM to ensure it is working and loaded into memory.      
+        On startup, try querying the LLM to ensure it is working and loaded into memory.    
+        You can override the base model with --llm.model "model_name"
 
         """
         match self.llm_provider:
             case LLM.OLLAMA_LOCAL:
-                model = "llama3.1" #great/fast
-                #model = "llama3.2" #good
-                #model = "llama3.2:3b-instruct-q8_0" #good            
+                model = "llama3.1" 
+                #model = "llama3.2"
+                #model = "llama3.2:3b-instruct-q8_0"
             case LLM.OPEN_ROUTER:
-                model = "google/gemini-flash-1.5-8b" #best
-                #model = "meta-llama/llama-3.1-70b-instruct:free" #ok
+                model = "google/gemini-flash-1.5-8b"
+                #model = "meta-llama/llama-3.1-70b-instruct:free"
             case LLM.CHAT_GPT:
                 model = "gpt-4o-mini"
             case LLM.VLLM:

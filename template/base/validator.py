@@ -185,8 +185,6 @@ class BaseValidatorNeuron(BaseNeuron):
     async def miner_sync(self):
         """
             Checks the miners in the metagraph for connectivity and updates the active miners list.
-            Additonally stores user actions for scoring.
-
         """
         bt.logging.trace(f"\033[1;32m Validator miner_sync ran at {int(time.time())}. \033[0m")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
@@ -236,8 +234,7 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.trace(f"Success - User actions size: \033[1;32m {len(self.user_actions)} \033[0m")
         except Exception as e:
             bt.logging.error(f"Failed to get user actions with exception: {e}")
-        return
-        
+        return        
 
 
     def run(self):
