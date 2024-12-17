@@ -141,8 +141,8 @@ class PromptFactory:
         
         1) Load <persona> and <context> into your memory.
         2) Observe the user <query>.
-        3) Find {} unique recommended products in the <context> that compliment the <query and return a unique set.
-        4) The products recommended could be products a customer would buy **after** they have purchased the product from <query>.
+        3) Find {} unique recommended products in the <context> that compliment the <query> and copy them to the return array.
+        4) The products recommended should be products a customer would buy **after** they have purchased the product from <query>.
         5) The products recommended could also be products the customer would buy **before** they purchased the product from <query>.
         6) Think step by step and consider the entire customer journey.        
         7) The order of the recommendations is important. The first recommendation should be the most relevant to the <query>.

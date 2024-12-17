@@ -159,7 +159,7 @@ def test_call_local_llm_with_20k():
     # #Charm Bangle Bracelets Set for Mother's Day, Birthday Gifts for Mom, Mother Jewelry for Christmas (Silver)
     
     user_prompt = "B07BG1CZ8X"
-    num_recs = 17
+    num_recs = 6
     debug_prompts = False
 
     match = [products for products in products if products.sku == user_prompt][0]
@@ -179,8 +179,9 @@ def test_call_local_llm_with_20k():
     #model = "llama3.1:70b" 
     #model = "qwen2.5:32b-instruct"  
     #model = "llama3.3:latest"
-    #model = "llama3.1"
-    model = "mistral-nemo"
+    model = "llama3.1"    
+    #model = "mistral-nemo"
+    #model = "qwen2.5"
 
     llm_response = LLMFactory.query_llm(server=LLM.OLLAMA_LOCAL,
                                  model=model, 
@@ -191,7 +192,6 @@ def test_call_local_llm_with_20k():
     parsed_recs = PromptFactory.tryparse_llm(llm_response)   
     print(f"parsed {len(parsed_recs)} records")
     print(parsed_recs)
-
   
     assert len(parsed_recs) == num_recs
 
@@ -200,5 +200,5 @@ def test_call_local_llm_with_20k():
     counter = Counter(skus)
     for sku, count in counter.items():
         print(f"{sku}: {count}")
-        assert count == 1    
+        assert count == 1
 
