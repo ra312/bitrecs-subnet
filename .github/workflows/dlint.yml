@@ -5,5 +5,5 @@ jobs:
     runs-on: ubuntu-latest
     name: Dlint
     steps:
-    - uses: actions/checkout@master
-    - uses: dlint-py/dlint-action@master
+    - uses: actions/checkout@main
+    - uses: dlint-py/dlint-action@main
