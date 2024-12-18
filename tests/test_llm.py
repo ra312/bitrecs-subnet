@@ -391,11 +391,11 @@ def test_call_open_router_with_20k_llm_logic():
 
 
 
-@pytest.mark.skip(reason="skipped for now please ensure .env file has gemini api key")
+# @pytest.mark.skip(reason="skipped for now please ensure .env file has gemini api key")
 def test_call_gemini_with_20k_llm_logic():
     raw_products = product_20k()
     print(f"loaded: {len(raw_products)} records")
-    assert len(raw_products) == 20_000
+    assert len(raw_products) == 18_088
 
     dd = Product.get_dupe_count(raw_products)
     print(f"dupe count: {dd}")

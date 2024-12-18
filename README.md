@@ -12,14 +12,14 @@
 </div>
 
 ## Introduction
-Bitrecs is a novel recommendation engine built on the Bittensor network. Our implementation provides a framework for serving e-commerce recommendations (recs) via state of the art LLMs (large language models). Miners are encouraged to experiement with their own implementations to improve latency and quality. 
+Bitrecs is a novel recommendation engine built on the Bittensor network. Our implementation provides a framework for serving e-commerce recommendations via the latest LLMs. Miners are encouraged to experiement with their own implementations to improve latency and quality. 
 
 ## Product
 The subnet operates through an incentive mechanism where miners produce arrays of product SKUs from a given input SKUs, a catalogue of store inventory and (when applicable) supplementary user browsing history. The protocol enables:
 
 - Easy integration for e-commerce shop owners through our propriatary WooCommerce and Shopify plugins
-- Base miner class with support for several popular LLM models and providers, out of the box
-- API layer serving requests from our plugins to the bittensor network
+- Base miner class with support for several popular LLM models and providers
+- API proxy layer serving requests from ecommerce sites to the bittensor network
 
 ## Incentive
 The incentive mechanism ranks miner responses by qualitative metrics and sales events like
