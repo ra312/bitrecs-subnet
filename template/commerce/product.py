@@ -31,22 +31,25 @@ class Product:
         except Exception as e:
             bt.logging.error(f"try_parse_context Exception: {e}")
             return []
-        
-        
+    
     # @staticmethod
-    # def deduplicate_list(obj_list):
+    # def dedupe(products: list["Product"]):
     #     seen = set()
-    #     return [x for x in obj_list if not (id(x) in seen or seen.add(id(x)))]
+    #     for product in products:
+    #         sku = product.sku
+    #         if sku in seen:
+    #             continue
+    #         seen.add(sku)
+    #     return [product for product in products if product.sku in seen]
+    
     
     @staticmethod
-    def dedupe(products: list["Product"]):
-        seen = set()
+    def dedupe(products: list) -> list["Product"]:
+        unique_products = {}
         for product in products:
-            sku = product.sku
-            if sku in seen:
-                continue
-            seen.add(sku)
-        return [product for product in products if product.sku in seen]
+            if product.sku not in unique_products:
+                unique_products[product.sku] = product
+        return list(unique_products.values())
         
         
     @staticmethod
@@ -69,11 +72,8 @@ class Product:
 
 
 
-class WoocommerceConverter:
-    
-    # def convert(self, context: str) -> list["Product"]:
-    #     return Product.try_parse_context(context)
-    
+class WoocommerceConverter:    
+  
     def convert(self, context: str) -> list["Product"]:
         """
         converts from product_catalog.csv converted to json format
