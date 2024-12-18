@@ -31,29 +31,31 @@ class Product:
         except Exception as e:
             bt.logging.error(f"try_parse_context Exception: {e}")
             return []
-        
-        
+    
     # @staticmethod
-    # def deduplicate_list(obj_list):
+    # def dedupe(products: list["Product"]):
     #     seen = set()
-    #     return [x for x in obj_list if not (id(x) in seen or seen.add(id(x)))]
+    #     for product in products:
+    #         sku = product.sku
+    #         if sku in seen:
+    #             continue
+    #         seen.add(sku)
+    #     return [product for product in products if product.sku in seen]
+    
     
     @staticmethod
-    def dedupe(products: list["Product"]):
-        seen = set()
+    def dedupe(products: list) -> list["Product"]:
+        unique_products = {}
         for product in products:
-            sku = product.sku
-            if sku in seen:
-                continue
-            seen.add(sku)
-        return [product for product in products if product.sku in seen]
+            if product.sku not in unique_products:
+                unique_products[product.sku] = product
+        return list(unique_products.values())
         
         
     @staticmethod
     def convert(context: str, provider: CatalogProvider) -> list["Product"]:
         """
-            context should be the store catalog in Product format (sku, name, price)
-            If its not in bitrecs format and from a known provider, we can convert it
+            context should be the store catalog in Product format (sku, name, price)            
 
         """
         match provider:
@@ -70,15 +72,36 @@ class Product:
 
 
 
-class WoocommerceConverter:
-    
+class WoocommerceConverter:    
+  
     def convert(self, context: str) -> list["Product"]:
-        return Product.try_parse_context(context)
+        """
+        converts from product_catalog.csv converted to json format
+
+        """
+        result : list[Product] = []
+        for p in json.loads(context):
+            try:
+                sku = p.get("sku")
+                name = p.get("name")
+                price = p.get("price")
+                # if not sku or not name or not price:
+                #     continue
+                result.append(Product(sku=sku, name=name, price=price))
+            except Exception as e:
+                bt.logging.error(f"WoocommerceConverter.convert Exception: {e}")
+                continue
+        return result
+        
 
     
 class AmazonConverter:
     
     def convert(self, context: str) -> list["Product"]:
+        """
+        converts from amazon_fashion_sample_1000.json format
+
+        """
         result : list[Product] = []
         for p in json.loads(context):
             try:

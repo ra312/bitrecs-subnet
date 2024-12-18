@@ -197,11 +197,11 @@ def reward(
                 return 0.0
 
         if len(valid_items) != num_recs:
-            bt.logging.warning(f"Miner {response.miner_uid} has invalid number of valid_items: {response.miner_hotkey}")
+            bt.logging.warning(f"Miner {response.miner_uid} invalid number of valid_items: {response.miner_hotkey}")
             return 0.0
 
         score = 0.80        
-        bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response.miner_hotkey}")
+        bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner: {response.miner_hotkey}")
 
         #Check duration        
         headers = response.to_headers()

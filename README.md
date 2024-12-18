@@ -38,6 +38,17 @@ Want to earn tao by mining? Check out our [mining guide](docs/running_miner.md) 
 ### Validating 
 Interested in running a validator? See our [validator setup instructions](docs/running_validator.md) for details.
 
+### Testing
+
+``` 
+Ensure you have the sample .json and .csv files in the /tests/data folder
+
+pytest ./tests/test_json.py -s
+pytest ./tests/test_llm.py -s
+pytest ./tests/test_llm.py -s -k 'test_call_local_llm_with_20k'
+ ```
+
+
 ## License
 
 This repository is licensed under the MIT License.
