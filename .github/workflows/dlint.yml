@@ -1,9 +1,15 @@
 name: Dlint
 on: [push, pull_request]
+
 jobs:
   dlint:
     runs-on: ubuntu-latest
     name: Dlint
     steps:
-    - uses: actions/checkout@main
+    # Check out the repository, ensuring the 'main' branch is used
+    - uses: actions/checkout@v3
+      with:
+        ref: main
+
+    # Run the Dlint action
     - uses: dlint-py/dlint-action@master
