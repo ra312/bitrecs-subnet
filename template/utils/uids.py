@@ -1,7 +1,9 @@
-import random
+
 import socket
 import bittensor as bt
 import numpy as np
+from random import SystemRandom
+random = SystemRandom()
 from typing import List
 
 #from template.base.neuron import BaseNeuron
