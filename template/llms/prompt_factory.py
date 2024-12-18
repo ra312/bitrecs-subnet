@@ -155,9 +155,8 @@ class PromptFactory:
         14) Never say 'Based on the provided query' or 'I have determined'. 
         15) Never explain yourself.
         16) assert each recommendation is unique ('sku' is the key).
-        17) assert len(recommendations) == {}. If not, start over until it matches.
+        17) assert len(recommendations) == {}. If not, start over until assert is true.
         18) Return in JSON.
-            
             
         """.format(self.num_recs, self.num_recs)
 
@@ -173,32 +172,51 @@ class PromptFactory:
     
 
     @staticmethod
-    def tryload_catalog(file_path: str, max_rows=10000) -> list:
+    def tryload_catalog(file_path: str, max_rows=100_000) -> list:
         try:
             df = pd.read_csv(file_path)
             #WooCommerce Format
-            columns = ["ID", "Type", "SKU", "Name", "Published", "Description", "In stock?", "Stock", "Categories"]            
-            #Take only certain columns
+            columns = ["ID", "Type", "SKU", "Name", "Published", "Description", "In stock?", "Stock", "Regular price", "Categories"]            
             df = df[[c for c in columns if c in df.columns]]            
-            #Clean HTML
             df['Description'] = df['Description'].str.replace(r'<[^<>]*>', '', regex=True)
+            
             #Only take simple and variable products
-            product_types = ["simple", "variable"]
-            df = df[df['Type'].isin(product_types)]            
+            #product_types = ["simple", "variable"]
+            #df = df[df['Type'].isin(product_types)]
+
             #Final renaming of columns
-            df = df.rename(columns={'In stock?': 'InStock', 'Stock': 'OnHand'})
-            #Remove NaN
-            df.fillna('', inplace=True)
+            df = df.rename(columns={'SKU': 'sku', 'Name': 'name', 'Regular price': 'price', 'In stock?': 'InStock', 'Stock': 'OnHand'})            
+            df.fillna(' ', inplace=True)
             df = df.head(max_rows)
             df = df.to_dict(orient='records')
             return df
-        except Exception as e:            
+        except Exception as e:
             bt.logging.error(str(e))
             return []
+        
+        
+    @staticmethod
+    def tryload_catalog_to_json(file_path: str, max_rows=10000) -> str:
+        """
+        Try to load a woo catalog into json 
+
+        """
+        thing = PromptFactory.tryload_catalog(file_path, max_rows)        
+        return json.dumps(thing, indent=2)
+    
+
+    # def catalog_to_json(self) -> str:
+    #     if len(self.catalog) == 0:
+    #         return "[]"
+    #     return json.dumps(self.catalog, indent=2)
         
 
     @staticmethod
     def tryparse_llm(input_str: str) -> list:
+        """
+        Take raw LLM output and parse to an array 
+
+        """
         try:
             pattern = r'\[.*?\]'
             regex = re.compile(pattern, re.DOTALL)
@@ -228,10 +246,7 @@ class PromptFactory:
     #     return final_results
 
 
-    def catalog_to_json(self) -> str:
-        if len(self.catalog) == 0:
-            return "[]"
-        return json.dumps(self.catalog, indent=2)
+   
 
 
 

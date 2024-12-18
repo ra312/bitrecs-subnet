@@ -52,8 +52,7 @@ class Product:
     @staticmethod
     def convert(context: str, provider: CatalogProvider) -> list["Product"]:
         """
-            context should be the store catalog in Product format (sku, name, price)
-            If its not in bitrecs format and from a known provider, we can convert it
+            context should be the store catalog in Product format (sku, name, price)            
 
         """
         match provider:
@@ -72,13 +71,37 @@ class Product:
 
 class WoocommerceConverter:
     
+    # def convert(self, context: str) -> list["Product"]:
+    #     return Product.try_parse_context(context)
+    
     def convert(self, context: str) -> list["Product"]:
-        return Product.try_parse_context(context)
+        """
+        converts from product_catalog.csv converted to json format
+
+        """
+        result : list[Product] = []
+        for p in json.loads(context):
+            try:
+                sku = p.get("sku")
+                name = p.get("name")
+                price = p.get("price")
+                # if not sku or not name or not price:
+                #     continue
+                result.append(Product(sku=sku, name=name, price=price))
+            except Exception as e:
+                bt.logging.error(f"WoocommerceConverter.convert Exception: {e}")
+                continue
+        return result
+        
 
     
 class AmazonConverter:
     
     def convert(self, context: str) -> list["Product"]:
+        """
+        converts from amazon_fashion_sample_1000.json format
+
+        """
         result : list[Product] = []
         for p in json.loads(context):
             try:
