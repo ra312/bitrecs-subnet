@@ -54,7 +54,6 @@ from template.utils.wandb import WandbHelper
 from template.utils.runtime import execute_periodically
 from template.validator.rules import validate_br_request
 from template.commerce.user_action import UserAction
-from template.utils
 
 from dotenv import load_dotenv
 load_dotenv()
