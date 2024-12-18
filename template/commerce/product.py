@@ -128,9 +128,11 @@ class AmazonConverter(BaseConverter):
             try:
                 sku = p.get("asin")
                 if p["metadata"]:
-                    name = p["metadata"].get("title")
+                    name = p["metadata"].get("title", "metadata not found")
                     price = p["metadata"].get("price", "0.00")
                 if not sku or not name:
+                    continue
+                if "metadata not found" in name:
                     continue
                 if price is None or price == 'None':                    
                     price = "0.00"

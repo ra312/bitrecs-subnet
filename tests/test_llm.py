@@ -97,11 +97,11 @@ def test_call_local_llm_with_woo_catalog():
 def test_call_local_llm_with_1k():
     products = product_1k()
     print(f"loaded {len(products)} records")
-    assert len(products) == 1000
+    assert len(products) == 907
     
     dd = Product.get_dupe_count(products)
     print(f"dupe count: {dd}")
-    assert dd == 66
+    assert dd == 61
     
     #B07BG1CZ8X = iJuqi Mom Gifts from Daughter Son - 3PCS Stainless Steel Expendable Motivational 
     # #Charm Bangle Bracelets Set for Mother's Day, Birthday Gifts for Mom, Mother Jewelry for Christmas (Silver)
@@ -147,11 +147,11 @@ def test_call_local_llm_with_1k():
 def test_call_local_llm_with_5k():
     products = product_5k()
     print(f"loaded {len(products)} records")
-    assert len(products) == 5000
+    assert len(products) == 4544
 
     dd = Product.get_dupe_count(products)
     print(f"dupe count: {dd}")
-    assert dd == 463
+    assert dd == 416
 
     products = Product.dedupe(products)
     print(f"after de-dupe: {len(products)} records")
@@ -201,7 +201,7 @@ def test_call_local_llm_with_5k():
 def test_call_local_llm_with_20k():
     raw_products = product_20k()
     print(f"loaded: {len(raw_products)} records")
-    assert len(raw_products) == 20_000
+    assert len(raw_products) == 18_088
 
     dd = Product.get_dupe_count(raw_products)
     print(f"dupe count: {dd}")
@@ -260,7 +260,7 @@ def test_call_local_llm_with_20k():
 def test_call_local_llm_with_20k_llm_logic():
     raw_products = product_20k()
     print(f"loaded: {len(raw_products)} records")
-    assert len(raw_products) == 20_000
+    assert len(raw_products) == 18_088
 
     dd = Product.get_dupe_count(raw_products)
     print(f"dupe count: {dd}")
@@ -364,7 +364,7 @@ def test_call_open_router_with_20k_llm_logic():
 
 
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv() #LLMFactory needs this to load the api key
 
     model = "google/gemini-flash-1.5-8b"
 
@@ -430,7 +430,7 @@ def test_call_gemini_with_20k_llm_logic():
     #print(prompt)
 
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv() #LLMFactory needs this to load the api key
 
     model = "gemini-2.0-flash-exp"
 
