@@ -16,19 +16,28 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import math
 import time
 import json
+import traceback
 import numpy as np
 import bittensor as bt
 import jsonschema
 import json_repair
+from template.commerce.user_action import UserAction, ActionType
 from template.protocol import BitrecsRequest
-from template.llms.prompt_factory import PromptFactory
 from typing import List
 from template.commerce.product import Product
 from template.utils import constants as CONST
 
 ALPHA_TIME_DECAY = 0.05
+BASE_BOOST = 1/256
+
+ACTION_WEIGHTS = {
+    ActionType.VIEW_PRODUCT.value: 0.05,
+    ActionType.ADD_TO_CART.value: 0.10,
+    ActionType.PURCHASE.value: 0.85,
+}
 
 
 def does_sku_exist(sku: str, store_catalog: List[Product]) -> bool:
@@ -86,7 +95,59 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
     return count == len(results)
 
 
-def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest) -> float:
+def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
+    """
+    Reward miners who generate positive actions on ecommerce sites
+
+    """
+    try:
+        if not actions or len(actions) == 0:
+            return 0.0
+
+        miner_actions = [a for a in actions if a["hot_key"].lower() == hotkey.lower()]
+        if len(miner_actions) == 0:
+            bt.logging.trace(f"Miner {hotkey} has no actions")
+            return 0.0
+
+        views = [v for v in miner_actions if v["action"] == ActionType.VIEW_PRODUCT.name]
+        add_to_carts = [a for a in miner_actions if a["action"] == ActionType.ADD_TO_CART.name]
+        purchases = [p for p in miner_actions if p["action"] == ActionType.PURCHASE.name]        
+
+        if len(views) == 0 and len(add_to_carts) == 0 and len(purchases) == 0:
+            bt.logging.trace(f"Miner {hotkey} has no parsed actions - skipping boost")
+            return 0.0
+        
+        vf = ACTION_WEIGHTS[ActionType.VIEW_PRODUCT.value] * len(views)
+        af = ACTION_WEIGHTS[ActionType.ADD_TO_CART.value] * len(add_to_carts)
+        pf = ACTION_WEIGHTS[ActionType.PURCHASE.value] * len(purchases)
+        total_boost = vf + af + pf
+        bt.logging.trace(f"Miner {hotkey} total_boost: {total_boost} from views: ({len(views)}) add_to_carts: ({len(add_to_carts)}) purchases: ({len(purchases)})")
+
+        # miner has no actions this round
+        if total_boost == 0:
+            return 0.0
+
+        # Apply diminishing returns using a sigmoid function
+        #TODO review this 
+        MAX_BOOST = 0.20
+        if total_boost > BASE_BOOST:
+            total_boost = MAX_BOOST / (1 + math.exp(-total_boost + BASE_BOOST))
+
+        # Ensure boost stays within bounds
+        return min(max(total_boost, 0.0), MAX_BOOST)
+    
+    except Exception as e:
+        bt.logging.error(f"Error in calculate_miner_boost: {e}")
+        traceback.print_exc()
+        return 0.0
+
+
+def reward(
+    num_recs: int, 
+    store_catalog: list[Product], 
+    response: BitrecsRequest,
+    actions: List[UserAction]
+) -> float:
     """
     Score the Miner's response to the BitrecsRequest 
 
@@ -94,15 +155,19 @@ def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest
     Recommendations must exist in the original catalog
     Unique recommendations in the response is expected
     Malformed JSON or invliad skus will result in a 0.0 reward
+    Miner rewards are boosted based on end-user actions on the ecommerce sites to encourage positive recs
 
     Returns:
     - float: The reward value for the miner.
     """    
     
     bt.logging.trace("*************** VALIDATOR REWARD *************************")
-
+    
     try:
         score = 0.0
+        if not response.is_success:
+            return 0.0
+        
         if len(response.results) != num_recs:            
             return 0.0
 
@@ -138,7 +203,7 @@ def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest
         score = 0.80        
         bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner's data': {response.miner_hotkey}")
 
-        #Check ttl time        
+        #Check duration        
         headers = response.to_headers()
         if "bt_header_dendrite_process_time" in headers:
             dendrite_time = headers["bt_header_dendrite_process_time"] #0.000132  1.2            
@@ -147,9 +212,18 @@ def reward(num_recs: int, store_catalog: list[Product], response: BitrecsRequest
         else:
             bt.logging.error(f"Error in reward: dendrite_time not found in headers")
             return 0.0
+        
+        # Adjust the rewards based on the actions
+        boost = calculate_miner_boost(response.miner_hotkey, actions)
+        if boost > 0:
+            bt.logging.trace(f"\033[1;32m Miner {response.miner_uid} has boost: {boost} \033[0m")
+            bt.logging.trace(f"\033[1;32m previous: {score} \033[0m")
+            score  = score + boost
+            bt.logging.trace(f"\033[1;32m after: {score} \033[0m")
 
+        bt.logging.trace(f"Final {score}")
         return score
-    except Exception as e:        
+    except Exception as e:
         bt.logging.error(f"Error in rewards: {e}, miner data: {response}")
         return 0.0
 
@@ -158,6 +232,7 @@ def get_rewards(
     num_recs: int,
     ground_truth: BitrecsRequest,
     responses: List[BitrecsRequest],
+    actions: List[UserAction] = None
 ) -> np.ndarray:
     """
     Returns an array of rewards for the given query and responses.
@@ -165,7 +240,8 @@ def get_rewards(
     Args:
     - num_recs (int): The number of results expected per miner response.
     - ground_truth (BitrecsRequest): The original ground truth which contains the catalog and query
-    - responses (List[float]): A list of responses from the miner.
+    - responses (List[float]): A list of responses from the miners.
+    - actions (List[UserAction]): A list of user actions across all miners. 
 
     Returns:
     - np.ndarray: An array of rewards for the given query and responses.
@@ -176,12 +252,15 @@ def get_rewards(
         return np.zeros(len(responses), dtype=float)        
     
     store_catalog: list[Product] = Product.try_parse_context(ground_truth.context)
-    if len(store_catalog) < CONST.MIN_CATALOG_SIZE:
+    if len(store_catalog) < CONST.MIN_CATALOG_SIZE or len(store_catalog) > CONST.MAX_CATALOG_SIZE:
         bt.logging.error(f"Invalid catalog size: {len(store_catalog)}")
         return np.zeros(len(responses), dtype=float)
+    
+    if not actions or len(actions) == 0:
+        bt.logging.warning(f"\033[1;31m WARNING - no actions found in get_rewards \033[0m")
         
     return np.array(
-        [reward(num_recs, store_catalog, response) for response in responses], dtype=float
+        [reward(num_recs, store_catalog, response, actions) for response in responses], dtype=float
     )
 
 

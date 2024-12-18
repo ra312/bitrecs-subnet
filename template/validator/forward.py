@@ -71,7 +71,7 @@ async def forward(self, pr: BitrecsRequest = None):
     num_results = 0
 
     if pr is not None: #API REQUEST
-        raise NotImplementedError("API requests not implemented yet")
+        raise NotImplementedError("API requests not implemented here")
         next_request = pr
         num_results = pr.num_results
     else:
@@ -88,7 +88,7 @@ async def forward(self, pr: BitrecsRequest = None):
     # The dendrite client queries the network.
     responses = await self.dendrite(        
         axons=[self.metagraph.axons[uid] for uid in miner_uids],
-        synapse=next_request,        
+        synapse=next_request,
         deserialize=False,
     )
     end_time = time.time()

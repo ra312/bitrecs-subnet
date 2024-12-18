@@ -47,8 +47,9 @@ async def do_work(user_prompt: str,
                   debug_prompts=False) -> typing.List[str]:
     """
     Do your miner work here. 
-    This function is called by the forward function to generate recs.
-    You can use any method you prefer to generate recommendations.
+    This function is called by the forward function to generate recommendations.
+    You can use any method you prefer to generate the data.
+    The default setup will use Open Router.
 
     Args:
         user_prompt (str): The user query (generally the SKU they are browsing)
@@ -64,8 +65,7 @@ async def do_work(user_prompt: str,
     """
     bt.logging.info(f"do_work Prompt: {user_prompt}")
     bt.logging.info(f"do_work LLM server: {server}")  
-    bt.logging.info(f"do_work LLM model: {model}")
-    #debug_prompts : bool = False
+    bt.logging.info(f"do_work LLM model: {model}")    
 
     factory = PromptFactory(sku=user_prompt, 
                             context=context, 
@@ -195,7 +195,7 @@ class Miner(BaseMinerNeuron):
                 continue
             dictionary_item["name"] = dictionary_item["name"].replace("'", "-")  # Remove single quotes
             recommendation = str(dictionary_item)
-            final_results.append(recommendation)
+            final_results.append(recommendation)        
       
         output_synapse=BitrecsRequest(
             name=synapse.name, 
@@ -210,7 +210,7 @@ class Miner(BaseMinerNeuron):
             results=final_results,
             models_used=[self.model],
             miner_uid=str(self.uid),
-            miner_hotkey=synapse.dendrite.hotkey
+            miner_hotkey=self.wallet.hotkey.ss58_address
         )
         
         bt.logging.info(f"MINER {self.uid} FORWARD PASS RESULT -> {output_synapse}")
@@ -331,17 +331,18 @@ class Miner(BaseMinerNeuron):
 
     def warmup(self):
         """
-        On startup, try querying the LLM to ensure it is working and loaded into memory.      
+        On startup, try querying the LLM to ensure it is working and loaded into memory.    
+        You can override the base model with --llm.model "model_name"
 
         """
         match self.llm_provider:
             case LLM.OLLAMA_LOCAL:
-                model = "llama3.1" #great/fast
-                #model = "llama3.2" #good
-                #model = "llama3.2:3b-instruct-q8_0" #good            
+                model = "llama3.1" 
+                #model = "llama3.2"
+                #model = "llama3.2:3b-instruct-q8_0"
             case LLM.OPEN_ROUTER:
-                model = "google/gemini-flash-1.5-8b" #best
-                #model = "meta-llama/llama-3.1-70b-instruct:free" #ok
+                model = "google/gemini-flash-1.5-8b"
+                #model = "meta-llama/llama-3.1-70b-instruct:free"
             case LLM.CHAT_GPT:
                 model = "gpt-4o-mini"
             case LLM.VLLM:

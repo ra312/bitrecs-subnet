@@ -43,10 +43,17 @@ from template.api.api_server import ApiServer
 from template.protocol import BitrecsRequest
 from template.utils.uids import get_random_uids, ping_uid
 from template.validator.reward import get_rewards
-from template.utils.logging import log_miner_responses, write_timestamp, log_miner_responses_to_sql
+from template.utils.logging import (
+    log_miner_responses, 
+    read_timestamp, 
+    write_timestamp, 
+    log_miner_responses_to_sql
+)
 from template.utils import constants as CONST
 from template.utils.runtime import execute_periodically
 from template.validator.rules import validate_br_request
+from template.commerce.user_action import UserAction
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -88,7 +95,7 @@ async def api_forward(synapse: BitrecsRequest) -> BitrecsRequest:
 
 class BaseValidatorNeuron(BaseNeuron):
     """
-    Base class for Bittensor validators. Your validator should inherit from this class.
+    Validator for Bitrecs
     """
 
     neuron_type: str = "ValidatorNeuron"
@@ -140,12 +147,12 @@ class BaseValidatorNeuron(BaseNeuron):
         self.is_running: bool = False
         self.thread: Union[threading.Thread, None] = None
         self.lock = asyncio.Lock()
-        self.active_miners = []
+        self.active_miners: List[int] = []
+        self.user_actions: List["UserAction"] = []
 
 
     def serve_axon(self):
         """Serve axon to enable external connections."""
-
         bt.logging.info("serving ip to chain...")
         try:
             self.axon = bt.axon(wallet=self.wallet, config=self.config, port=self.config.axon.port)
@@ -162,9 +169,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 pass
 
         except Exception as e:
-            bt.logging.error(
-                f"Failed to create Axon initialize with exception: {e}"
-            )
+            bt.logging.error(f"Failed to create Axon initialize with exception: {e}")
             pass
 
 
@@ -179,9 +184,8 @@ class BaseValidatorNeuron(BaseNeuron):
     @execute_periodically(timedelta(seconds=CONST.MINER_BATTERY_INTERVAL))
     async def miner_sync(self):
         """
-            Checks the miners in the metagraph and updates the active miners list.
-
-        """        
+            Checks the miners in the metagraph for connectivity and updates the active miners list.
+        """
         bt.logging.trace(f"\033[1;32m Validator miner_sync ran at {int(time.time())}. \033[0m")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
         available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
@@ -195,6 +199,8 @@ class BaseValidatorNeuron(BaseNeuron):
         chosen_uids = list(set(chosen_uids))
         selected_miners = []
         for uid in chosen_uids:
+            if uid == self.uid:
+                continue
             if not self.metagraph.axons[uid].is_serving:                
                 continue
             if self.metagraph.S[uid] > self.config.neuron.vpermit_tao_limit:
@@ -214,6 +220,21 @@ class BaseValidatorNeuron(BaseNeuron):
         
         self.active_miners = list(set(selected_miners))
         bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
+
+
+    @execute_periodically(timedelta(seconds=120))
+    async def action_sync(self):
+        """
+        Periodically fetch user actions 
+        """
+        sd, ed = UserAction.get_default_range(days_ago=7)
+        bt.logging.trace(f"Gathering user actions for range: {sd} to {ed}")
+        try:
+            self.user_actions = UserAction.get_actions_range(start_date=sd, end_date=ed)
+            bt.logging.trace(f"Success - User actions size: \033[1;32m {len(self.user_actions)} \033[0m")
+        except Exception as e:
+            bt.logging.error(f"Failed to get user actions with exception: {e}")
+        return        
 
 
     def run(self):
@@ -237,7 +258,7 @@ class BaseValidatorNeuron(BaseNeuron):
             f"Axon: {self.axon}"
         
         bt.logging.info(f"Validator starting at block: {self.block}")
-        bt.logging.info(f"Validator SAMPLE SIZE: {self.config.neuron.sample_size}")        
+        bt.logging.info(f"Validator SAMPLE SIZE: {self.config.neuron.sample_size}")
         try:
             while True:
                 try:
@@ -291,7 +312,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         # Adjust the scores based on responses from miners.
                         rewards = get_rewards(num_recs=number_of_recs_desired,
                                               ground_truth=api_request,
-                                              responses=responses)
+                                              responses=responses, actions=self.user_actions)
                         
                         if not len(chosen_uids) == len(responses) == len(rewards):
                             bt.logging.error("MISMATCH in lengths of chosen_uids, responses and rewards")
@@ -326,9 +347,9 @@ class BaseValidatorNeuron(BaseNeuron):
                         self.update_scores(rewards, chosen_uids)
 
                     else:
-                        if not api_exclusive: #Regular validator loop                
+                        if not api_exclusive: #Regular validator loop  
                             bt.logging.info("Processing synthetic concurrent forward")
-                            self.loop.run_until_complete(self.concurrent_forward())                            
+                            self.loop.run_until_complete(self.concurrent_forward())
 
                     if self.should_exit:
                         return
@@ -336,6 +357,7 @@ class BaseValidatorNeuron(BaseNeuron):
                     try:                        
                         self.sync()
                         self.loop.run_until_complete(self.miner_sync())
+                        self.loop.run_until_complete(self.action_sync())
                     except Exception as e:
                         bt.logging.error(traceback.format_exc())
                         bt.logging.error(f"Failed to sync with exception: {e}")
@@ -349,7 +371,7 @@ class BaseValidatorNeuron(BaseNeuron):
                     time.sleep(60)
                 finally:
                     if api_enabled and api_exclusive:
-                        bt.logging.info(f"forward finished, ready for next request")                        
+                        bt.logging.info(f"forward finished, ready for next request")
                         pass
                     else:
                         bt.logging.info(f"forward finished, sleep for {10} seconds")
@@ -619,6 +641,10 @@ class BaseValidatorNeuron(BaseNeuron):
         # self.step = state["step"]
         # self.scores = state["scores"]
         # self.hotkeys = state["hotkeys"]
-        pass
+        ts = read_timestamp()
+        if not ts:
+            bt.logging.error("NO STATE FOUND - first step")
+        else:
+            bt.logging.info(f"Last state loaded at {ts}")
 
 
