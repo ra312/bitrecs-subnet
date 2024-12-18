@@ -6,10 +6,11 @@ jobs:
     runs-on: ubuntu-latest
     name: Dlint
     steps:
-    # Check out the repository, ensuring the 'main' branch is used
+    # Checkout the repository and fetch all history for the main branch
     - uses: actions/checkout@v3
       with:
-        ref: main
+        fetch-depth: 0
+        ref: main  # Ensures the 'main' branch is checked out
 
     # Run the Dlint action
     - uses: dlint-py/dlint-action@master
