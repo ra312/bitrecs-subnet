@@ -2,7 +2,7 @@ import ast
 import json
 import os
 from dataclasses import asdict
-import random
+from random import SystemRandom
 from typing import Counter
 
 import pytest
@@ -13,6 +13,7 @@ from template.llms.prompt_factory import PromptFactory
 os.environ["NEST_ASYNCIO"] = "0"
 
 LOCAL_OLLAMA_URL = "http://10.0.0.40:11434/api/chat"
+safe_random = SystemRandom()
 
 
 def product_woo():
@@ -271,11 +272,11 @@ def test_call_local_llm_with_20k_llm_logic():
    
     #B07BG1CZ8X = iJuqi Mom Gifts from Daughter Son - 3PCS Stainless Steel Expendable Motivational 
     # #Charm Bangle Bracelets Set for Mother's Day, Birthday Gifts for Mom, Mother Jewelry for Christmas (Silver)
-    rp = random.choice(products)
+    rp = safe_random.choice(products)
     user_prompt = rp.sku
 
     #user_prompt = "B07BG1CZ8X"
-    num_recs = random.choice([5, 6, 7, 8, 9, 10, 16, 20])
+    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 16, 20])
     #num_recs = 8
 
     debug_prompts = False
@@ -339,11 +340,11 @@ def test_call_open_router_with_20k_llm_logic():
    
     #B07BG1CZ8X = iJuqi Mom Gifts from Daughter Son - 3PCS Stainless Steel Expendable Motivational 
     # #Charm Bangle Bracelets Set for Mother's Day, Birthday Gifts for Mom, Mother Jewelry for Christmas (Silver)
-    rp = random.choice(products)
+    rp = safe_random.choice(products)
     user_prompt = rp.sku
 
     #user_prompt = "B07BG1CZ8X"
-    num_recs = random.choice([5, 6, 7, 8, 9, 10, 16, 20])
+    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 16, 20])
     #num_recs = 8
 
     debug_prompts = False
@@ -406,11 +407,11 @@ def test_call_gemini_with_20k_llm_logic():
    
     #B07BG1CZ8X = iJuqi Mom Gifts from Daughter Son - 3PCS Stainless Steel Expendable Motivational 
     # #Charm Bangle Bracelets Set for Mother's Day, Birthday Gifts for Mom, Mother Jewelry for Christmas (Silver)
-    rp = random.choice(products)
+    rp = safe_random.choice(products)
     user_prompt = rp.sku
 
     #user_prompt = "B07BG1CZ8X"
-    num_recs = random.choice([5, 6, 7, 8, 9, 10, 16, 20])
+    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 16, 20])
     #num_recs = 8
 
     debug_prompts = False
