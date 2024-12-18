@@ -50,9 +50,11 @@ from template.utils.logging import (
     log_miner_responses_to_sql
 )
 from template.utils import constants as CONST
+from template.utils.wandb import WandbHelper
 from template.utils.runtime import execute_periodically
 from template.validator.rules import validate_br_request
 from template.commerce.user_action import UserAction
+from template.utils
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -107,6 +109,12 @@ class BaseValidatorNeuron(BaseNeuron):
 
     def __init__(self, config=None):
         super().__init__(config=config)
+
+        # Initialize the wandb client
+        self.wandb = WandbHelper(
+            project_name=self.config.wandb.project_name,
+            entity=self.config.wandb.entity,
+        )
 
         # Save a copy of the hotkeys to local memory.
         self.hotkeys = copy.deepcopy(self.metagraph.hotkeys)      
@@ -515,6 +523,10 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.debug(f"uint_weights {uint_weights}")        
             bt.logging.debug(f"uint_uids {uint_uids}")
 
+            # Log weights to wandb before chain update
+            weights_dict = {str(uid): float(weight) for uid, weight in zip(uint_uids, uint_weights)}
+            self.wandb.log_weights(self.step, weights_dict)
+
         except Exception as e:
             bt.logging.error(f"convert_weights_and_uids_for_emit function error: {e}")
             pass
@@ -532,8 +544,10 @@ class BaseValidatorNeuron(BaseNeuron):
             )
             if result is True:
                 bt.logging.info(f"set_weights on chain successfully! msg: {msg}")
+                self.wandb.log_metrics({"weight_update_success": 1})
             else:
                 bt.logging.error(f"set_weights on chain failed {msg}")
+                self.wandb.log_metrics({"weight_update_success": 0})
         except Exception as e:
             bt.logging.error(f"set_weights failed with exception: {e}")
 
