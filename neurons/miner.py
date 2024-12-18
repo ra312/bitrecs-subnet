@@ -81,8 +81,7 @@ async def do_work(user_prompt: str,
         if not llm_response or len(llm_response) < 10:
             bt.logging.error("LLM response is empty.")
             return []
-
-        llm_response = llm_response.replace("```json", "").replace("```", "").strip()
+        
         parsed_recs = PromptFactory.tryparse_llm(llm_response)
         if debug_prompts:
             bt.logging.trace(f" {llm_response} ")
@@ -389,17 +388,7 @@ async def main():
                     f"---Total request in last 5 minutes: {miner.total_request_in_interval}"
                 )
                 start_time = time.time()
-                miner.total_request_in_interval = 0
-
-                # try:
-                #     bt.logging.debug("Syncing metagraph")
-                #     if miner.should_sync_metagraph():
-                #         miner.resync_metagraph()
-                #         bt.logging.debug("Synced metagraph")
-                #     else:
-                #         bt.logging.debug("No need to sync metagraph")
-                # except Exception as e:                    
-                #     bt.logging.error(f"Error syncing metagraph: {e}")
+                miner.total_request_in_interval = 0              
 
             await asyncio.sleep(15)
 

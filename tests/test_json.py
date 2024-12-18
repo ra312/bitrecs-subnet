@@ -56,7 +56,7 @@ def test_schema_validation():
                    "{'sku': '24-UG07', 'name': 'Dual Handle Cardio Ball'}"]
     
     partial_json =  ["{'sku': '24-WG088', 'name': 'Sprite Foam Roller'}",
-                 "{'sku': '24-WG084', 'name': 'Sprite Foam Yoga Brick'}",
+                 "{'sku': '24-WG084', 'name': 'Sprite Foam Yoga Brick', 'price': 5.00}",
                    "{'sku': '24-UG01', 'name': 'Quest Lumaflex&trade; Band'}", 
                    '{\'sku\': \'24-UG05\', \'name\': "Go-Get\'r Pushup Grips"}', 
                    "{'sku': '24-UG02', 'name': 'Pursuit Lumaflex&trade; Tone Band'}", 
@@ -190,7 +190,7 @@ def test_convert_1k_amazon_to_bitrecs():
         data = f.read()    
     products = Product.convert(data, CatalogProvider.AMAZON)
     print(f"loaded {len(products)} records")       
-    assert len(products) == 907
+    assert len(products) == 1000
 
     for product in products:
         if not hasattr(product, "sku"):

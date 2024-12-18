@@ -173,6 +173,10 @@ class PromptFactory:
 
     @staticmethod
     def tryload_catalog(file_path: str, max_rows=100_000) -> list:
+        """
+        Try to load a woo catalog into a normalized list
+
+        """
         try:
             df = pd.read_csv(file_path)
             #WooCommerce Format
@@ -198,17 +202,15 @@ class PromptFactory:
     @staticmethod
     def tryload_catalog_to_json(file_path: str, max_rows=10000) -> str:
         """
-        Try to load a woo catalog into json 
+        Convert a WooCommerce catalog export to a JSON string
 
         """
+        if not os.path.exists(file_path):   
+            bt.logging.error(f"File not found: {file_path}")
+            raise FileNotFoundError(f"File not found: {file_path}")
+        
         thing = PromptFactory.tryload_catalog(file_path, max_rows)        
         return json.dumps(thing, indent=2)
-    
-
-    # def catalog_to_json(self) -> str:
-    #     if len(self.catalog) == 0:
-    #         return "[]"
-    #     return json.dumps(self.catalog, indent=2)
         
 
     @staticmethod
@@ -218,6 +220,10 @@ class PromptFactory:
 
         """
         try:
+            if not input_str:
+                bt.logging.error("Empty input string tryparse_llm")   
+                return []
+            input_str = input_str.replace("```json", "").replace("```", "").strip()
             pattern = r'\[.*?\]'
             regex = re.compile(pattern, re.DOTALL)
             match = regex.findall(input_str)        
