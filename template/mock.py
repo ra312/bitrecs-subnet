@@ -1,10 +1,8 @@
 import time
-
 import asyncio
 from random import SystemRandom
 random = SystemRandom()
 import bittensor as bt
-
 from typing import List
 
 
