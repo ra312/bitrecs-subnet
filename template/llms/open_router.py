@@ -4,7 +4,7 @@ from openai import OpenAI
 class OpenRouter:    
     def __init__(self, 
                  key,
-                 model="openai/gpt-3.5-turbo", 
+                 model="google/gemini-flash-1.5-8b", 
                  system_prompt="You are a helpful AI assistant.", 
                  temp=0.0
         ):

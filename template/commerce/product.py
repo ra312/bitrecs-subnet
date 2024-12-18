@@ -1,6 +1,9 @@
-
 import json
+import re
 import bittensor as bt
+from typing import Counter
+from pydantic import BaseModel
+from abc import abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 
@@ -16,7 +19,7 @@ class CatalogProvider(Enum):
 class Product:
     sku: str
     name: str
-    price: float
+    price: str
 
 
     @staticmethod
@@ -31,20 +34,21 @@ class Product:
         except Exception as e:
             bt.logging.error(f"try_parse_context Exception: {e}")
             return []
-    
-    # @staticmethod
-    # def dedupe(products: list["Product"]):
-    #     seen = set()
-    #     for product in products:
-    #         sku = product.sku
-    #         if sku in seen:
-    #             continue
-    #         seen.add(sku)
-    #     return [product for product in products if product.sku in seen]
-    
+        
+   
+    @staticmethod
+    def get_dupe_count(products: list["Product"]) -> int:
+        try:
+            if not products or len(products) == 0:
+                return 0
+            sku_counts = Counter(product.sku for product in products)
+            return sum(count - 1 for count in sku_counts.values() if count > 1)
+        except AttributeError:
+            return 0
+        
     
     @staticmethod
-    def dedupe(products: list) -> list["Product"]:
+    def dedupe(products: list["Product"]) -> list["Product"]:
         unique_products = {}
         for product in products:
             if product.sku not in unique_products:
@@ -55,7 +59,7 @@ class Product:
     @staticmethod
     def convert(context: str, provider: CatalogProvider) -> list["Product"]:
         """
-            context should be the store catalog in Product format (sku, name, price)            
+            Convert a raw store catalog json in Products
 
         """
         match provider:
@@ -71,12 +75,25 @@ class Product:
                 raise NotImplementedError("invalid provider")
 
 
+class BaseConverter(BaseModel):
+    
+    @abstractmethod
+    def convert(self, context: str) -> list["Product"]:
+        raise NotImplementedError("BaseConverter not implemented")
+    
+    def clean(self, raw_value: str) -> str:        
+        result = re.sub(r"[^A-Za-z ]", "", raw_value)
+        return result.strip()
+    
 
-class WoocommerceConverter:    
+class WoocommerceConverter(BaseConverter):    
   
     def convert(self, context: str) -> list["Product"]:
         """
-        converts from product_catalog.csv converted to json format
+        converts from product_catalog.csv to Products
+
+        args:
+            context: str - woocommerce product export converted to json            
 
         """
         result : list[Product] = []
@@ -84,9 +101,13 @@ class WoocommerceConverter:
             try:
                 sku = p.get("sku")
                 name = p.get("name")
-                price = p.get("price")
-                # if not sku or not name or not price:
-                #     continue
+                price = p.get("price", "0.00")             
+                if not sku or not name:
+                    continue
+                if price is None or price == 'None':
+                    price = "0.00"
+                price = str(price)
+                name = self.clean(name)
                 result.append(Product(sku=sku, name=name, price=price))
             except Exception as e:
                 bt.logging.error(f"WoocommerceConverter.convert Exception: {e}")
@@ -95,7 +116,7 @@ class WoocommerceConverter:
         
 
     
-class AmazonConverter:
+class AmazonConverter(BaseConverter):
     
     def convert(self, context: str) -> list["Product"]:
         """
@@ -107,10 +128,16 @@ class AmazonConverter:
             try:
                 sku = p.get("asin")
                 if p["metadata"]:
-                    name = p["metadata"].get("title")
-                    price = p["metadata"].get("price")
-                if not sku or not name or not price:
+                    name = p["metadata"].get("title", "metadata not found")
+                    price = p["metadata"].get("price", "0.00")
+                if not sku or not name:
                     continue
+                if "metadata not found" in name:
+                    continue
+                if price is None or price == 'None':                    
+                    price = "0.00"
+                price = str(price)
+                name = self.clean(name)
                 result.append(Product(sku=sku, name=name, price=price))
             except Exception as e:
                 bt.logging.error(f"AmazonConverter.convert Exception: {e}")
@@ -118,14 +145,14 @@ class AmazonConverter:
         return result
     
 
-class ShopifyConverter:
+class ShopifyConverter(BaseConverter):
     
     def convert(self, context: str) -> list["Product"]:
         raise NotImplementedError("Shopify not implemented")
     
 
     
-class BigcommerceConverter:
+class BigcommerceConverter(BaseConverter):
     
     def convert(self, context: str) -> list["Product"]:
         raise NotImplementedError("Bigcommerce not implemented")

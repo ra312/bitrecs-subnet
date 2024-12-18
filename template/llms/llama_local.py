@@ -13,25 +13,29 @@ class OllamaLocal():
         self.model = model
         if not system_prompt:
             system_prompt = "You are a helpful assistant."
-        self.system_prompt = system_prompt
-        self.temp = temp
+        self.system_prompt = system_prompt        
         if temp < 0 or temp > 1:
             raise Exception
+        self.temp = temp
         self.keep_alive = 1800
+
 
     def file_to_base64(self, file_path) -> str:
         with open(file_path, "rb") as file:
             return base64.b64encode(file.read()).decode("utf-8")
+        
 
     def ask_ollama(self, prompt) -> str:        
         data = {
-            "model": self.model,
+            "model": self.model,            
             "messages": [
                 {
+                    "role": "system",
+                    "content": self.system_prompt
+                },
+                {
                     "role": "user",
-                    "content": prompt,
-                    "stream": False,
-                    "system": self.system_prompt
+                    "content": prompt
                 }
             ],
             "stream": False,
@@ -42,6 +46,7 @@ class OllamaLocal():
         }
         # print(data)
         return self.call_ollama(data)
+    
 
     def get_ollama_caption(self, file_path) -> str:        
         base64_image = self.file_to_base64(file_path)
@@ -64,6 +69,7 @@ class OllamaLocal():
         }
         # print(data)
         return self.call_ollama(data)
+    
 
     def route_intention(self, file_path) -> str:        
         prompt = "What is this? : "
@@ -125,6 +131,7 @@ class OllamaLocal():
             }
 
         return self.call_ollama(data)
+    
 
     def call_ollama(self, data) -> str:        
         response = requests.post(self.ollama_url, json=data)        
