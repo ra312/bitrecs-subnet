@@ -70,6 +70,7 @@ def test_call_local_llm_with_woo_catalog():
     
     prompt = factory.generate_prompt()
     #print(prompt)
+    print(f"prompt length: {len(prompt)}")
 
     os.environ["OLLAMA_LOCAL_URL"] = LOCAL_OLLAMA_URL
     model = "llama3.1"
@@ -257,7 +258,7 @@ def test_call_local_llm_with_20k():
         assert count == 1
 
 
-def test_call_local_llm_with_20k_llm_logic():
+def test_call_local_llm_with_20k_random_logic():
     raw_products = product_20k()
     print(f"loaded: {len(raw_products)} records")
     assert len(raw_products) == 18_088
@@ -293,6 +294,7 @@ def test_call_local_llm_with_20k_llm_logic():
     
     prompt = factory.generate_prompt()
     #print(prompt)
+    print(f"prompt length: {len(prompt)}")
 
     os.environ["OLLAMA_LOCAL_URL"] = LOCAL_OLLAMA_URL
     #model = "llama3.1:70b" 
@@ -325,7 +327,7 @@ def test_call_local_llm_with_20k_llm_logic():
 
 
 @pytest.mark.skip(reason="skipped for now please ensure .env file has open router api key")
-def test_call_open_router_with_20k_llm_logic():
+def test_call_open_router_with_20k_random_logic():
     raw_products = product_20k()
     print(f"loaded: {len(raw_products)} records")
     assert len(raw_products) == 20_000
@@ -361,6 +363,7 @@ def test_call_open_router_with_20k_llm_logic():
     
     prompt = factory.generate_prompt()
     #print(prompt)
+    print(f"prompt length: {len(prompt)}")
 
 
     from dotenv import load_dotenv
@@ -391,8 +394,8 @@ def test_call_open_router_with_20k_llm_logic():
 
 
 
-# @pytest.mark.skip(reason="skipped for now please ensure .env file has gemini api key")
-def test_call_gemini_with_20k_llm_logic():
+@pytest.mark.skip(reason="skipped for now please ensure .env file has gemini api key")
+def test_call_gemini_with_20k_random_logic():
     raw_products = product_20k()
     print(f"loaded: {len(raw_products)} records")
     assert len(raw_products) == 18_088
@@ -428,11 +431,14 @@ def test_call_gemini_with_20k_llm_logic():
     
     prompt = factory.generate_prompt()
     #print(prompt)
+    print(f"prompt length: {len(prompt)}")
 
     from dotenv import load_dotenv
     load_dotenv() #LLMFactory needs this to load the api key
 
-    model = "gemini-2.0-flash-exp"
+    #model = "gemini-1.5-flash-8b"
+    model = "gemini-2.0-flash-exp"    
+    
 
     llm_response = LLMFactory.query_llm(server=LLM.GEMINI,
                                  model=model,
