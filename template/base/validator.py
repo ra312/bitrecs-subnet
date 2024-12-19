@@ -42,6 +42,7 @@ from template.utils.config import add_validator_args
 from template.api.api_server import ApiServer
 from template.protocol import BitrecsRequest
 from template.utils.uids import get_random_uids, ping_uid
+from template.utils.version import LocalMetadata
 from template.validator.reward import get_rewards
 from template.utils.logging import (
     log_miner_responses, 
@@ -150,6 +151,8 @@ class BaseValidatorNeuron(BaseNeuron):
         self.active_miners: List[int] = []
         self.user_actions: List["UserAction"] = []
 
+        self.version_sync()
+
 
     def serve_axon(self):
         """Serve axon to enable external connections."""
@@ -234,7 +237,25 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.trace(f"Success - User actions size: \033[1;32m {len(self.user_actions)} \033[0m")
         except Exception as e:
             bt.logging.error(f"Failed to get user actions with exception: {e}")
-        return        
+        return
+    
+    
+    @execute_periodically(timedelta(seconds=600))
+    async def version_sync(self):
+        bt.logging.trace(f"Version sync ran at {int(time.time())}")
+
+        try:
+            self.local_metadata = LocalMetadata.local_metadata()
+            self.local_metadata.uid = self.uid
+            self.local_metadata.hotkey = self.wallet.hotkey.ss58_address
+            #self.local_metadata.coldkey = self.wallet.coldkeypub.ss58_address
+            bt.logging.trace(f"Local metadata: {self.local_metadata}")
+            bt.logging.trace(f"\033[1;32m Metadata Sucess \033[0m")
+
+        except Exception as e:
+            bt.logging.error(f"Failed to get version with exception: {e}")
+        return
+
 
 
     def run(self):
@@ -250,7 +271,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
         """
         # Check that validator is registered on the network.
-        self.sync()
+        self.sync()        
         
         bt.logging.info(
             f"\033[1;32m 🐸 Running validator on network: {self.config.subtensor.chain_endpoint} with netuid: {self.config.netuid}\033[0m")
@@ -358,6 +379,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         self.sync()
                         self.loop.run_until_complete(self.miner_sync())
                         self.loop.run_until_complete(self.action_sync())
+                        self.loop.run_until_complete(self.version_sync())
                     except Exception as e:
                         bt.logging.error(traceback.format_exc())
                         bt.logging.error(f"Failed to sync with exception: {e}")

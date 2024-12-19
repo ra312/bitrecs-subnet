@@ -1,3 +1,5 @@
+from pathlib import Path
+
 """
 Global constants
 
@@ -11,7 +13,7 @@ Constants:
     MINER_BATTERY_INTERVAL (int): Length of seconds between miner checks.
     
 """
-
+ROOT_DIR = Path(__file__).parent.parent
 MAX_DENDRITE_TIMEOUT = 5
 MIN_QUERY_LENGTH = 3
 MAX_QUERY_LENGTH = 30
