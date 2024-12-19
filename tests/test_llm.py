@@ -2,6 +2,7 @@ import json
 import os
 from dataclasses import asdict
 from random import SystemRandom
+safe_random = SystemRandom()
 from typing import Counter
 
 import pytest
@@ -12,7 +13,6 @@ from template.llms.prompt_factory import PromptFactory
 os.environ["NEST_ASYNCIO"] = "0"
 
 LOCAL_OLLAMA_URL = "http://10.0.0.40:11434/api/chat"
-safe_random = SystemRandom()
 
 
 def product_woo():

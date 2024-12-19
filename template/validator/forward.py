@@ -18,8 +18,7 @@
 
 import time
 import bittensor as bt
-from random import SystemRandom
-random = SystemRandom()
+import random
 from datetime import datetime, timezone
 from template.protocol import BitrecsRequest
 from template.validator.reward import get_rewards

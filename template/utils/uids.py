@@ -2,8 +2,7 @@
 import socket
 import bittensor as bt
 import numpy as np
-from random import SystemRandom
-random = SystemRandom()
+import random
 from typing import List
 
 #from template.base.neuron import BaseNeuron
