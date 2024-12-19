@@ -6,11 +6,13 @@ jobs:
     runs-on: ubuntu-latest
     name: Dlint
     steps:
-    # Checkout the repository and fetch all history for the main branch
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-        ref: main  # Ensures the 'main' branch is checked out
-
+    - name: Clear cache
+        run: rm -rf /home/runner/work/_temp/_github_home
+    - name: Checkout
+        uses: actions/checkout@v3
+        with:
+            fetch-depth: 0
+            ref: main  # Ensures the 'main' branch is checked out
+              
     # Run the Dlint action
     - uses: dlint-py/dlint-action@master
