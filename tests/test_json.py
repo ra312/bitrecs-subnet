@@ -4,20 +4,16 @@ import jsonschema
 import pytest
 
 from template.commerce.product import CatalogProvider, Product
+from template.llms.prompt_factory import PromptFactory
 
 def test_basic_parsing():
     single_rec = "{'sku': '24-UG01', 'name': 'Quest Lumaflex&trade; Band', 'price': '19'}"
     single_rec2 = "{'sku': '24-UG02', 'name': 'Pursuit Lumaflex&trade; Tone Band', 'price': '16'}"
     single_rec3 = "{'sku': '24-MG05', 'name': 'Cruise Dual Analog Watch', 'price': '55'}"
-    multi_rec = [single_rec, single_rec2, single_rec3]   
-    # json_string = [item.replace("'", '"') for item in multi_rec]
-    # print(json_string)  
-    
+    multi_rec = [single_rec, single_rec2, single_rec3]
     final_recs = [json.loads(idx.replace("'", '"')) for idx in multi_rec]
-    print(final_recs)
-    
-    assert len(multi_rec) == len(final_recs)
-    print("Test 1 complete")
+    print(final_recs)    
+    assert len(multi_rec) == len(final_recs)    
 
 
 def test_basic_parsing2():
@@ -29,23 +25,15 @@ def test_basic_parsing2():
                    "{'sku': '24-UG07', 'name': 'Dual Handle Cardio Ball'}"]
 
     final = []
-    for idx in results:
-        #print(idx)      
+    for idx in results:        
         fixed1 = json_repair.repair_json(idx, logging=False)  
         print(f"fixed: {fixed1}")
-        product = json_repair.loads(fixed1)
-        #fixed = json_repair.loads(idx, logging=False)
-        #print(fixed)
-        final.append(product)
-
-    #final_recs = [json.loads(idx.replace("'", '"')) for idx in fixed]
-    #final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
-
-    #print(final_recs)
+        product = json_repair.loads(fixed1)        
+        final.append(product)    
     print("FINAL RESULTS")
     print(final)
-
     assert len(results) == len(final)
+
 
 def test_schema_validation():
     broken_json =  ["{'sku': '24-WG088', 'name': 'Sprite Foam Roller'}",
@@ -85,11 +73,9 @@ def test_schema_validation():
             thing = json_repair.loads(item)
             jsonschema.validate(thing, schema)
             broken_count += 1
-        except json.decoder.JSONDecodeError as e:
-            #print(e)
+        except json.decoder.JSONDecodeError as e:            
             continue
-        except jsonschema.exceptions.ValidationError as e:
-            #print(e)
+        except jsonschema.exceptions.ValidationError as e:            
             continue
     #print(broken_count)
     assert broken_count == 0
@@ -100,11 +86,9 @@ def test_schema_validation():
             thing = json_repair.loads(item)
             jsonschema.validate(thing, schema)
             partial_count += 1
-        except json.decoder.JSONDecodeError as e:
-            #print(e)
+        except json.decoder.JSONDecodeError as e:            
             continue
-        except jsonschema.exceptions.ValidationError as e:
-            #print(e)
+        except jsonschema.exceptions.ValidationError as e:            
             continue
     
     assert partial_count == 1
@@ -116,17 +100,15 @@ def test_schema_validation():
             thing = json_repair.loads(item)
             jsonschema.validate(thing, schema)
             good_count += 1
-        except json.decoder.JSONDecodeError as e:
-            #print(e)
+        except json.decoder.JSONDecodeError as e:            
             continue
-        except jsonschema.exceptions.ValidationError as e:
-            #print(e)
+        except jsonschema.exceptions.ValidationError as e:            
             continue
 
     assert good_count == len(good_json)
 
 
-def test_load_1k():
+def test_load_1k_raw():
     rows = []
     with open("./tests/data/amazon_fashion_sample_1000.json", "r") as f:
         data = f.read()
@@ -135,7 +117,7 @@ def test_load_1k():
     assert len(rows) == 1000
 
 
-def test_load_5k():
+def test_load_5k_raw():
     rows = []
     with open("./tests/data/amazon_fashion_sample_5000.json", "r") as f:
         data = f.read()
@@ -168,29 +150,39 @@ def test_parse_20k_into_products():
     assert len(products) == 20000
 
 
-@pytest.mark.skip("skipped for now")
-def test_parse_1k_products_have_required_fields():
+
+def test_parse_1k_products_have_missing_fields():
     with open("./tests/data/amazon_fashion_sample_1000.json", "r") as f:
         data = f.read()    
     products = Product.try_parse_context(data)
     print(f"loaded {len(products)} records")       
     assert len(products) == 1000
 
+    broken = False
     for product in products:
         if not hasattr(product, "sku"):
-            assert False
+            broken = True
+            break
         if not hasattr(product, "name"):
-            assert False
+            broken = True
+            break
         if not hasattr(product, "price"):
-            assert False
+            broken = True
+            break
+
+    assert broken # should be broken
 
             
 def test_convert_1k_amazon_to_bitrecs():
     with open("./tests/data/amazon_fashion_sample_1000.json", "r") as f:
         data = f.read()    
     products = Product.convert(data, CatalogProvider.AMAZON)
-    print(f"loaded {len(products)} records")       
-    assert len(products) == 1000
+    print(f"converted {len(products)} records")       
+    assert len(products) == 907
+
+    dupe_count = Product.get_dupe_count(products)
+    print(f"dupe count: {dupe_count}")
+    assert dupe_count == 61
 
     for product in products:
         if not hasattr(product, "sku"):
@@ -200,6 +192,62 @@ def test_convert_1k_amazon_to_bitrecs():
         if not hasattr(product, "price"):
             assert False
 
+
+def test_convert_5k_amazon_to_bitrecs():
+    with open("./tests/data/amazon_fashion_sample_5000.json", "r") as f:
+        data = f.read()    
+    products = Product.convert(data, CatalogProvider.AMAZON)
+    print(f"converted {len(products)} records")       
+    assert len(products) == 4544
+
+    dupe_count = Product.get_dupe_count(products)
+    print(f"dupe count: {dupe_count}")
+    assert dupe_count == 416
+
+    for product in products:
+        if not hasattr(product, "sku"):
+            assert False
+        if not hasattr(product, "name"):
+            assert False
+        if not hasattr(product, "price"):
+            assert False
+
+
+
+def test_convert_20k_amazon_to_bitrecs():
+    with open("./tests/data/amazon_fashion_sample_20000.json", "r") as f:
+        data = f.read()    
+    products = Product.convert(data, CatalogProvider.AMAZON)
+    print(f"converted {len(products)} records")       
+    assert len(products) == 18088
+
+    dupe_count = Product.get_dupe_count(products)
+    print(f"dupe count: {dupe_count}")
+    assert dupe_count == 3324
+
+    for product in products:
+        if not hasattr(product, "sku"):
+            assert False
+        if not hasattr(product, "name"):
+            assert False
+        if not hasattr(product, "price"):
+            assert False
+
+
+def test_convert_1k_woocommerce_to_bitrecs():
+    woo_catalog = "./tests/data/product_catalog.csv" #2038 records
+    catalog = PromptFactory.tryload_catalog_to_json(woo_catalog)
+    products = Product.convert(catalog, CatalogProvider.WOOCOMMERCE)
+    print(f"converted {len(products)} records")       
+    assert len(products) == 2038
+
+    for product in products:
+        if not hasattr(product, "sku"):
+            assert False
+        if not hasattr(product, "name"):
+            assert False
+        if not hasattr(product, "price"):
+            assert False
 
 
 

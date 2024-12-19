@@ -200,7 +200,7 @@ class PromptFactory:
         
         
     @staticmethod
-    def tryload_catalog_to_json(file_path: str, max_rows=10000) -> str:
+    def tryload_catalog_to_json(file_path: str, max_rows=100_000) -> str:
         """
         Convert a WooCommerce catalog export to a JSON string
 
