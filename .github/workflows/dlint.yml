@@ -5,9 +5,7 @@ jobs:
   dlint:
     runs-on: ubuntu-latest
     name: Dlint
-    steps:
-    # - name: Clear cache
-    #     run: rm -rf /home/runner/work/_temp/_github_home
+    steps:  
     - name: Checkout
         uses: actions/checkout@v3
         with:
