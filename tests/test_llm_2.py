@@ -23,7 +23,7 @@ LOCAL_OLLAMA_URL = "http://10.0.0.40:11434/api/chat"
 
 #OLLAMA_MODEL = "llama3.1" #3/6
 #OLLAMA_MODEL = "llama3.3" #3/5
-#OLLAMA_MODEL = "llama3.3:70b-instruct-q2_K" #4/5
+OLLAMA_MODEL = "llama3.3:70b-instruct-q2_K" #4/5
 
 
 MASTER_SKU = "B08XYRDKDV" #HP Envy 6455e Wireless Color All-in-One Printer with 6 Months Free Ink (223R1A) (Renewed Premium)
