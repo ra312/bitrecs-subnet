@@ -15,13 +15,16 @@ os.environ["NEST_ASYNCIO"] = "0"
 
 LOCAL_OLLAMA_URL = "http://10.0.0.40:11434/api/chat"
 
-#OLLAMA_MODEL = "llama3.1" #4/5
-#OLLAMA_MODEL= "llama3.1:70b" #4/5
-#OLLAMA_MODEL= "llama3.3" #3/5
-#OLLAMA_MODEL= "llama3.3:70b-instruct-q2_K" #4/5
-#OLLAMA_MODEL= "qwen2.5:32b-instruct" #0/5
+#OLLAMA_MODEL = "nemotron:70b-instruct-q4_K_M" #6/6
+#OLLAMA_MODEL = "qwen2.5:32b-instruct" #6/6
+#OLLAMA_MODEL = "llama3.1:70b" #6/6
+
 #OLLAMA_MODEL= "nemotron" #5/6
-OLLAMA_MODEL = "nemotron:70b-instruct-q4_K_M" #4/5
+
+#OLLAMA_MODEL = "llama3.1" #3/6
+#OLLAMA_MODEL = "llama3.3" #3/5
+#OLLAMA_MODEL = "llama3.3:70b-instruct-q2_K" #4/5
+
 
 MASTER_SKU = "B08XYRDKDV" #HP Envy 6455e Wireless Color All-in-One Printer with 6 Months Free Ink (223R1A) (Renewed Premium)
 
@@ -99,9 +102,7 @@ def test_call_local_llm_with_1k():
                             debug=debug_prompts)
     
     prompt = factory.generate_prompt()
-    #print(prompt)
-
-    os.environ["OLLAMA_LOCAL_URL"] = LOCAL_OLLAMA_URL
+    #print(prompt)    
     model = OLLAMA_MODEL
     llm_response = LLMFactory.query_llm(server=LLM.OLLAMA_LOCAL,
                                  model=model, 
@@ -150,9 +151,7 @@ def test_call_local_llm_with_5k():
                             debug=debug_prompts)
     
     prompt = factory.generate_prompt()
-    #print(prompt)
-
-    os.environ["OLLAMA_LOCAL_URL"] = LOCAL_OLLAMA_URL
+    #print(prompt)    
     model = OLLAMA_MODEL
     llm_response = LLMFactory.query_llm(server=LLM.OLLAMA_LOCAL,
                                  model=model, 
@@ -201,13 +200,6 @@ def test_call_local_llm_with_20k():
     
     prompt = factory.generate_prompt()
     #print(prompt)
-
-    os.environ["OLLAMA_LOCAL_URL"] = LOCAL_OLLAMA_URL
-    #model = "llama3.1:70b" 
-    #model = "qwen2.5:32b-instruct"  
-    #model = "llama3.3:latest"    
-    #model = "mistral-nemo"
-    #model = "qwen2.5"
     model = OLLAMA_MODEL
 
     llm_response = LLMFactory.query_llm(server=LLM.OLLAMA_LOCAL,
@@ -241,14 +233,9 @@ def test_call_local_llm_with_20k_random_logic():
     products = Product.dedupe(raw_products)    
     print(f"after de-dupe: {len(products)} records")
    
-    #B07BG1CZ8X = iJuqi Mom Gifts from Daughter Son - 3PCS Stainless Steel Expendable Motivational 
-    # #Charm Bangle Bracelets Set for Mother's Day, Birthday Gifts for Mom, Mother Jewelry for Christmas (Silver)
     rp = safe_random.choice(products)
-    user_prompt = rp.sku
-
-    #user_prompt = "B07BG1CZ8X"
+    user_prompt = rp.sku    
     num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 16, 20])
-    #num_recs = 8
 
     debug_prompts = False
 
@@ -266,14 +253,8 @@ def test_call_local_llm_with_20k_random_logic():
     prompt = factory.generate_prompt()
     #print(prompt)
     print(f"prompt length: {len(prompt)}")
-
-    os.environ["OLLAMA_LOCAL_URL"] = LOCAL_OLLAMA_URL
-    #model = "llama3.1:70b" 
-    #model = "qwen2.5:32b-instruct"  
-    #model = "llama3.3:latest"    
-    #model = "mistral-nemo"
-    #model = "qwen2.5"
-    model = "llama3.1"
+       
+    model = OLLAMA_MODEL
 
     llm_response = LLMFactory.query_llm(server=LLM.OLLAMA_LOCAL,
                                  model=model,
@@ -313,11 +294,8 @@ def test_call_open_router_with_5k_random_logic():
     #B07BG1CZ8X = iJuqi Mom Gifts from Daughter Son - 3PCS Stainless Steel Expendable Motivational 
     # #Charm Bangle Bracelets Set for Mother's Day, Birthday Gifts for Mom, Mother Jewelry for Christmas (Silver)
     rp = safe_random.choice(products)
-    user_prompt = rp.sku
-
-    #user_prompt = "B07BG1CZ8X"
-    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 16, 20])
-    #num_recs = 8
+    user_prompt = rp.sku    
+    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 16, 20])    
 
     debug_prompts = False
 
@@ -588,7 +566,7 @@ def test_call_grok_with_woo_catalog():
     print(f"prompt length: {len(prompt)}")
 
     
-    model = "llama3.1 "
+    model = "GROK TODO"
     llm_response = LLMFactory.query_llm(server=LLM.GROK,
                                  model=model,
                                  system_prompt="You are a helpful assistant", 
