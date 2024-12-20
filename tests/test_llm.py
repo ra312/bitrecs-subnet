@@ -1,17 +1,16 @@
-import json
 import os
+import json
+import pytest
 from dataclasses import asdict
 from random import SystemRandom
 safe_random = SystemRandom()
 from typing import Counter
-
-import pytest
 from template.commerce.product import CatalogProvider, Product
 from template.llms.factory import LLM, LLMFactory
 from template.llms.prompt_factory import PromptFactory
-
+from tests.utils import write_prompt_to_file
 from dotenv import load_dotenv
-load_dotenv() #LLMFactory needs this to load the api key
+load_dotenv()
 
 os.environ["NEST_ASYNCIO"] = "0"
 
@@ -41,6 +40,21 @@ def product_20k():
         data = f.read()    
     products = Product.convert(data, CatalogProvider.AMAZON)
     return products
+
+
+def test_all_sets_matryoshka():
+    list1 = product_1k()
+    list2 = product_5k()
+    list3 = product_20k()
+    
+    set1 = set(item.sku for item in list1)
+    set2 = set(item.sku for item in list2)
+    set3 = set(item.sku for item in list3)
+
+    assert set1.issubset(set2)
+    assert set2.issubset(set3)
+    assert (set1 & set2).issubset(set3)
+
 
 
 def test_call_local_llm_with_woo_catalog():
@@ -233,6 +247,8 @@ def test_call_local_llm_with_20k():
     
     prompt = factory.generate_prompt()
     #print(prompt)
+    if 1==2:
+        write_prompt_to_file(prompt)    
 
     os.environ["OLLAMA_LOCAL_URL"] = LOCAL_OLLAMA_URL
     #model = "llama3.1:70b" 
@@ -368,10 +384,6 @@ def test_call_open_router_with_20k_random_logic():
     #print(prompt)
     print(f"prompt length: {len(prompt)}")
 
-
-    from dotenv import load_dotenv
-    load_dotenv() #LLMFactory needs this to load the api key
-
     model = "google/gemini-flash-1.5-8b"
 
     llm_response = LLMFactory.query_llm(server=LLM.OPEN_ROUTER,
@@ -397,7 +409,7 @@ def test_call_open_router_with_20k_random_logic():
 
 
 
-@pytest.mark.skip(reason="skipped for now please ensure .env file has gemini api key")
+# @pytest.mark.skip(reason="skipped for now please ensure .env file has gemini api key")
 def test_call_gemini_with_20k_random_logic():
     raw_products = product_20k()
     print(f"loaded: {len(raw_products)} records")
@@ -434,13 +446,10 @@ def test_call_gemini_with_20k_random_logic():
     
     prompt = factory.generate_prompt()
     #print(prompt)
-    print(f"prompt length: {len(prompt)}")
+    print(f"prompt length: {len(prompt)}")    
 
-    from dotenv import load_dotenv
-    load_dotenv() #LLMFactory needs this to load the api key
-
-    #model = "gemini-1.5-flash-8b"
-    model = "gemini-2.0-flash-exp"    
+    model = "gemini-1.5-flash-8b"
+    #model = "gemini-2.0-flash-exp"    
     
 
     llm_response = LLMFactory.query_llm(server=LLM.GEMINI,
