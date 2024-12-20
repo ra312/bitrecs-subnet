@@ -19,25 +19,25 @@ LOCAL_OLLAMA_URL = "http://10.0.0.40:11434/api/chat"
 
 
 def product_woo():
-    woo_catalog = "./tests/data/product_catalog.csv" #2038 records
+    woo_catalog = "./tests/data/woocommerce/product_catalog.csv" #2038 records
     catalog = PromptFactory.tryload_catalog_to_json(woo_catalog)
     products = Product.convert(catalog, CatalogProvider.WOOCOMMERCE)
     return products
 
 def product_1k():
-    with open("./tests/data/amazon_fashion_sample_1000.json", "r") as f:
+    with open("./tests/data/amazon/fashion/amazon_fashion_sample_1000.json", "r") as f:
         data = f.read()    
     products = Product.convert(data, CatalogProvider.AMAZON)
     return products
 
 def product_5k():
-    with open("./tests/data/amazon_fashion_sample_5000.json", "r") as f:
+    with open("./tests/data/amazon/fashion/amazon_fashion_sample_5000.json", "r") as f:
         data = f.read()    
     products = Product.convert(data, CatalogProvider.AMAZON)
     return products
 
 def product_20k():
-    with open("./tests/data/amazon_fashion_sample_20000.json", "r") as f:
+    with open("./tests/data/amazon/fashion/amazon_fashion_sample_20000.json", "r") as f:
         data = f.read()    
     products = Product.convert(data, CatalogProvider.AMAZON)
     return products
@@ -379,7 +379,7 @@ def test_call_open_router_with_20k_random_logic():
                                  system_prompt="You are a helpful assistant", 
                                  temp=0.0, user_prompt=prompt)
     #print(llm_response)    
-    parsed_recs = PromptFactory.tryparse_llm(llm_response)   
+    parsed_recs = PromptFactory.tryparse_llm(llm_response)
     print(f"parsed {len(parsed_recs)} records")
     print(parsed_recs)
   
@@ -466,7 +466,7 @@ def test_call_gemini_with_20k_random_logic():
 
 
 
-    
+@pytest.mark.skip(reason="skipped for now please ensure .env file has grok api key")
 def test_call_grok_with_woo_catalog():
     products = product_woo()
     print(f"loaded {len(products)} records")
