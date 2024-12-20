@@ -27,12 +27,13 @@ class OllamaLocal():
 
     def ask_ollama(self, prompt) -> str:        
         data = {
-            "model": self.model,            
+            "model": self.model,       
+            "system": self.system_prompt,    
             "messages": [
-                {
-                    "role": "system",
-                    "content": self.system_prompt
-                },
+                # {
+                #     "role": "system",
+                #     "content": self.system_prompt
+                # },
                 {
                     "role": "user",
                     "content": prompt
