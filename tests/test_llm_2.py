@@ -14,12 +14,14 @@ load_dotenv()
 os.environ["NEST_ASYNCIO"] = "0"
 
 LOCAL_OLLAMA_URL = "http://10.0.0.40:11434/api/chat"
-#OLLAMA_MODEL = "llama3.1" 4/5
-#OLLAMA_MODEL= "llama3.1:70b" 4/5
-#OLLAMA_MODEL= "llama3.3" 3/5
-#OLLAMA_MODEL= "llama3.3:70b-instruct-q2_K" 
-#OLLAMA_MODEL= "qwen2.5:32b-instruct" 
-OLLAMA_MODEL= "nemotron" #5/6
+
+#OLLAMA_MODEL = "llama3.1" #4/5
+#OLLAMA_MODEL= "llama3.1:70b" #4/5
+#OLLAMA_MODEL= "llama3.3" #3/5
+#OLLAMA_MODEL= "llama3.3:70b-instruct-q2_K" #4/5
+#OLLAMA_MODEL= "qwen2.5:32b-instruct" #0/5
+#OLLAMA_MODEL= "nemotron" #5/6
+OLLAMA_MODEL = "nemotron:70b-instruct-q4_K_M" #4/5
 
 MASTER_SKU = "B08XYRDKDV" #HP Envy 6455e Wireless Color All-in-One Printer with 6 Months Free Ink (223R1A) (Renewed Premium)
 
@@ -47,6 +49,16 @@ def product_20k():
         data = f.read()    
     products = Product.convert(data, CatalogProvider.AMAZON)
     return products
+
+def test_warmup():
+    prompt = "Tell me a joke"
+    model = OLLAMA_MODEL
+    llm_response = LLMFactory.query_llm(server=LLM.OLLAMA_LOCAL,
+                                 model=model, 
+                                 system_prompt="You are a helpful assistant", 
+                                 temp=0.0, user_prompt=prompt)
+    print(llm_response)
+    assert llm_response is not None
 
 
 def test_all_sets_matryoshka():
