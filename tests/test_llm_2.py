@@ -15,7 +15,7 @@ os.environ["NEST_ASYNCIO"] = "0"
 
 LOCAL_OLLAMA_URL = "http://10.0.0.40:11434/api/chat"
 
-OLLAMA_MODEL = "mistral-nemo" #6/6 7 passed, 5 skipped, 3 warnings in 50.73s
+OLLAMA_MODEL = "mistral-nemo" #7/7 7 passed, 5 skipped, 3 warnings in 50.73s
 #6 passed, 5 skipped, 3 warnings in 52.57s | 6 passed, 5 skipped, 3 warnings in 57.67s | 1 failed, 5 passed, 5 skipped, 3 warnings in 67.16s (0:01:07) |  1 failed, 5 passed, 5 skipped, 3 warnings in 62.38s (0:01:02) |1 failed, 6 passed, 5 skipped, 3 warnings in 57.55s 
 
 #OLLAMA_MODEL = "nemotron:70b-instruct-q4_K_M" #6/6 6 passed, 5 skipped, 3 warnings in 159.35s (0:02:39) 
@@ -47,7 +47,6 @@ MASTER_SKU = "B08XYRDKDV" #HP Envy 6455e Wireless Color All-in-One Printer with 
 
 print(f"MASTER_SKU: {MASTER_SKU}\n")
 print(f"OLLAMA_MODEL: {OLLAMA_MODEL}")
-
 
 
 def product_woo():
@@ -304,15 +303,12 @@ def test_call_local_llm_with_20k_random_logic():
     assert user_prompt not in skus
 
 
-
 @pytest.mark.skip(reason="skipped")
 def test_call_open_router_with_5k_random_logic():
     raw_products = product_5k()
     products = Product.dedupe(raw_products)    
-    print(f"after de-dupe: {len(products)} records")
-   
-    #B07BG1CZ8X = iJuqi Mom Gifts from Daughter Son - 3PCS Stainless Steel Expendable Motivational 
-    # #Charm Bangle Bracelets Set for Mother's Day, Birthday Gifts for Mom, Mother Jewelry for Christmas (Silver)
+    print(f"after de-dupe: {len(products)} records")   
+  
     rp = safe_random.choice(products)
     user_prompt = rp.sku    
     num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 11, 12, 16, 20])
@@ -362,16 +358,11 @@ def test_call_open_router_with_5k_random_logic():
 def test_call_open_router_with_20k_random_logic():
     raw_products = product_20k()
     products = Product.dedupe(raw_products)    
-    print(f"after de-dupe: {len(products)} records")
-   
-    #B07BG1CZ8X = iJuqi Mom Gifts from Daughter Son - 3PCS Stainless Steel Expendable Motivational 
-    # #Charm Bangle Bracelets Set for Mother's Day, Birthday Gifts for Mom, Mother Jewelry for Christmas (Silver)
+    print(f"after de-dupe: {len(products)} records")   
+ 
     rp = safe_random.choice(products)
-    user_prompt = rp.sku
-
-    #user_prompt = "B07BG1CZ8X"    
-    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 11, 12, 16, 20])
-    #num_recs = 8
+    user_prompt = rp.sku    
+    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 11, 12, 16, 20])    
 
     debug_prompts = False
 
@@ -401,8 +392,7 @@ def test_call_open_router_with_20k_random_logic():
     print(f"parsed {len(parsed_recs)} records")
     print(parsed_recs)
   
-    assert len(parsed_recs) == num_recs
-  
+    assert len(parsed_recs) == num_recs  
 
     #check uniques
     skus = [item['sku'] for item in parsed_recs]
@@ -418,16 +408,11 @@ def test_call_open_router_with_20k_random_logic():
 def test_call_gemini_with_5k_random_logic():
     raw_products = product_5k()
     products = Product.dedupe(raw_products)    
-    print(f"after de-dupe: {len(products)} records")
+    print(f"after de-dupe: {len(products)} records")   
    
-    #B07BG1CZ8X = iJuqi Mom Gifts from Daughter Son - 3PCS Stainless Steel Expendable Motivational 
-    # #Charm Bangle Bracelets Set for Mother's Day, Birthday Gifts for Mom, Mother Jewelry for Christmas (Silver)
     rp = safe_random.choice(products)
-    user_prompt = rp.sku
-
-    #user_prompt = "B07BG1CZ8X"    
-    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 11, 12, 16, 20])
-    #num_recs = 8
+    user_prompt = rp.sku    
+    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 11, 12, 16, 20])    
 
     debug_prompts = False
 
@@ -447,8 +432,7 @@ def test_call_gemini_with_5k_random_logic():
     print(f"prompt length: {len(prompt)}")    
 
     model = "gemini-1.5-flash-8b"
-    #model = "gemini-2.0-flash-exp"    
-    
+    #model = "gemini-2.0-flash-exp"
 
     llm_response = LLMFactory.query_llm(server=LLM.GEMINI,
                                  model=model,
@@ -459,8 +443,7 @@ def test_call_gemini_with_5k_random_logic():
     print(f"parsed {len(parsed_recs)} records")
     print(parsed_recs)
   
-    assert len(parsed_recs) == num_recs
-  
+    assert len(parsed_recs) == num_recs  
 
     #check uniques
     skus = [item['sku'] for item in parsed_recs]
@@ -477,9 +460,7 @@ def test_call_gemini_with_20k_random_logic():
     raw_products = product_20k()
     products = Product.dedupe(raw_products)    
     print(f"after de-dupe: {len(products)} records")
-   
-    #B07BG1CZ8X = iJuqi Mom Gifts from Daughter Son - 3PCS Stainless Steel Expendable Motivational 
-    # #Charm Bangle Bracelets Set for Mother's Day, Birthday Gifts for Mom, Mother Jewelry for Christmas (Silver)
+
     rp = safe_random.choice(products)
     user_prompt = rp.sku        
     num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 11, 12, 16, 20])    
@@ -502,8 +483,7 @@ def test_call_gemini_with_20k_random_logic():
     print(f"prompt length: {len(prompt)}")    
 
     model = "gemini-1.5-flash-8b"
-    #model = "gemini-2.0-flash-exp"    
-    
+    #model = "gemini-2.0-flash-exp"
 
     llm_response = LLMFactory.query_llm(server=LLM.GEMINI,
                                  model=model,
@@ -514,8 +494,7 @@ def test_call_gemini_with_20k_random_logic():
     print(f"parsed {len(parsed_recs)} records")
     print(parsed_recs)
   
-    assert len(parsed_recs) == num_recs
-  
+    assert len(parsed_recs) == num_recs  
 
     #check uniques
     skus = [item['sku'] for item in parsed_recs]
@@ -525,7 +504,6 @@ def test_call_gemini_with_20k_random_logic():
         assert count == 1
 
     assert user_prompt not in skus
-
 
 
 @pytest.mark.skip(reason="skipped")

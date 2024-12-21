@@ -30,8 +30,9 @@ from typing import List
 from template.commerce.product import Product
 from template.utils import constants as CONST
 
-ALPHA_TIME_DECAY = 0.05
 BASE_BOOST = 1/256
+BASE_REWARD = 0.80
+ALPHA_TIME_DECAY = 0.05
 
 ACTION_WEIGHTS = {
     ActionType.VIEW_PRODUCT.value: 0.05,
@@ -178,20 +179,17 @@ def reward(
         valid_items = set()
         for result in response.results:
             try:
-                product: Product = json_repair.loads(result)
-                #bt.logging.trace(f"{response.miner_uid} response product: {product}")
+                product: Product = json_repair.loads(result)                
                 sku = product["sku"]
                 if sku in valid_items:
                     bt.logging.warning(f"Miner {response.miner_uid} has duplicate results: {response.miner_hotkey}")
-                    return 0.0               
+                    return 0.0                
                 
-                # Check if sku exists in the context
                 if not does_sku_exist(sku, store_catalog):
                     bt.logging.warning(f"Miner {response.miner_uid} has invalid results: {response.miner_hotkey}")
                     return 0.00
                 
                 valid_items.add(sku)
-
             except Exception as e:
                 bt.logging.error(f"JSON ERROR: {e}, miner data: {response.miner_hotkey}")
                 return 0.0
@@ -200,7 +198,7 @@ def reward(
             bt.logging.warning(f"Miner {response.miner_uid} invalid number of valid_items: {response.miner_hotkey}")
             return 0.0
 
-        score = 0.80        
+        score = BASE_REWARD 
         bt.logging.info(f"In reward, score: {score}, num_recs: {num_recs}, miner: {response.miner_hotkey}")
 
         #Check duration        

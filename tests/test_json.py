@@ -110,7 +110,7 @@ def test_schema_validation():
 
 def test_load_1k_raw():
     rows = []
-    with open("./tests/data/amazon_fashion_sample_1000.json", "r") as f:
+    with open("./tests/data/amazon/fashion/amazon_fashion_sample_1000.json", "r") as f:
         data = f.read()
         rows = json_repair.loads(data)    
     print(f"loaded {len(rows)} records")
@@ -119,7 +119,7 @@ def test_load_1k_raw():
 
 def test_load_5k_raw():
     rows = []
-    with open("./tests/data/amazon_fashion_sample_5000.json", "r") as f:
+    with open("./tests/data/amazon/fashion/amazon_fashion_sample_5000.json", "r") as f:
         data = f.read()
         rows = json_repair.loads(data)    
     print(f"loaded {len(rows)} records")
@@ -127,7 +127,7 @@ def test_load_5k_raw():
 
 
 def test_parse_1k_into_products():
-    with open("./tests/data/amazon_fashion_sample_1000.json", "r") as f:
+    with open("./tests/data/amazon/fashion/amazon_fashion_sample_1000.json", "r") as f:
         data = f.read()    
     products = Product.try_parse_context(data)
     print(f"loaded {len(products)} records")    
@@ -135,7 +135,7 @@ def test_parse_1k_into_products():
 
 
 def test_parse_5k_into_products():
-    with open("./tests/data/amazon_fashion_sample_5000.json", "r") as f:
+    with open("./tests/data/amazon/fashion/amazon_fashion_sample_5000.json", "r") as f:
         data = f.read()    
     products = Product.try_parse_context(data)
     print(f"loaded {len(products)} records")    
@@ -143,7 +143,7 @@ def test_parse_5k_into_products():
 
 
 def test_parse_20k_into_products():
-    with open("./tests/data/amazon_fashion_sample_20000.json", "r") as f:
+    with open("./tests/data/amazon/fashion/amazon_fashion_sample_20000.json", "r") as f:
         data = f.read()    
     products = Product.try_parse_context(data)
     print(f"loaded {len(products)} records")    
@@ -152,7 +152,7 @@ def test_parse_20k_into_products():
 
 
 def test_parse_1k_products_have_missing_fields():
-    with open("./tests/data/amazon_fashion_sample_1000.json", "r") as f:
+    with open("./tests/data/amazon/fashion/amazon_fashion_sample_1000.json", "r") as f:
         data = f.read()    
     products = Product.try_parse_context(data)
     print(f"loaded {len(products)} records")       
@@ -174,7 +174,7 @@ def test_parse_1k_products_have_missing_fields():
 
             
 def test_convert_1k_amazon_to_bitrecs():
-    with open("./tests/data/amazon_fashion_sample_1000.json", "r") as f:
+    with open("./tests/data/amazon/fashion/amazon_fashion_sample_1000.json", "r") as f:
         data = f.read()    
     products = Product.convert(data, CatalogProvider.AMAZON)
     print(f"converted {len(products)} records")       
@@ -194,7 +194,7 @@ def test_convert_1k_amazon_to_bitrecs():
 
 
 def test_convert_5k_amazon_to_bitrecs():
-    with open("./tests/data/amazon_fashion_sample_5000.json", "r") as f:
+    with open("./tests/data/amazon/fashion/amazon_fashion_sample_5000.json", "r") as f:
         data = f.read()    
     products = Product.convert(data, CatalogProvider.AMAZON)
     print(f"converted {len(products)} records")       
@@ -215,7 +215,7 @@ def test_convert_5k_amazon_to_bitrecs():
 
 
 def test_convert_20k_amazon_to_bitrecs():
-    with open("./tests/data/amazon_fashion_sample_20000.json", "r") as f:
+    with open("./tests/data/amazon/fashion/amazon_fashion_sample_20000.json", "r") as f:
         data = f.read()    
     products = Product.convert(data, CatalogProvider.AMAZON)
     print(f"converted {len(products)} records")       
@@ -235,7 +235,7 @@ def test_convert_20k_amazon_to_bitrecs():
 
 
 def test_convert_1k_woocommerce_to_bitrecs():
-    woo_catalog = "./tests/data/product_catalog.csv" #2038 records
+    woo_catalog = "./tests/data/woocommerce/product_catalog.csv" #2038 records
     catalog = PromptFactory.tryload_catalog_to_json(woo_catalog)
     products = Product.convert(catalog, CatalogProvider.WOOCOMMERCE)
     print(f"converted {len(products)} records")       

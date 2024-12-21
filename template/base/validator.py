@@ -243,7 +243,6 @@ class BaseValidatorNeuron(BaseNeuron):
     @execute_periodically(timedelta(seconds=600))
     async def version_sync(self):
         bt.logging.trace(f"Version sync ran at {int(time.time())}")
-
         try:
             self.local_metadata = LocalMetadata.local_metadata()
             self.local_metadata.uid = self.uid
@@ -251,11 +250,9 @@ class BaseValidatorNeuron(BaseNeuron):
             #self.local_metadata.coldkey = self.wallet.coldkeypub.ss58_address
             bt.logging.trace(f"Local metadata: {self.local_metadata}")
             bt.logging.trace(f"\033[1;32m Metadata Sucess \033[0m")
-
         except Exception as e:
             bt.logging.error(f"Failed to get version with exception: {e}")
         return
-
 
 
     def run(self):
@@ -309,7 +306,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         if len(chosen_uids) == 0:
                             available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
                             chosen_uids : list[int] = available_uids.tolist()
-                            chosen_uids.append(1) #add local miner for now
+                            chosen_uids.append(1) #add local miner for now #TODO remove
                             chosen_uids = list(set(chosen_uids))
                         if len(chosen_uids) == 0:
                             bt.logging.error("No active miners, skipping - check your connectivity")
