@@ -15,7 +15,8 @@ os.environ["NEST_ASYNCIO"] = "0"
 
 LOCAL_OLLAMA_URL = "http://10.0.0.40:11434/api/chat"
 
-OLLAMA_MODEL = "mistral-nemo" #6/6 6 passed, 5 skipped, 3 warnings in 52.57s | 6 passed, 5 skipped, 3 warnings in 57.67s | 1 failed, 5 passed, 5 skipped, 3 warnings in 67.16s (0:01:07) |  1 failed, 5 passed, 5 skipped, 3 warnings in 62.38s (0:01:02) |1 failed, 6 passed, 5 skipped, 3 warnings in 57.55s 
+OLLAMA_MODEL = "mistral-nemo" #6/6 7 passed, 5 skipped, 3 warnings in 50.73s
+#6 passed, 5 skipped, 3 warnings in 52.57s | 6 passed, 5 skipped, 3 warnings in 57.67s | 1 failed, 5 passed, 5 skipped, 3 warnings in 67.16s (0:01:07) |  1 failed, 5 passed, 5 skipped, 3 warnings in 62.38s (0:01:02) |1 failed, 6 passed, 5 skipped, 3 warnings in 57.55s 
 
 #OLLAMA_MODEL = "nemotron:70b-instruct-q4_K_M" #6/6 6 passed, 5 skipped, 3 warnings in 159.35s (0:02:39) 
 #OLLAMA_MODEL = "llama3.1:70b" #6/6 6 passed, 5 skipped, 3 warnings in 133.20s (0:02:13)
@@ -23,8 +24,9 @@ OLLAMA_MODEL = "mistral-nemo" #6/6 6 passed, 5 skipped, 3 warnings in 52.57s | 6
 #OLLAMA_MODEL = "qwen2.5:32b" #6/6  6 passed, 5 skipped, 3 warnings in 119.75s (0:01:59) 
 #OLLAMA_MODEL = "qwen2.5:32b-instruct" #6/6
 
-OLLAMA_MODEL = "mistral-nemo:12b-instruct-2407-q8_0" #5/6  1 failed, 5 passed, 5 skipped, 3 warnings in 76.60s (0:01:16) | 1 failed, 6 passed, 5 skipped, 3 warnings in 87.11s (0:01:27)
-#OLLAMA_MODEL= "nemotron" #5/6 1 failed, 5 passed, 5 skipped, 3 warnings in 226.01s (0:03:46)
+#OLLAMA_MODEL = "mistral-nemo:12b" #5/6 1 failed, 6 passed, 5 skipped, 3 warnings in 58.90s
+#OLLAMA_MODEL = "mistral-nemo:12b-instruct-2407-q8_0" #5/6  1 failed, 5 passed, 5 skipped, 3 warnings in 76.60s (0:01:16) | 1 failed, 6 passed, 5 skipped, 3 warnings in 87.11s (0:01:27) | 1 failed, 6 passed, 5 skipped, 3 warnings in 75.76s (0:01:15)
+#OLLAMA_MODEL = "nemotron" #5/6 1 failed, 5 passed, 5 skipped, 3 warnings in 226.01s (0:03:46)
 
 #OLLAMA_MODEL = "qwen2.5-coder:32b" #5/6
 #OLLAMA_MODEL = "llama3.2-vision:90b" #5/6 1 failed, 5 passed, 5 skipped, 3 warnings in 163.90s (0:02:43)
@@ -39,7 +41,7 @@ OLLAMA_MODEL = "mistral-nemo:12b-instruct-2407-q8_0" #5/6  1 failed, 5 passed, 5
 #OLLAMA_MODEL = "deepseek-coder-v2:latest" # 4 failed, 2 passed, 5 skipped, 3 warnings in 71.11s (0:01:11)
 #OLLAMA_MODEL = "llama3.2-vision:90b-instruct-q4_K_M" #2 failed, 4 passed, 5 skipped, 3 warnings in 216.71s (0:03:36)
 #OLLAMA_MODEL = "qwen2.5:72b-instruct-q4_0" dnf
-
+#OLLAMA_MODEL = "mistral-nemo:12b-instruct-2407-fp16"
 
 MASTER_SKU = "B08XYRDKDV" #HP Envy 6455e Wireless Color All-in-One Printer with 6 Months Free Ink (223R1A) (Renewed Premium)
 
@@ -127,8 +129,6 @@ def test_product_dupes():
     dd3 = Product.dedupe(list3)
     print(f"after de-dupe: {len(dd3)} records") 
     assert len(dd3) == (len(list3) - d3)
-    
-   
 
 
 def test_call_local_llm_with_1k():
@@ -172,8 +172,7 @@ def test_call_local_llm_with_1k():
     
   
 def test_call_local_llm_with_5k():
-    products = product_5k() 
-
+    products = product_5k()
     products = Product.dedupe(products)
     print(f"after de-dupe: {len(products)} records")    
     

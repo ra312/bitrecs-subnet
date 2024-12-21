@@ -336,7 +336,8 @@ class Miner(BaseMinerNeuron):
         """
         match self.llm_provider:
             case LLM.OLLAMA_LOCAL:
-                model = "llama3.1" 
+                model = "mistral-nemo"
+                #model = "llama3.1" 
                 #model = "llama3.2"
                 #model = "llama3.2:3b-instruct-q8_0"
             case LLM.OPEN_ROUTER:
