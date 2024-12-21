@@ -179,7 +179,7 @@ class Miner(BaseMinerNeuron):
             bt.logging.error(f"\033[31mFATAL ERROR calling do_work: {e!r} \033[0m")
         finally:
             et = time.time()
-            bt.logging.info(f"{self.model} Query - Elapsed Time: {et-st}")
+            bt.logging.info(f"{self.model} Query - Elapsed Time: \033[1;32m {et-st} \033[0m")
 
         utc_now = datetime.now(timezone.utc)
         created_at = utc_now.strftime("%Y-%m-%dT%H:%M:%S")

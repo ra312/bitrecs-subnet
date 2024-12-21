@@ -56,6 +56,10 @@ class LLMFactory:
                 return LLM.VLLM
             case "GEMINI":
                 return LLM.GEMINI
+            case "GROK":
+                return LLM.GROK
+            case "CLAUDE":
+                return LLM.CLAUDE
             case _:
                 raise ValueError("Unknown LLM server")
         
