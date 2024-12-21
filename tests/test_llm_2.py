@@ -15,7 +15,7 @@ os.environ["NEST_ASYNCIO"] = "0"
 
 LOCAL_OLLAMA_URL = "http://10.0.0.40:11434/api/chat"
 
-OLLAMA_MODEL = "mistral-nemo" #6/6 6 passed, 5 skipped, 3 warnings in 52.57s | 1 failed, 5 passed, 5 skipped, 3 warnings in 67.16s (0:01:07) |  1 failed, 5 passed, 5 skipped, 3 warnings in 62.38s (0:01:02) 
+OLLAMA_MODEL = "mistral-nemo" #6/6 6 passed, 5 skipped, 3 warnings in 52.57s | 6 passed, 5 skipped, 3 warnings in 57.67s | 1 failed, 5 passed, 5 skipped, 3 warnings in 67.16s (0:01:07) |  1 failed, 5 passed, 5 skipped, 3 warnings in 62.38s (0:01:02) |1 failed, 6 passed, 5 skipped, 3 warnings in 57.55s 
 
 #OLLAMA_MODEL = "nemotron:70b-instruct-q4_K_M" #6/6 6 passed, 5 skipped, 3 warnings in 159.35s (0:02:39) 
 #OLLAMA_MODEL = "llama3.1:70b" #6/6 6 passed, 5 skipped, 3 warnings in 133.20s (0:02:13)
@@ -23,9 +23,7 @@ OLLAMA_MODEL = "mistral-nemo" #6/6 6 passed, 5 skipped, 3 warnings in 52.57s | 1
 #OLLAMA_MODEL = "qwen2.5:32b" #6/6  6 passed, 5 skipped, 3 warnings in 119.75s (0:01:59) 
 #OLLAMA_MODEL = "qwen2.5:32b-instruct" #6/6
 
-
-
-#OLLAMA_MODEL = "mistral-nemo:12b-instruct-2407-q8_0" #5/6  1 failed, 5 passed, 5 skipped, 3 warnings in 76.60s (0:01:16)
+OLLAMA_MODEL = "mistral-nemo:12b-instruct-2407-q8_0" #5/6  1 failed, 5 passed, 5 skipped, 3 warnings in 76.60s (0:01:16) | 1 failed, 6 passed, 5 skipped, 3 warnings in 87.11s (0:01:27)
 #OLLAMA_MODEL= "nemotron" #5/6 1 failed, 5 passed, 5 skipped, 3 warnings in 226.01s (0:03:46)
 
 #OLLAMA_MODEL = "qwen2.5-coder:32b" #5/6
@@ -40,7 +38,7 @@ OLLAMA_MODEL = "mistral-nemo" #6/6 6 passed, 5 skipped, 3 warnings in 52.57s | 1
 #OLLAMA_MODEL = "gemma2:27b-instruct-fp16" # 4 failed, 2 passed, 5 skipped, 3 warnings in 119.31s (0:01:59)
 #OLLAMA_MODEL = "deepseek-coder-v2:latest" # 4 failed, 2 passed, 5 skipped, 3 warnings in 71.11s (0:01:11)
 #OLLAMA_MODEL = "llama3.2-vision:90b-instruct-q4_K_M" #2 failed, 4 passed, 5 skipped, 3 warnings in 216.71s (0:03:36)
-
+#OLLAMA_MODEL = "qwen2.5:72b-instruct-q4_0" dnf
 
 
 MASTER_SKU = "B08XYRDKDV" #HP Envy 6455e Wireless Color All-in-One Printer with 6 Months Free Ink (223R1A) (Renewed Premium)
@@ -99,14 +97,43 @@ def test_all_sets_matryoshka():
     assert (set1 & set2).issubset(set3)
 
 
-def test_call_local_llm_with_1k():
-    products = product_1k()
-    print(f"loaded {len(products)} records")
-    assert len(products) == 1000
+def test_product_dupes():
+    list1 = product_1k()
+    print(f"loaded {len(list1)} records")
+    assert len(list1) == 1000
+    d1 = Product.get_dupe_count(list1)
+    print(f"dupe count: {d1}")
+    assert d1 == 36
+    dd1 = Product.dedupe(list1)
+    print(f"after de-dupe: {len(dd1)} records") 
+    assert len(dd1) == (len(list1) - d1)
+
+    list2 = product_5k()
+    print(f"loaded {len(list2)} records")
+    assert len(list2) == 5000
+    d2 = Product.get_dupe_count(list2)
+    print(f"dupe count: {d2}")
+    assert d2 == 568
+    dd2 = Product.dedupe(list2)
+    print(f"after de-dupe: {len(dd2)} records") 
+    assert len(dd2) == (len(list2) - d2)
+
+    list3 = product_20k()
+    print(f"loaded {len(list3)} records")
+    assert len(list3) == 19_999
+    d3 = Product.get_dupe_count(list3)
+    print(f"dupe count: {d3}")
+    assert d3 == 4500
+    dd3 = Product.dedupe(list3)
+    print(f"after de-dupe: {len(dd3)} records") 
+    assert len(dd3) == (len(list3) - d3)
     
-    dd = Product.get_dupe_count(products)
-    print(f"dupe count: {dd}")
-    assert dd == 36
+   
+
+
+def test_call_local_llm_with_1k():
+    products = product_1k() 
+    products = Product.dedupe(products)
     
     user_prompt = MASTER_SKU
     num_recs = 5
@@ -145,13 +172,7 @@ def test_call_local_llm_with_1k():
     
   
 def test_call_local_llm_with_5k():
-    products = product_5k()
-    print(f"loaded {len(products)} records")
-    assert len(products) == 5000
-
-    dd = Product.get_dupe_count(products)
-    print(f"dupe count: {dd}")
-    assert dd == 568
+    products = product_5k() 
 
     products = Product.dedupe(products)
     print(f"after de-dupe: {len(products)} records")    
@@ -194,16 +215,9 @@ def test_call_local_llm_with_5k():
 
 
 def test_call_local_llm_with_20k():
-    raw_products = product_20k()
-    print(f"loaded: {len(raw_products)} records")
-    assert len(raw_products) == 19_999
-
-    dd = Product.get_dupe_count(raw_products)
-    print(f"dupe count: {dd}")
-    assert dd == 4500    
-
-    products = Product.dedupe(raw_products)    
-    print(f"after de-dupe: {len(products)} records")   
+    products = product_20k()  
+    products = Product.dedupe(products)    
+    print(f"after de-dupe: {len(products)} records")
     
     user_prompt = MASTER_SKU
     num_recs = 6
@@ -244,13 +258,6 @@ def test_call_local_llm_with_20k():
 
 def test_call_local_llm_with_20k_random_logic():
     raw_products = product_20k()
-    print(f"loaded: {len(raw_products)} records")
-    assert len(raw_products) == 19_999
-
-    dd = Product.get_dupe_count(raw_products)
-    print(f"dupe count: {dd}")
-    assert dd == 4500    
-
     products = Product.dedupe(raw_products)    
     print(f"after de-dupe: {len(products)} records")
    
@@ -262,10 +269,10 @@ def test_call_local_llm_with_20k_random_logic():
 
     match = [products for products in products if products.sku == user_prompt][0]
     print(match)    
-    print(f"num_recs: {num_recs}")  
+    print(f"num_recs: {num_recs}")
 
     context = json.dumps([asdict(products) for products in products])
-    factory = PromptFactory(sku=user_prompt, 
+    factory = PromptFactory(sku=user_prompt,
                             context=context, 
                             num_recs=num_recs, 
                             load_catalog=False, 
@@ -302,13 +309,6 @@ def test_call_local_llm_with_20k_random_logic():
 @pytest.mark.skip(reason="skipped")
 def test_call_open_router_with_5k_random_logic():
     raw_products = product_5k()
-    print(f"loaded: {len(raw_products)} records")
-    assert len(raw_products) == 5000
-
-    dd = Product.get_dupe_count(raw_products)
-    print(f"dupe count: {dd}")
-    assert dd == 568
-
     products = Product.dedupe(raw_products)    
     print(f"after de-dupe: {len(products)} records")
    
@@ -362,13 +362,6 @@ def test_call_open_router_with_5k_random_logic():
 @pytest.mark.skip(reason="skipped")
 def test_call_open_router_with_20k_random_logic():
     raw_products = product_20k()
-    print(f"loaded: {len(raw_products)} records")
-    assert len(raw_products) == 19_999
-
-    dd = Product.get_dupe_count(raw_products)
-    print(f"dupe count: {dd}")
-    assert dd == 4500
-
     products = Product.dedupe(raw_products)    
     print(f"after de-dupe: {len(products)} records")
    
@@ -425,13 +418,6 @@ def test_call_open_router_with_20k_random_logic():
 @pytest.mark.skip(reason="skipped")
 def test_call_gemini_with_5k_random_logic():
     raw_products = product_5k()
-    print(f"loaded: {len(raw_products)} records")
-    assert len(raw_products) == 5000
-
-    dd = Product.get_dupe_count(raw_products)
-    print(f"dupe count: {dd}")
-    assert dd == 568    
-
     products = Product.dedupe(raw_products)    
     print(f"after de-dupe: {len(products)} records")
    
@@ -490,13 +476,6 @@ def test_call_gemini_with_5k_random_logic():
 @pytest.mark.skip(reason="skipped")
 def test_call_gemini_with_20k_random_logic():
     raw_products = product_20k()
-    print(f"loaded: {len(raw_products)} records")
-    assert len(raw_products) == 19_999
-
-    dd = Product.get_dupe_count(raw_products)
-    print(f"dupe count: {dd}")
-    assert dd == 4500    
-
     products = Product.dedupe(raw_products)    
     print(f"after de-dupe: {len(products)} records")
    
