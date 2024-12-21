@@ -29,6 +29,9 @@ class Product:
         """
         Try to load a woo catalog into a normalized list
 
+        :param file_path: Path to the WooCommerce CSV file
+        :param max_rows: Maximum number of rows to process
+        :return: List of dictionaries with 'sku', 'name', 'price'
         """
         try:
             df = pd.read_csv(file_path)
@@ -55,29 +58,78 @@ class Product:
     @staticmethod
     def tryload_catalog_shopify(file_path: str, max_rows=100_000) -> list:
         """
-        Try to load a shopify catalog into a normalized list
-
+        Try to load a Shopify catalog into a normalized list
+        *this will squash variants down 
+        
+        :param file_path: Path to the Shopify CSV file
+        :param max_rows: Maximum number of rows to process
+        :return: List of dictionaries with 'sku', 'name', 'price'
         """
         try:
             df = pd.read_csv(file_path)
-            #Shopify Format
-            columns = ["Handle", "Title", "Vendor", "Type", "Published", "Variant SKU", "Variant Price", "Status"]
-            df = df[[c for c in columns if c in df.columns]]
-            df = df.rename(columns={'Variant SKU': 'sku', 'Title': 'name', 'Variant Price': 'price', 'Stock': 'OnHand'})
 
-            df['name'] = df['name'].str.replace(r'<[^<>]*>', '', regex=True)
-            
-            #Only take simple and variable products
-            #product_types = ["simple", "variable"]
-            #df = df[df['Type'].isin(product_types)]
-            #             
-            
-            df.fillna(' ', inplace=True)
+            # Select relevant columns
+            columns = [
+                "Handle", "Title", "Variant SKU", "Variant Price", 
+                "Option1 Name", "Option1 Value", 
+                "Option2 Name", "Option2 Value", 
+                "Option3 Name", "Option3 Value", 
+                "Status"
+            ]
+            df = df[[c for c in columns if c in df.columns]]
+
+            # Rename columns for clarity
+            df = df.rename(columns={
+                'Handle': 'handle',
+                'Title': 'name',
+                'Variant SKU': 'sku',
+                'Variant Price': 'price',
+                'Option1 Name': 'option1_name',
+                'Option1 Value': 'option1_value',
+                'Option2 Name': 'option2_name',
+                'Option2 Value': 'option2_value',
+                'Option3 Name': 'option3_name',
+                'Option3 Value': 'option3_value'
+            })
+
+            # Clean and preprocess data
+            df['name'] = df['name'].fillna('').str.replace(r'<[^<>]*>', '', regex=True)
+            df['sku'] = df['sku'].astype(str).str.lstrip("'").replace('nan', '')  # Remove leading ' and invalid 'nan' values
+            df.fillna('', inplace=True)
+
+            # Fill empty names with the parent name grouped by 'handle'
+            parent_names = df.groupby('handle')['name'].first().to_dict()
+            df['name'] = df.apply(lambda row: parent_names.get(row['handle'], '') if row['name'] == '' else row['name'], axis=1)
+
+            # Remove rows without a SKU
+            df = df[df['sku'] != '']
+
+            # Limit rows for processing
             df = df.head(max_rows)
-            df = df.to_dict(orient='records')
-            return df
+
+            # Convert to list of dictionaries
+            products = []
+            for _, row in df.iterrows():
+                product = {
+                    'handle': row['handle'],
+                    'name': row['name'],
+                    'sku': row['sku'],
+                    'price': row['price'],
+                    'variants': []
+                }
+
+                # Add variant details if available
+                for i in range(1, 4):
+                    option_name = row.get(f'option{i}_name', '').strip()
+                    option_value = row.get(f'option{i}_value', '').strip()
+                    if option_name and option_value:
+                        product['variants'].append({option_name: option_value})
+
+                products.append(product)
+
+            return products
         except Exception as e:
-            bt.logging.error(str(e))
+            print(f"Error loading catalog: {e}")
             return []
         
         
@@ -85,7 +137,7 @@ class Product:
     @staticmethod
     def tryload_catalog_to_json(provider: CatalogProvider, file_path: str, max_rows=100_000) -> str:
         """
-        Convert a WooCommerce catalog export to a JSON string
+        Convert a product export .csv into JSON
 
         """
         if not os.path.exists(file_path):   
@@ -100,6 +152,7 @@ class Product:
                 return json.dumps(thing, indent=2)
             case _:
                raise ValueError(f"Invalid provider: {provider}")
+            
 
     @staticmethod
     def try_parse_context(context: str) -> list["Product"]:
@@ -138,7 +191,7 @@ class Product:
     @staticmethod
     def convert(context: str, provider: CatalogProvider) -> list["Product"]:
         """
-            Convert a raw store catalog json in Products
+            Convert a raw store catalog json into Products
 
         """
         match provider:
@@ -245,35 +298,10 @@ class ShopifyConverter(BaseConverter):
                 name = self.clean(name)
                 result.append(Product(sku=sku, name=name, price=price))
             except Exception as e:
-                bt.logging.error(f"WoocommerceConverter.convert Exception: {e}")
+                bt.logging.error(f"ShopifyConverter.convert Exception: {e}")
                 continue
-        return result
+        return result    
      
-     
-    def get_variants(self, products):
-        """Get variants from a list of products.
-
-        Args:
-            products (pd.DataFrame): Pandas dataframe of products from get_products()
-
-        Returns:
-            variants (pd.DataFrame): Pandas dataframe of variants
-        """
-
-        products['id'].astype(int)
-        df_variants = pd.DataFrame()
-
-        for row in products.itertuples(index='True'):
-
-            for variant in getattr(row, 'variants'):
-                df_variants = pd.concat([df_variants, pd.DataFrame.from_records(variant, index=[0])])
-
-        df_variants['id'].astype(int)
-        df_variants['product_id'].astype(int)
-        df_parent_data = products[['id', 'title', 'vendor']]
-        df_parent_data = df_parent_data.rename(columns={'title': 'parent_title', 'id': 'parent_id'})
-        df_variants = df_variants.merge(df_parent_data, left_on='product_id', right_on='parent_id')
-        return df_variants
     
 
     

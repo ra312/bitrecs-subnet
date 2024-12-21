@@ -51,7 +51,7 @@ print(f"OLLAMA_MODEL: {OLLAMA_MODEL}")
 
 def product_woo():
     woo_catalog = "./tests/data/woocommerce/product_catalog.csv" #2038 records
-    catalog = PromptFactory.tryload_catalog_to_json(CatalogProvider.WOOCOMMERCE, woo_catalog)
+    catalog = Product.tryload_catalog_to_json(CatalogProvider.WOOCOMMERCE, woo_catalog)
     products = Product.convert(catalog, CatalogProvider.WOOCOMMERCE)
     return products
 
