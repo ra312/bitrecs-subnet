@@ -1,5 +1,6 @@
 
 from os import path
+import os
 import pathlib
 import base64
 import requests
@@ -24,16 +25,11 @@ class OllamaLocal():
         with open(file_path, "rb") as file:
             return base64.b64encode(file.read()).decode("utf-8")
         
-
-    def ask_ollama(self, prompt) -> str:        
+    def ask_ollama(self, prompt) -> str:
         data = {
-            "model": self.model,       
-            "system": self.system_prompt,    
+            "model": self.model,
+            "system": self.system_prompt,
             "messages": [
-                # {
-                #     "role": "system",
-                #     "content": self.system_prompt
-                # },
                 {
                     "role": "user",
                     "content": prompt
@@ -42,11 +38,41 @@ class OllamaLocal():
             "stream": False,
             "keep_alive": self.keep_alive,
             "options": {
-                "temperature": self.temp
+                "temperature": self.temp,
             }
         }
         # print(data)
         return self.call_ollama(data)
+        
+
+    # def ask_ollama_long_ctx(self, prompt) -> str:
+    #     options = {
+    #         "temperature": self.temp,
+    #     }
+        
+    #     if os.environ.get("num_ctx") is not None:
+    #         num_ctx = int(os.environ.get('num_ctx'))
+    #         print(f"CUSTOM CTX LENGTH {num_ctx}")
+    #         options = {
+    #             "temperature": self.temp,
+    #             "num_ctx": num_ctx
+    #         }
+
+    #     data = {
+    #         "model": self.model,       
+    #         "system": self.system_prompt,    
+    #         "messages": [              
+    #             {
+    #                 "role": "user",
+    #                 "content": prompt
+    #             }
+    #         ],
+    #         "stream": False,
+    #         "keep_alive": self.keep_alive,
+    #         "options": options
+    #     }
+    #     # print(data)
+    #     return self.call_ollama(data)
     
 
     def get_ollama_caption(self, file_path) -> str:        

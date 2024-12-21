@@ -15,19 +15,31 @@ os.environ["NEST_ASYNCIO"] = "0"
 
 LOCAL_OLLAMA_URL = "http://10.0.0.40:11434/api/chat"
 
-OLLAMA_MODEL = "nemotron:70b-instruct-q4_K_M" #6/6
+OLLAMA_MODEL = "mistral-nemo" #6/6 6 passed, 5 skipped, 3 warnings in 52.57s | 1 failed, 5 passed, 5 skipped, 3 warnings in 67.16s (0:01:07) |  1 failed, 5 passed, 5 skipped, 3 warnings in 62.38s (0:01:02) 
+
+#OLLAMA_MODEL = "nemotron:70b-instruct-q4_K_M" #6/6 6 passed, 5 skipped, 3 warnings in 159.35s (0:02:39) 
+#OLLAMA_MODEL = "llama3.1:70b" #6/6 6 passed, 5 skipped, 3 warnings in 133.20s (0:02:13)
+#OLLAMA_MODEL = "llama3.1:70b-instruct-q4_0" #6 passed, 5 skipped, 3 warnings in 132.29s (0:02:12)
+#OLLAMA_MODEL = "qwen2.5:32b" #6/6  6 passed, 5 skipped, 3 warnings in 119.75s (0:01:59) 
 #OLLAMA_MODEL = "qwen2.5:32b-instruct" #6/6
-#OLLAMA_MODEL = "llama3.1:70b" #6/6
-#OLLAMA_MODEL = "mistral-nemo" #6 passed, 5 skipped, 3 warnings in 57.21s
 
 
-#OLLAMA_MODEL= "nemotron" #5/6
+
+#OLLAMA_MODEL = "mistral-nemo:12b-instruct-2407-q8_0" #5/6  1 failed, 5 passed, 5 skipped, 3 warnings in 76.60s (0:01:16)
+#OLLAMA_MODEL= "nemotron" #5/6 1 failed, 5 passed, 5 skipped, 3 warnings in 226.01s (0:03:46)
+
 #OLLAMA_MODEL = "qwen2.5-coder:32b" #5/6
+#OLLAMA_MODEL = "llama3.2-vision:90b" #5/6 1 failed, 5 passed, 5 skipped, 3 warnings in 163.90s (0:02:43)
+#OLLAMA_MODEL = "falcon3:10b-instruct-fp16" # 1 failed, 5 passed, 5 skipped, 3 warnings in 123.59s (0:02:03)
+
 
 #OLLAMA_MODEL = "llama3.1" #3/6
 #OLLAMA_MODEL = "llama3.3" #3/5
 #OLLAMA_MODEL = "llama3.3:70b-instruct-q2_K" #2/5
 #OLLAMA_MODEL = "qwq" #4/6
+#OLLAMA_MODEL = "gemma2:27b-instruct-fp16" # 4 failed, 2 passed, 5 skipped, 3 warnings in 119.31s (0:01:59)
+#OLLAMA_MODEL = "deepseek-coder-v2:latest" # 4 failed, 2 passed, 5 skipped, 3 warnings in 71.11s (0:01:11)
+#OLLAMA_MODEL = "llama3.2-vision:90b-instruct-q4_K_M" #2 failed, 4 passed, 5 skipped, 3 warnings in 216.71s (0:03:36)
 
 
 
@@ -35,6 +47,7 @@ MASTER_SKU = "B08XYRDKDV" #HP Envy 6455e Wireless Color All-in-One Printer with 
 
 print(f"MASTER_SKU: {MASTER_SKU}\n")
 print(f"OLLAMA_MODEL: {OLLAMA_MODEL}")
+
 
 
 def product_woo():
@@ -243,7 +256,7 @@ def test_call_local_llm_with_20k_random_logic():
    
     rp = safe_random.choice(products)
     user_prompt = rp.sku    
-    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 16, 20])
+    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 11, 12, 16, 20])
 
     debug_prompts = False
 
@@ -364,8 +377,8 @@ def test_call_open_router_with_20k_random_logic():
     rp = safe_random.choice(products)
     user_prompt = rp.sku
 
-    #user_prompt = "B07BG1CZ8X"
-    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 16, 20])
+    #user_prompt = "B07BG1CZ8X"    
+    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 11, 12, 16, 20])
     #num_recs = 8
 
     debug_prompts = False
@@ -427,8 +440,8 @@ def test_call_gemini_with_5k_random_logic():
     rp = safe_random.choice(products)
     user_prompt = rp.sku
 
-    #user_prompt = "B07BG1CZ8X"
-    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 16, 20])
+    #user_prompt = "B07BG1CZ8X"    
+    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 11, 12, 16, 20])
     #num_recs = 8
 
     debug_prompts = False
@@ -490,11 +503,8 @@ def test_call_gemini_with_20k_random_logic():
     #B07BG1CZ8X = iJuqi Mom Gifts from Daughter Son - 3PCS Stainless Steel Expendable Motivational 
     # #Charm Bangle Bracelets Set for Mother's Day, Birthday Gifts for Mom, Mother Jewelry for Christmas (Silver)
     rp = safe_random.choice(products)
-    user_prompt = rp.sku
-
-    #user_prompt = "B07BG1CZ8X"
-    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 16, 20])
-    #num_recs = 8
+    user_prompt = rp.sku        
+    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 11, 12, 16, 20])    
 
     debug_prompts = False
 

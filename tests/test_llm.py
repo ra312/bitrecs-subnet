@@ -33,6 +33,7 @@ MASTER_SKU = "B07BG1CZ8X"   #iJuqi Mom Gifts from Daughter Son - 3PCS Stainless 
 print(f"MASTER_SKU: {MASTER_SKU}\n")
 print(f"OLLAMA_MODEL: {OLLAMA_MODEL}")
 
+NUM_RECS = safe_random.choice([5, 6, 7, 8, 9, 10, 16, 20])
 
 def product_woo():
     woo_catalog = "./tests/data/woocommerce/product_catalog.csv" #2038 records
