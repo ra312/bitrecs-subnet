@@ -15,18 +15,26 @@ os.environ["NEST_ASYNCIO"] = "0"
 
 LOCAL_OLLAMA_URL = "http://10.0.0.40:11434/api/chat"
 
-#OLLAMA_MODEL = "nemotron:70b-instruct-q4_K_M" #6/6
+OLLAMA_MODEL = "nemotron:70b-instruct-q4_K_M" #6/6
 #OLLAMA_MODEL = "qwen2.5:32b-instruct" #6/6
 #OLLAMA_MODEL = "llama3.1:70b" #6/6
+#OLLAMA_MODEL = "mistral-nemo" #6 passed, 5 skipped, 3 warnings in 57.21s
+
 
 #OLLAMA_MODEL= "nemotron" #5/6
+#OLLAMA_MODEL = "qwen2.5-coder:32b" #5/6
 
 #OLLAMA_MODEL = "llama3.1" #3/6
 #OLLAMA_MODEL = "llama3.3" #3/5
-OLLAMA_MODEL = "llama3.3:70b-instruct-q2_K" #4/5
+#OLLAMA_MODEL = "llama3.3:70b-instruct-q2_K" #2/5
+#OLLAMA_MODEL = "qwq" #4/6
+
 
 
 MASTER_SKU = "B08XYRDKDV" #HP Envy 6455e Wireless Color All-in-One Printer with 6 Months Free Ink (223R1A) (Renewed Premium)
+
+print(f"MASTER_SKU: {MASTER_SKU}\n")
+print(f"OLLAMA_MODEL: {OLLAMA_MODEL}")
 
 
 def product_woo():
@@ -295,7 +303,7 @@ def test_call_open_router_with_5k_random_logic():
     # #Charm Bangle Bracelets Set for Mother's Day, Birthday Gifts for Mom, Mother Jewelry for Christmas (Silver)
     rp = safe_random.choice(products)
     user_prompt = rp.sku    
-    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 16, 20])    
+    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 11, 12, 16, 20])
 
     debug_prompts = False
 

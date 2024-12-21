@@ -30,7 +30,7 @@ OLLAMA_MODEL = "llama3.1" #6/7
 MASTER_SKU = "B07BG1CZ8X"   #iJuqi Mom Gifts from Daughter Son - 3PCS Stainless Steel Expendable Motivational 
                             # #Charm Bangle Bracelets Set for Mother's Day, Birthday Gifts for Mom, Mother Jewelry for Christmas (Silver)
 
-print(f"MASTER_SKU: {MASTER_SKU}")
+print(f"MASTER_SKU: {MASTER_SKU}\n")
 print(f"OLLAMA_MODEL: {OLLAMA_MODEL}")
 
 
