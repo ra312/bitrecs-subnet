@@ -5,7 +5,7 @@ from dataclasses import asdict
 from random import SystemRandom
 safe_random = SystemRandom()
 from typing import Counter
-from template.commerce.product import CatalogProvider, Product
+from template.commerce.product import CatalogProvider, ProductFactory
 from template.llms.factory import LLM, LLMFactory
 from template.llms.prompt_factory import PromptFactory
 from tests.utils import write_prompt_to_file
@@ -36,26 +36,26 @@ NUM_RECS = safe_random.choice([5, 6, 7, 8, 9, 10, 16, 20])
 
 def product_woo():
     woo_catalog = "./tests/data/woocommerce/product_catalog.csv" #2038 records
-    catalog = PromptFactory.tryload_catalog_to_json(woo_catalog)
-    products = Product.convert(catalog, CatalogProvider.WOOCOMMERCE)
+    catalog = ProductFactory.tryload_catalog_to_json(CatalogProvider.WOOCOMMERCE, woo_catalog)
+    products = ProductFactory.convert(catalog, CatalogProvider.WOOCOMMERCE)
     return products
 
 def product_1k():
     with open("./tests/data/amazon/fashion/amazon_fashion_sample_1000.json", "r") as f:
         data = f.read()    
-    products = Product.convert(data, CatalogProvider.AMAZON)
+    products = ProductFactory.convert(data, CatalogProvider.AMAZON)
     return products
 
 def product_5k():
     with open("./tests/data/amazon/fashion/amazon_fashion_sample_5000.json", "r") as f:
         data = f.read()    
-    products = Product.convert(data, CatalogProvider.AMAZON)
+    products = ProductFactory.convert(data, CatalogProvider.AMAZON)
     return products
 
 def product_20k():
     with open("./tests/data/amazon/fashion/amazon_fashion_sample_20000.json", "r") as f:
         data = f.read()    
-    products = Product.convert(data, CatalogProvider.AMAZON)
+    products = ProductFactory.convert(data, CatalogProvider.AMAZON)
     return products
 
 
@@ -90,7 +90,7 @@ def test_call_local_llm_with_woo_catalog():
     print(f"loaded {len(products)} records")
     assert len(products) == 2038
     #print(products)
-    dd = Product.get_dupe_count(products)
+    dd = ProductFactory.get_dupe_count(products)
     print(f"dupe count: {dd}")
     assert dd == 0
     
@@ -144,7 +144,7 @@ def test_call_local_llm_with_1k():
     print(f"loaded {len(products)} records")
     assert len(products) == 907
     
-    dd = Product.get_dupe_count(products)
+    dd = ProductFactory.get_dupe_count(products)
     print(f"dupe count: {dd}")
     assert dd == 61
     
@@ -190,11 +190,11 @@ def test_call_local_llm_with_5k():
     print(f"loaded {len(products)} records")
     assert len(products) == 4544
 
-    dd = Product.get_dupe_count(products)
+    dd = ProductFactory.get_dupe_count(products)
     print(f"dupe count: {dd}")
     assert dd == 416
 
-    products = Product.dedupe(products)
+    products = ProductFactory.dedupe(products)
     print(f"after de-dupe: {len(products)} records")
     
     user_prompt = MASTER_SKU
@@ -240,11 +240,11 @@ def test_call_local_llm_with_20k():
     print(f"loaded: {len(raw_products)} records")
     assert len(raw_products) == 18_088
 
-    dd = Product.get_dupe_count(raw_products)
+    dd = ProductFactory.get_dupe_count(raw_products)
     print(f"dupe count: {dd}")
     #assert dd == 2106    
 
-    products = Product.dedupe(raw_products)    
+    products = ProductFactory.dedupe(raw_products)    
     print(f"after de-dupe: {len(products)} records")
     
     user_prompt = MASTER_SKU
@@ -292,11 +292,11 @@ def test_call_local_llm_with_20k_random_logic():
     print(f"loaded: {len(raw_products)} records")
     assert len(raw_products) == 18_088
 
-    dd = Product.get_dupe_count(raw_products)
+    dd = ProductFactory.get_dupe_count(raw_products)
     print(f"dupe count: {dd}")
     #assert dd == 2106    
 
-    products = Product.dedupe(raw_products)    
+    products = ProductFactory.dedupe(raw_products)    
     print(f"after de-dupe: {len(products)} records")
    
     rp = safe_random.choice(products)
@@ -350,11 +350,11 @@ def test_call_open_router_with_20k_random_logic():
     print(f"loaded: {len(raw_products)} records")
     assert len(raw_products) == 20_000
 
-    dd = Product.get_dupe_count(raw_products)
+    dd = ProductFactory.get_dupe_count(raw_products)
     print(f"dupe count: {dd}")
     #assert dd == 2106    
 
-    products = Product.dedupe(raw_products)    
+    products = ProductFactory.dedupe(raw_products)    
     print(f"after de-dupe: {len(products)} records")  
   
     rp = safe_random.choice(products)
@@ -409,11 +409,11 @@ def test_call_gemini_with_20k_random_logic():
     print(f"loaded: {len(raw_products)} records")
     assert len(raw_products) == 18_088
 
-    dd = Product.get_dupe_count(raw_products)
+    dd = ProductFactory.get_dupe_count(raw_products)
     print(f"dupe count: {dd}")
     #assert dd == 2106    
 
-    products = Product.dedupe(raw_products)    
+    products = ProductFactory.dedupe(raw_products)    
     print(f"after de-dupe: {len(products)} records")
   
     rp = safe_random.choice(products)
@@ -470,7 +470,7 @@ def test_call_grok_with_woo_catalog():
     print(f"loaded {len(products)} records")
     assert len(products) == 2038
     #print(products)
-    dd = Product.get_dupe_count(products)
+    dd = ProductFactory.get_dupe_count(products)
     print(f"dupe count: {dd}")
     assert dd == 0
     

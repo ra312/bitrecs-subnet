@@ -38,7 +38,5 @@ class OpenRouter:
                 "content": prompt,
             }]
         )
-        thing = completion.choices[0].message.content
-        #print(thing)
-        print("call_open_router COMPLETE")
+        thing = completion.choices[0].message.content                
         return thing

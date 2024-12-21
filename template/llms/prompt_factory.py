@@ -5,6 +5,8 @@ import os
 import pandas as pd
 import bittensor as bt
 
+from template.commerce.product import CatalogProvider
+
 
 class PromptFactory:
     """
@@ -172,48 +174,6 @@ class PromptFactory:
     
 
     @staticmethod
-    def tryload_catalog(file_path: str, max_rows=100_000) -> list:
-        """
-        Try to load a woo catalog into a normalized list
-
-        """
-        try:
-            df = pd.read_csv(file_path)
-            #WooCommerce Format
-            columns = ["ID", "Type", "SKU", "Name", "Published", "Description", "In stock?", "Stock", "Regular price", "Categories"]            
-            df = df[[c for c in columns if c in df.columns]]            
-            df['Description'] = df['Description'].str.replace(r'<[^<>]*>', '', regex=True)
-            
-            #Only take simple and variable products
-            #product_types = ["simple", "variable"]
-            #df = df[df['Type'].isin(product_types)]
-
-            #Final renaming of columns
-            df = df.rename(columns={'SKU': 'sku', 'Name': 'name', 'Regular price': 'price', 'In stock?': 'InStock', 'Stock': 'OnHand'})            
-            df.fillna(' ', inplace=True)
-            df = df.head(max_rows)
-            df = df.to_dict(orient='records')
-            return df
-        except Exception as e:
-            bt.logging.error(str(e))
-            return []
-        
-        
-    @staticmethod
-    def tryload_catalog_to_json(file_path: str, max_rows=100_000) -> str:
-        """
-        Convert a WooCommerce catalog export to a JSON string
-
-        """
-        if not os.path.exists(file_path):   
-            bt.logging.error(f"File not found: {file_path}")
-            raise FileNotFoundError(f"File not found: {file_path}")
-        
-        thing = PromptFactory.tryload_catalog(file_path, max_rows)        
-        return json.dumps(thing, indent=2)
-        
-
-    @staticmethod
     def tryparse_llm(input_str: str) -> list:
         """
         Take raw LLM output and parse to an array 
@@ -237,23 +197,6 @@ class PromptFactory:
         except Exception as e:
             bt.logging.error(str(e))
             return []
-        
-
-    # @staticmethod
-    # def parse_llm(input_str: str) -> list:
-    #     final_results = PromptFactory.tryparse_llm(input_str)
-    #     for item in final_results:
-    #         cleaned_item = str(item).replace("\\'", "'")  # Fix escaped single quotes            
-    #         dictionary_item = ast.literal_eval(cleaned_item)
-    #         if "name" in dictionary_item:
-    #             dictionary_item["name"] = dictionary_item["name"].replace("'", "-")  # Remove single quotes
-    #         recommendation = str(dictionary_item)
-    #         final_results.append(recommendation)
-    #     return final_results
-
-
-   
-
 
 
 class ExampleRecs:

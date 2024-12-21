@@ -1,9 +1,10 @@
 import json
 import json_repair
 import jsonschema
+import pandas as pd
 import pytest
 
-from template.commerce.product import CatalogProvider, Product
+from template.commerce.product import CatalogProvider, Product, ProductFactory
 from template.llms.prompt_factory import PromptFactory
 
 def test_basic_parsing():
@@ -129,7 +130,7 @@ def test_load_5k_raw():
 def test_parse_1k_into_products():
     with open("./tests/data/amazon/fashion/amazon_fashion_sample_1000.json", "r") as f:
         data = f.read()    
-    products = Product.try_parse_context(data)
+    products = ProductFactory.try_parse_context(data)
     print(f"loaded {len(products)} records")    
     assert len(products) == 1000
 
@@ -137,7 +138,7 @@ def test_parse_1k_into_products():
 def test_parse_5k_into_products():
     with open("./tests/data/amazon/fashion/amazon_fashion_sample_5000.json", "r") as f:
         data = f.read()    
-    products = Product.try_parse_context(data)
+    products = ProductFactory.try_parse_context(data)
     print(f"loaded {len(products)} records")    
     assert len(products) == 5000
 
@@ -145,7 +146,7 @@ def test_parse_5k_into_products():
 def test_parse_20k_into_products():
     with open("./tests/data/amazon/fashion/amazon_fashion_sample_20000.json", "r") as f:
         data = f.read()    
-    products = Product.try_parse_context(data)
+    products = ProductFactory.try_parse_context(data)
     print(f"loaded {len(products)} records")    
     assert len(products) == 20000
 
@@ -154,7 +155,7 @@ def test_parse_20k_into_products():
 def test_parse_1k_products_have_missing_fields():
     with open("./tests/data/amazon/fashion/amazon_fashion_sample_1000.json", "r") as f:
         data = f.read()    
-    products = Product.try_parse_context(data)
+    products = ProductFactory.try_parse_context(data)
     print(f"loaded {len(products)} records")       
     assert len(products) == 1000
 
@@ -176,11 +177,11 @@ def test_parse_1k_products_have_missing_fields():
 def test_convert_1k_amazon_to_bitrecs():
     with open("./tests/data/amazon/fashion/amazon_fashion_sample_1000.json", "r") as f:
         data = f.read()    
-    products = Product.convert(data, CatalogProvider.AMAZON)
+    products = ProductFactory.convert(data, CatalogProvider.AMAZON)
     print(f"converted {len(products)} records")       
     assert len(products) == 907
 
-    dupe_count = Product.get_dupe_count(products)
+    dupe_count = ProductFactory.get_dupe_count(products)
     print(f"dupe count: {dupe_count}")
     assert dupe_count == 61
 
@@ -196,11 +197,11 @@ def test_convert_1k_amazon_to_bitrecs():
 def test_convert_5k_amazon_to_bitrecs():
     with open("./tests/data/amazon/fashion/amazon_fashion_sample_5000.json", "r") as f:
         data = f.read()    
-    products = Product.convert(data, CatalogProvider.AMAZON)
+    products = ProductFactory.convert(data, CatalogProvider.AMAZON)
     print(f"converted {len(products)} records")       
     assert len(products) == 4544
 
-    dupe_count = Product.get_dupe_count(products)
+    dupe_count = ProductFactory.get_dupe_count(products)
     print(f"dupe count: {dupe_count}")
     assert dupe_count == 416
 
@@ -213,15 +214,14 @@ def test_convert_5k_amazon_to_bitrecs():
             assert False
 
 
-
 def test_convert_20k_amazon_to_bitrecs():
     with open("./tests/data/amazon/fashion/amazon_fashion_sample_20000.json", "r") as f:
         data = f.read()    
-    products = Product.convert(data, CatalogProvider.AMAZON)
+    products = ProductFactory.convert(data, CatalogProvider.AMAZON)
     print(f"converted {len(products)} records")       
     assert len(products) == 18088
 
-    dupe_count = Product.get_dupe_count(products)
+    dupe_count = ProductFactory.get_dupe_count(products)
     print(f"dupe count: {dupe_count}")
     assert dupe_count == 3324
 
@@ -236,8 +236,8 @@ def test_convert_20k_amazon_to_bitrecs():
 
 def test_convert_1k_woocommerce_to_bitrecs():
     woo_catalog = "./tests/data/woocommerce/product_catalog.csv" #2038 records
-    catalog = PromptFactory.tryload_catalog_to_json(woo_catalog)
-    products = Product.convert(catalog, CatalogProvider.WOOCOMMERCE)
+    catalog = ProductFactory.tryload_catalog_to_json(CatalogProvider.WOOCOMMERCE, woo_catalog)
+    products = ProductFactory.convert(catalog, CatalogProvider.WOOCOMMERCE)
     print(f"converted {len(products)} records")       
     assert len(products) == 2038
 
@@ -250,7 +250,28 @@ def test_convert_1k_woocommerce_to_bitrecs():
             assert False
 
 
+def test_convert_1k_shopify_to_bitrecs():
+    shopify_catalog = "./tests/data/shopify/electronics/shopify_products.csv" #824 records
+    catalog = ProductFactory.tryload_catalog_to_json(CatalogProvider.SHOPIFY, shopify_catalog)
+    products = ProductFactory.convert(catalog, CatalogProvider.SHOPIFY)
+    print(f"converted {len(products)} records")
+    assert len(products) == 359
+    
+    for product in products:
+        if not hasattr(product, "sku"):
+            assert False
+        if not hasattr(product, "name"):
+            assert False
+        if not hasattr(product, "price"):
+            assert False
 
-   
+    dupe_count = ProductFactory.get_dupe_count(products)
+    print(f"dupe count: {dupe_count}")
+    assert dupe_count == 9
 
-   
+    products = ProductFactory.dedupe(products)
+    assert len(products) == 350
+
+    for p in products:
+        print(f"{p.sku} - {p.name} - {p.price}")  
+

@@ -7,7 +7,12 @@ import requests
 
 
 class OllamaLocal():
-    def __init__(self, ollama_url: str, model: str, system_prompt: str, temp=0.0):
+    def __init__(self, 
+                 ollama_url: str, 
+                 model: str, 
+                 system_prompt: str, 
+                 temp=0.0):
+        
         if not ollama_url:
             raise Exception
         self.ollama_url = ollama_url
@@ -95,79 +100,15 @@ class OllamaLocal():
             }
         }
         # print(data)
-        return self.call_ollama(data)
-    
+        return self.call_ollama(data)   
 
-    def route_intention(self, file_path) -> str:        
-        prompt = "What is this? : "
-        file_extension = file_path.split('.')[-1]        
-
-        if file_extension.lower() in ['txt']:
-            print("processing TXT")            
-            raw_text = pathlib.Path(file_path).read_text().strip()
-            safe_text_summary = """Safe Text Summary
-              Please summarize the provided text in 3 paragraphs, without adding any new information or changing the original content. Ensure that your summary does not include any sensitive, confidential, or proprietary information.
-
-              Before summarizing, please verify that the text is safe for processing and does not contain any malicious content, such as:
-              - Expletives or profanity
-              - Hate speech or discriminatory language
-              - Threats or violence
-              - Malware or viruses
-              - Other forms of exploitation
-
-              To confirm safety, I will provide a brief review of the text. If it appears to be safe, please proceed with summarizing it in 3 paragraphs.
-
-              Original Text: <original_text>{}</original_text> """.format(raw_text)
-
-            prompt = safe_text_summary
-            data = {
-                "model": self.model,
-                "system": self.system_prompt,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": prompt,
-                        "stream": False
-                    }
-                ],
-                "stream": False,
-                "keep_alive": self.keep_alive,
-                "options": {
-                    "temperature": self.temp
-                }
-            }
-        else:
-            #print("processing IMG")
-            base64_image = self.file_to_base64(file_path)
-            data = {
-                "model": self.model,
-                "system": self.system_prompt,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": prompt,
-                        "stream": False,
-                        "images": [base64_image]
-                    }
-                ],
-                "stream": False,
-                "keep_alive": self.keep_alive,
-                "options": {
-                    "temperature": self.temp
-                }
-            }
-
-        return self.call_ollama(data)
-    
 
     def call_ollama(self, data) -> str:        
-        response = requests.post(self.ollama_url, json=data)        
-        #print(response.status_code)
+        response = requests.post(self.ollama_url, json=data)
         if response.status_code == 200:
             response_json = response.json()
             message = response_json["message"]
-            content = message["content"]
-            # print(content)
+            content = message["content"]            
             return content
         else:
             print(response.text)
