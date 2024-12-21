@@ -6,13 +6,13 @@ import traceback
 import bittensor as bt
 import hmac
 import hashlib
-from typing import Callable, Dict, List, Optional, Any
+from typing import Callable
 from fastapi import FastAPI, HTTPException, Request, APIRouter, Response, Header
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from bittensor.core.axon import FastAPIThreadedServer
+from template.commerce.product import ProductFactory
 from template.protocol import BitrecsRequest
-from template.commerce.product import Product
 from template.api.api_counter import APICounter
 from template.api.utils import api_key_validator
 from template.utils import constants as CONST
@@ -126,7 +126,7 @@ class ApiServer:
           
             await verify_request(request, x_signature, x_timestamp)
 
-            stuff = Product.try_parse_context(request.context)
+            stuff = ProductFactory.try_parse_context(request.context)
             catalog_size = len(stuff)
             bt.logging.trace(f"REQUEST CATALOG SIZE: {catalog_size}")
             if catalog_size < CONST.MIN_CATALOG_SIZE:

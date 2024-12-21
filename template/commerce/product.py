@@ -24,6 +24,9 @@ class Product:
     price: str
     
 
+class ProductFactory:
+
+
     @staticmethod
     def tryload_catalog(file_path: str, max_rows=100_000) -> list:
         """
@@ -145,10 +148,10 @@ class Product:
             raise FileNotFoundError(f"File not found: {file_path}")
         match provider:
             case CatalogProvider.WOOCOMMERCE:
-                thing = Product.tryload_catalog(file_path, max_rows)
+                thing = ProductFactory.tryload_catalog(file_path, max_rows)
                 return json.dumps(thing, indent=2)
             case CatalogProvider.SHOPIFY:
-                thing = Product.tryload_catalog_shopify(file_path, max_rows)
+                thing = ProductFactory.tryload_catalog_shopify(file_path, max_rows)
                 return json.dumps(thing, indent=2)
             case _:
                raise ValueError(f"Invalid provider: {provider}")
