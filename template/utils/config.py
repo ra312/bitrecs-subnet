@@ -160,14 +160,14 @@ def add_miner_args(cls, parser):
     parser.add_argument(
         "--wandb.project_name",
         type=str,
-        default="template-miners",
+        default="template-miners-testnet",
         help="Wandb project to log to.",
     )
 
     parser.add_argument(
         "--wandb.entity",
         type=str,
-        default="opentensor-dev",
+        default="bitrecs",
         help="Wandb entity to log to.",
     )
 
@@ -254,14 +254,14 @@ def add_validator_args(cls, parser):
         "--wandb.project_name",
         type=str,
         help="The name of the project where you are sending the new run.",
-        default="template-validators",
+        default="template-validator-testnet",
     )
 
     parser.add_argument(
         "--wandb.entity",
         type=str,
-        help="The name of the project where you are sending the new run.",
-        default="opentensor-dev",
+        help="The name of the entity who owns the subnet.",
+        default="bitrecs"
     )
 
     parser.add_argument(
