@@ -1,6 +1,8 @@
 import json
+import os
 import re
 import bittensor as bt
+import pandas as pd
 from typing import Counter
 from pydantic import BaseModel
 from abc import abstractmethod
@@ -20,7 +22,84 @@ class Product:
     sku: str
     name: str
     price: str
+    
 
+    @staticmethod
+    def tryload_catalog(file_path: str, max_rows=100_000) -> list:
+        """
+        Try to load a woo catalog into a normalized list
+
+        """
+        try:
+            df = pd.read_csv(file_path)
+            #WooCommerce Format
+            columns = ["ID", "Type", "SKU", "Name", "Published", "Description", "In stock?", "Stock", "Regular price", "Categories"]            
+            df = df[[c for c in columns if c in df.columns]]            
+            df['Description'] = df['Description'].str.replace(r'<[^<>]*>', '', regex=True)
+            
+            #Only take simple and variable products
+            #product_types = ["simple", "variable"]
+            #df = df[df['Type'].isin(product_types)]
+
+            #Final renaming of columns
+            df = df.rename(columns={'SKU': 'sku', 'Name': 'name', 'Regular price': 'price', 'In stock?': 'InStock', 'Stock': 'OnHand'})            
+            df.fillna(' ', inplace=True)
+            df = df.head(max_rows)
+            df = df.to_dict(orient='records')
+            return df
+        except Exception as e:
+            bt.logging.error(str(e))
+            return []
+        
+        
+    @staticmethod
+    def tryload_catalog_shopify(file_path: str, max_rows=100_000) -> list:
+        """
+        Try to load a shopify catalog into a normalized list
+
+        """
+        try:
+            df = pd.read_csv(file_path)
+            #Shopify Format
+            columns = ["Handle", "Title", "Vendor", "Type", "Published", "Variant SKU", "Variant Price", "Status"]
+            df = df[[c for c in columns if c in df.columns]]
+            df = df.rename(columns={'Variant SKU': 'sku', 'Title': 'name', 'Variant Price': 'price', 'Stock': 'OnHand'})
+
+            df['name'] = df['name'].str.replace(r'<[^<>]*>', '', regex=True)
+            
+            #Only take simple and variable products
+            #product_types = ["simple", "variable"]
+            #df = df[df['Type'].isin(product_types)]
+            #             
+            
+            df.fillna(' ', inplace=True)
+            df = df.head(max_rows)
+            df = df.to_dict(orient='records')
+            return df
+        except Exception as e:
+            bt.logging.error(str(e))
+            return []
+        
+        
+        
+    @staticmethod
+    def tryload_catalog_to_json(provider: CatalogProvider, file_path: str, max_rows=100_000) -> str:
+        """
+        Convert a WooCommerce catalog export to a JSON string
+
+        """
+        if not os.path.exists(file_path):   
+            bt.logging.error(f"File not found: {file_path}")
+            raise FileNotFoundError(f"File not found: {file_path}")
+        match provider:
+            case CatalogProvider.WOOCOMMERCE:
+                thing = Product.tryload_catalog(file_path, max_rows)
+                return json.dumps(thing, indent=2)
+            case CatalogProvider.SHOPIFY:
+                thing = Product.tryload_catalog_shopify(file_path, max_rows)
+                return json.dumps(thing, indent=2)
+            case _:
+               raise ValueError(f"Invalid provider: {provider}")
 
     @staticmethod
     def try_parse_context(context: str) -> list["Product"]:
@@ -148,7 +227,53 @@ class AmazonConverter(BaseConverter):
 class ShopifyConverter(BaseConverter):
     
     def convert(self, context: str) -> list["Product"]:
-        raise NotImplementedError("Shopify not implemented")
+        """
+        converts from shopify export .csv format
+
+        """
+        result : list[Product] = []
+        for p in json.loads(context):
+            try:
+                sku = p.get("sku")
+                name = p.get("name")
+                price = p.get("price", "0.00")             
+                if not sku or not name:
+                    continue
+                if price is None or price == 'None':
+                    price = "0.00"
+                price = str(price)
+                name = self.clean(name)
+                result.append(Product(sku=sku, name=name, price=price))
+            except Exception as e:
+                bt.logging.error(f"WoocommerceConverter.convert Exception: {e}")
+                continue
+        return result
+     
+     
+    def get_variants(self, products):
+        """Get variants from a list of products.
+
+        Args:
+            products (pd.DataFrame): Pandas dataframe of products from get_products()
+
+        Returns:
+            variants (pd.DataFrame): Pandas dataframe of variants
+        """
+
+        products['id'].astype(int)
+        df_variants = pd.DataFrame()
+
+        for row in products.itertuples(index='True'):
+
+            for variant in getattr(row, 'variants'):
+                df_variants = pd.concat([df_variants, pd.DataFrame.from_records(variant, index=[0])])
+
+        df_variants['id'].astype(int)
+        df_variants['product_id'].astype(int)
+        df_parent_data = products[['id', 'title', 'vendor']]
+        df_parent_data = df_parent_data.rename(columns={'title': 'parent_title', 'id': 'parent_id'})
+        df_variants = df_variants.merge(df_parent_data, left_on='product_id', right_on='parent_id')
+        return df_variants
     
 
     

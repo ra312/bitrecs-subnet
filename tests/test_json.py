@@ -236,7 +236,7 @@ def test_convert_20k_amazon_to_bitrecs():
 
 def test_convert_1k_woocommerce_to_bitrecs():
     woo_catalog = "./tests/data/woocommerce/product_catalog.csv" #2038 records
-    catalog = PromptFactory.tryload_catalog_to_json(woo_catalog)
+    catalog = PromptFactory.tryload_catalog_to_json(CatalogProvider.WOOCOMMERCE, woo_catalog)
     products = Product.convert(catalog, CatalogProvider.WOOCOMMERCE)
     print(f"converted {len(products)} records")       
     assert len(products) == 2038
@@ -249,6 +249,25 @@ def test_convert_1k_woocommerce_to_bitrecs():
         if not hasattr(product, "price"):
             assert False
 
+
+def test_convert_1k_shopify_to_bitrecs():
+    shopify_catalog = "./tests/data/shopify/electronics/shopify_products.csv" #824 records
+    catalog = Product.tryload_catalog_to_json(CatalogProvider.SHOPIFY, shopify_catalog)
+    products = Product.convert(catalog, CatalogProvider.SHOPIFY)
+    print(f"converted {len(products)} records")       
+    assert len(products) == 805
+
+    for product in products:
+        if not hasattr(product, "sku"):
+            assert False
+        if not hasattr(product, "name"):
+            assert False
+        if not hasattr(product, "price"):
+            assert False
+    
+    for p in products:
+        print(p)
+    
 
 
    

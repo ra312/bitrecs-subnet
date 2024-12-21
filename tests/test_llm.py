@@ -36,7 +36,7 @@ NUM_RECS = safe_random.choice([5, 6, 7, 8, 9, 10, 16, 20])
 
 def product_woo():
     woo_catalog = "./tests/data/woocommerce/product_catalog.csv" #2038 records
-    catalog = PromptFactory.tryload_catalog_to_json(woo_catalog)
+    catalog = Product.tryload_catalog_to_json(CatalogProvider.WOOCOMMERCE, woo_catalog)
     products = Product.convert(catalog, CatalogProvider.WOOCOMMERCE)
     return products
 
