@@ -153,10 +153,10 @@ class PromptFactory:
         12) Each recommendation should have a 'sku', 'name' and 'price' field.
         13) Each recommendation should be unique (use 'sku' as the key field for uniqueness).
         14) Never say 'Based on the provided query' or 'I have determined'. 
-        15) Never explain yourself.
+        15) Never explain yourself and no smalltalk.
         16) assert each recommendation is unique ('sku' is the key).
         17) assert len(recommendations) == {}. If not, start over until assert is true.
-        18) Return in JSON.
+        18) Return JSON.
             
         """.format(self.num_recs, self.num_recs)
 

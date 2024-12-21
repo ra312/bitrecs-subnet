@@ -214,7 +214,7 @@ class Miner(BaseMinerNeuron):
         
         bt.logging.info(f"MINER {self.uid} FORWARD PASS RESULT -> {output_synapse}")
         self.total_request_in_interval += 1
-        return output_synapse   
+        return output_synapse
         
 
     async def blacklist(
@@ -336,7 +336,8 @@ class Miner(BaseMinerNeuron):
         """
         match self.llm_provider:
             case LLM.OLLAMA_LOCAL:
-                model = "llama3.1" 
+                model = "mistral-nemo"
+                #model = "llama3.1" 
                 #model = "llama3.2"
                 #model = "llama3.2:3b-instruct-q8_0"
             case LLM.OPEN_ROUTER:
