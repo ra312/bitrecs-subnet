@@ -270,5 +270,8 @@ def test_convert_1k_shopify_to_bitrecs():
     assert dupe_count == 9
 
     products = ProductFactory.dedupe(products)
-    assert len(products) == 350    
+    assert len(products) == 350
+
+    for p in products:
+        print(f"{p.sku} - {p.name} - {p.price}")  
 

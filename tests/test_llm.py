@@ -5,7 +5,7 @@ from dataclasses import asdict
 from random import SystemRandom
 safe_random = SystemRandom()
 from typing import Counter
-from template.commerce.product import CatalogProvider, Product, ProductFactory
+from template.commerce.product import CatalogProvider, ProductFactory
 from template.llms.factory import LLM, LLMFactory
 from template.llms.prompt_factory import PromptFactory
 from tests.utils import write_prompt_to_file

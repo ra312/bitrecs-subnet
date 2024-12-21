@@ -55,6 +55,12 @@ def product_woo():
     products = ProductFactory.convert(catalog, CatalogProvider.WOOCOMMERCE)
     return products
 
+def product_shopify():
+    shopify_catalog = "./tests/data/shopify/electronics/shopify_products.csv"
+    catalog = ProductFactory.tryload_catalog_to_json(CatalogProvider.SHOPIFY, shopify_catalog)
+    products = ProductFactory.convert(catalog, CatalogProvider.SHOPIFY)
+    return products
+
 def product_1k():
     with open("./tests/data/amazon/office/amazon_office_sample_1000.json", "r") as f:
         data = f.read()
@@ -301,6 +307,59 @@ def test_call_local_llm_with_20k_random_logic():
         assert count == 1
 
     assert user_prompt not in skus
+
+
+
+def test_call_local_llm_with_shopify_1k_random_logic():
+    raw_products = product_shopify()
+    products = ProductFactory.dedupe(raw_products)    
+    print(f"after de-dupe: {len(products)} records")
+   
+    rp = safe_random.choice(products)
+    user_prompt = rp.sku    
+    num_recs = safe_random.choice([5, 6, 7, 8, 9, 10, 11, 12, 16, 20])
+
+    debug_prompts = False
+
+    match = [products for products in products if products.sku == user_prompt][0]
+    print(match)    
+    print(f"num_recs: {num_recs}")
+
+    context = json.dumps([asdict(products) for products in products])
+    factory = PromptFactory(sku=user_prompt,
+                            context=context, 
+                            num_recs=num_recs, 
+                            load_catalog=False, 
+                            debug=debug_prompts)
+    
+    prompt = factory.generate_prompt()
+    #print(prompt)
+    print(f"prompt length: {len(prompt)}")
+       
+    model = OLLAMA_MODEL
+
+    llm_response = LLMFactory.query_llm(server=LLM.OLLAMA_LOCAL,
+                                 model=model,
+                                 system_prompt="You are a helpful assistant", 
+                                 temp=0.0, user_prompt=prompt)
+    #print(llm_response)    
+    parsed_recs = PromptFactory.tryparse_llm(llm_response)   
+    print(f"parsed {len(parsed_recs)} records")
+    print(parsed_recs)
+  
+    assert len(parsed_recs) == num_recs  
+
+    #check uniques
+    skus = [item['sku'] for item in parsed_recs]
+    counter = Counter(skus)
+    for sku, count in counter.items():
+        print(f"{sku}: {count}")
+        assert count == 1
+
+    assert user_prompt not in skus
+
+
+
 
 
 @pytest.mark.skip(reason="skipped")
