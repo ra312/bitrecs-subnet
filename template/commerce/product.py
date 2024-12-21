@@ -37,6 +37,10 @@ class ProductFactory:
         :return: List of dictionaries with 'sku', 'name', 'price'
         """
         try:
+            if not os.path.exists(file_path):   
+                bt.logging.error(f"File not found: {file_path}")
+                raise FileNotFoundError(f"File not found: {file_path}")
+            
             df = pd.read_csv(file_path)
             #WooCommerce Format
             columns = ["ID", "Type", "SKU", "Name", "Published", "Description", "In stock?", "Stock", "Regular price", "Categories"]            
@@ -69,8 +73,11 @@ class ProductFactory:
         :return: List of dictionaries with 'sku', 'name', 'price'
         """
         try:
+            if not os.path.exists(file_path):   
+                bt.logging.error(f"File not found: {file_path}")
+                raise FileNotFoundError(f"File not found: {file_path}")
+            
             df = pd.read_csv(file_path)
-
             # Select relevant columns
             columns = [
                 "Handle", "Title", "Variant SKU", "Variant Price", 
@@ -158,7 +165,7 @@ class ProductFactory:
             
 
     @staticmethod
-    def try_parse_context(context: str) -> list["Product"]:
+    def try_parse_context(context: str) -> list[Product]:
         """
         Default converter expects a json array of products with sku/name/price fields
 
@@ -172,7 +179,7 @@ class ProductFactory:
         
    
     @staticmethod
-    def get_dupe_count(products: list["Product"]) -> int:
+    def get_dupe_count(products: list[Product]) -> int:
         try:
             if not products or len(products) == 0:
                 return 0
@@ -183,7 +190,7 @@ class ProductFactory:
         
     
     @staticmethod
-    def dedupe(products: list["Product"]) -> list["Product"]:
+    def dedupe(products: list[Product]) -> list[Product]:
         unique_products = {}
         for product in products:
             if product.sku not in unique_products:
@@ -192,7 +199,7 @@ class ProductFactory:
         
         
     @staticmethod
-    def convert(context: str, provider: CatalogProvider) -> list["Product"]:
+    def convert(context: str, provider: CatalogProvider) -> list[Product]:
         """
             Convert a raw store catalog json into Products
 
@@ -213,7 +220,7 @@ class ProductFactory:
 class BaseConverter(BaseModel):
     
     @abstractmethod
-    def convert(self, context: str) -> list["Product"]:
+    def convert(self, context: str) -> list[Product]:
         raise NotImplementedError("BaseConverter not implemented")
     
     def clean(self, raw_value: str) -> str:        
@@ -223,7 +230,7 @@ class BaseConverter(BaseModel):
 
 class WoocommerceConverter(BaseConverter):    
   
-    def convert(self, context: str) -> list["Product"]:
+    def convert(self, context: str) -> list[Product]:
         """
         converts from product_catalog.csv to Products
 
@@ -253,7 +260,7 @@ class WoocommerceConverter(BaseConverter):
     
 class AmazonConverter(BaseConverter):
     
-    def convert(self, context: str) -> list["Product"]:
+    def convert(self, context: str) -> list[Product]:
         """
         converts from amazon_fashion_sample_1000.json format
 
@@ -282,7 +289,7 @@ class AmazonConverter(BaseConverter):
 
 class ShopifyConverter(BaseConverter):
     
-    def convert(self, context: str) -> list["Product"]:
+    def convert(self, context: str) -> list[Product]:
         """
         converts from shopify export .csv format
 
@@ -310,5 +317,5 @@ class ShopifyConverter(BaseConverter):
     
 class BigcommerceConverter(BaseConverter):
     
-    def convert(self, context: str) -> list["Product"]:
+    def convert(self, context: str) -> list[Product]:
         raise NotImplementedError("Bigcommerce not implemented")
