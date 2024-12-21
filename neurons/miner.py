@@ -337,9 +337,7 @@ class Miner(BaseMinerNeuron):
         match self.llm_provider:
             case LLM.OLLAMA_LOCAL:
                 model = "mistral-nemo"
-                #model = "llama3.1" 
-                #model = "llama3.2"
-                #model = "llama3.2:3b-instruct-q8_0"
+                #model = "llama3.1"
             case LLM.OPEN_ROUTER:
                 model = "google/gemini-flash-1.5-8b"
                 #model = "meta-llama/llama-3.1-70b-instruct:free"
