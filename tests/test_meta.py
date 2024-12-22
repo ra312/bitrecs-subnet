@@ -46,10 +46,12 @@ def test_version_check_expected_ok():
 def test_version_returns_ok():
     v = LocalMetadata.version()
     assert isinstance(v, str)   
+    assert len(v) > 0
     print(f"Version: {v}")
 
 
 def test_version_spec_returns_ok():
     s = LocalMetadata.spec()
     assert isinstance(s, str)   
+    assert len(s) > 0
     print(f"Spec: {s}")
