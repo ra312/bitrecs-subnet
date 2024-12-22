@@ -68,9 +68,12 @@ class Validator(BaseValidatorNeuron):
         try:
             self.local_metadata = LocalMetadata.local_metadata()
             self.local_metadata.uid = self.uid
-            self.local_metadata.hotkey = self.wallet.hotkey.ss58_address            
-            commit = self.local_metadata.commit
-            bt.logging.trace(f"Local metadata:\033[33m {commit} \033[0m")            
+            self.local_metadata.hotkey = self.wallet.hotkey.ss58_address
+            local_head = self.local_metadata.head
+            remote_head = self.local_metadata.remote_head
+            bt.logging.info(f"Version:\033[33m {local_head}\033[0m / Remote: \033[33m{remote_head}\033[0m")
+            if local_head != remote_head:
+                bt.logging.warning(f"Version mismatch: Please update your code to the latest version.")
         except Exception as e:
             bt.logging.error(f"Failed to get version with exception: {e}")
         return
