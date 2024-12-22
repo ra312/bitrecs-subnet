@@ -1,5 +1,6 @@
 import subprocess
 import template.utils.constants as CONST
+
 from shlex import split
 from dataclasses import dataclass
 from importlib.metadata import version
@@ -7,9 +8,10 @@ from importlib.metadata import version
     
 @dataclass
 class LocalMetadata:
-    """Metadata associated with the local validator instance"""
+    """Metadata associated with the local neuron instance"""
 
-    commit: str
+    head: str
+    remote_head: str
     btversion: str
     uid: int = 0
     coldkey: str = ""
@@ -21,6 +23,7 @@ class LocalMetadata:
         """Extract the version as current git commit hash"""
         commit_hash = ""
         try:
+            bittensor_version = version("bittensor")
             result = subprocess.run(
                 split("git rev-parse HEAD"),
                 check=True,
@@ -29,12 +32,24 @@ class LocalMetadata:
             )
             commit = result.stdout.decode().strip()
             assert len(commit) == 40, f"Invalid commit hash: {commit}"
-            commit_hash = commit[:8]
+            commit_hash = commit[:16]
+
+            # Get remote commit hash
+            result = subprocess.run(
+                split("git ls-remote origin -h refs/heads/main"),
+                check=True,
+                capture_output=True,
+                cwd=CONST.ROOT_DIR,
+            )
+            remote_commit = result.stdout.decode().strip().split()[0]
+            assert len(remote_commit) == 40, f"Invalid remote commit hash: {remote_commit}"
+            remote_commit_hash = remote_commit[:16]
+
         except Exception as e:
             commit_hash = "unknown"
 
-        bittensor_version = version("bittensor")
         return LocalMetadata(
-            commit=commit_hash,
+            head=commit_hash,
+            remote_head=remote_commit_hash,
             btversion=bittensor_version,
         )
