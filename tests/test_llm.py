@@ -16,7 +16,7 @@ os.environ["NEST_ASYNCIO"] = "0"
 
 LOCAL_OLLAMA_URL = "http://10.0.0.40:11434/api/chat"
 
-OLLAMA_MODEL = "mistral-nemo" #7/7 7 passed, 3 skipped, 4 warnings in 48.95s
+OLLAMA_MODEL = "mistral-nemo" #7/7 7 passed, 3 skipped, 4 warnings in 48.95s | 7 passed, 3 skipped, 4 warnings in 48.15s
 #OLLAMA_MODEL = "llama3.1" #6/7
 #OLLAMA_MODEL = "nemotron:70b-instruct-q4_K_M" #7/7
 #OLLAMA_MODEL = "nemotron" #5/6

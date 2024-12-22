@@ -21,11 +21,10 @@ map = [
     {"provider": LLM.OLLAMA_LOCAL, "model": "mistral-nemo"},
     {"provider": LLM.VLLM, "model": "NousResearch/Meta-Llama-3-8B-Instruct"},
 
-    {"provider": LLM.CHAT_GPT, "model": "gpt-4o-mini"},
+    {"provider": LLM.CHAT_GPT, "model": "gpt-4o-mini"},    
+    {"provider": LLM.OPEN_ROUTER, "model": "nvidia/llama-3.1-nemotron-70b-instruct"},    
+    #{"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-lite-v1"},
     #{"provider": LLM.OPEN_ROUTER, "model": "meta-llama/llama-3.2-3b-instruct:free"},
-    {"provider": LLM.OPEN_ROUTER, "model": "nvidia/llama-3.1-nemotron-70b-instruct"},
-    #{"provider": LLM.OPEN_ROUTER, "model": "microsoft/phi-3-mini-128k-instruct:free"},
-    #{"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-lite-v1"},   
     
     {"provider": LLM.GROK, "model": "grok-2-latest"},
     {"provider": LLM.GEMINI, "model": "gemini-1.5-flash-8b"},
@@ -210,21 +209,15 @@ def test_call_all_cloud_providers_warmup():
                                 system_prompt="You are a helpful assistant", 
                                 temp=0.0, 
                                 user_prompt=prompt)                        
-            print(f"response: {llm_response}")
-            time.sleep(1)
-            # parsed_recs = PromptFactory.tryparse_llm(llm_response)
-            # print(f"parsed {len(parsed_recs)} records")
-            # print(parsed_recs)
+            print(f"response: {llm_response}")                      
             assert llm_response is not None 
             assert len(llm_response) > 0
             print(f"provider: \033[32m {provider} PASSED \033[0m with: {model}")
             count += 1
 
         except Exception as e:
-            print(f"provider: {provider} \033[31m FAILED \033[0m using: {model}")
-            print(e)
-            continue
-            #raise e #throw for now
+            print(f"provider: {provider} \033[31m FAILED \033[0m using: {model}")            
+            continue            
                      
 
 
@@ -266,9 +259,7 @@ def test_call_all_cloud_providers_1k_woo_products():
                                 model=model,
                                 system_prompt="You are a helpful assistant", 
                                 temp=0.0, 
-                                user_prompt=prompt)                        
-            #print(f"response: {llm_response}")
-            #time.sleep(1)
+                                user_prompt=prompt)
             parsed_recs = PromptFactory.tryparse_llm(llm_response)
             print(f"parsed {len(parsed_recs)} records")
             print(parsed_recs)
@@ -288,7 +279,6 @@ def test_call_all_cloud_providers_1k_woo_products():
             count += 1
 
         except Exception as e:
-            print(f"provider: {provider} \033[31m FAILED woo \033[0m using: {model}")
-            print(e)
+            print(f"provider: {provider} \033[31m FAILED woo \033[0m using: {model}")            
             continue
     
