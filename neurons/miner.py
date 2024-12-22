@@ -386,9 +386,9 @@ class Miner(BaseMinerNeuron):
         try:
             self.local_metadata = LocalMetadata.local_metadata()
             self.local_metadata.uid = self.uid
-            self.local_metadata.hotkey = self.wallet.hotkey.ss58_address            
+            self.local_metadata.hotkey = self.wallet.hotkey.ss58_address
             commit = self.local_metadata.commit
-            bt.logging.trace(f"Local metadata:\033[33m {commit} \033[0m")            
+            bt.logging.info(f"Local metadata:\033[33m {commit} \033[0m")
         except Exception as e:
             bt.logging.error(f"Failed to get version with exception: {e}")
         return
