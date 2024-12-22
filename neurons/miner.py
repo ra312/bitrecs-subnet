@@ -24,8 +24,7 @@ import bittensor as bt
 import template
 import asyncio
 import ast
-import random
-
+from typing import List
 from datetime import datetime, timedelta, timezone
 from template.base.miner import BaseMinerNeuron
 from template.protocol import BitrecsRequest
@@ -34,10 +33,10 @@ from template.llms.factory import LLM, LLMFactory
 from template.utils.runtime import execute_periodically
 from template.utils.uids import best_uid
 from template.utils.gpu import GPUInfo
+from template.utils.version import LocalMetadata
+from template.utils import constants as CONST
 
 from dotenv import load_dotenv
-
-from template.utils.version import LocalMetadata
 load_dotenv()
 
 
@@ -47,7 +46,7 @@ async def do_work(user_prompt: str,
                   server: LLM,
                   model: str,
                   system_prompt="You are a helpful assistant.", 
-                  debug_prompts=False) -> typing.List[str]:
+                  debug_prompts=False) -> List[str]:
     """
     Do your miner work here. 
     This function is called by the forward function to generate recommendations.
@@ -131,8 +130,7 @@ class Miner(BaseMinerNeuron):
         elif self.llm_provider == LLM.OLLAMA_LOCAL:
             bt.logging.info(f"\033[1;35m Please ensure Ollama Server is running\033[0m")
         else:
-            bt.logging.info(f"\033[1;35m Please ensure your API keys are set in the environment\033[0m")
-             
+            bt.logging.info(f"\033[1;35m Please ensure your API keys are set in the environment\033[0m")             
 
         bt.logging.info(f"\033[1;35m Miner is warming up\033[0m")
         warmup_result = self.warmup()
@@ -150,9 +148,7 @@ class Miner(BaseMinerNeuron):
         self.total_request_in_interval = 0
         
         if(self.config.logging.trace):
-            bt.logging.trace(f"TRACE ENABLED Miner {self.uid} - {self.llm_provider} - {self.model}")
-
-        
+            bt.logging.trace(f"TRACE ENABLED Miner {self.uid} - {self.llm_provider} - {self.model}")        
 
 
     async def forward(
@@ -380,7 +376,7 @@ class Miner(BaseMinerNeuron):
         return False
     
     
-    @execute_periodically(timedelta(seconds=180))
+    @execute_periodically(timedelta(seconds=CONST.VERSION_CHECK_INTERVAL))
     async def version_sync(self):
         bt.logging.trace(f"Version sync ran at {int(time.time())}")
         try:
@@ -389,9 +385,11 @@ class Miner(BaseMinerNeuron):
             self.local_metadata.hotkey = self.wallet.hotkey.ss58_address
             local_head = self.local_metadata.head
             remote_head = self.local_metadata.remote_head
-            bt.logging.info(f"Version:\033[33m {local_head}\033[0m / Remote: \033[33m{remote_head}\033[0m")
             if local_head != remote_head:
-                bt.logging.warning(f"Version mismatch: Please update your code to the latest version.")
+                bt.logging.info(f"Version:\033[33m {local_head}\033[0m / Remote: \033[33m{remote_head}\033[0m")
+                bt.logging.warning(f"Miner version mismatch: Please update your code to the latest version.")
+            else:
+                 bt.logging.info(f"Version:\033[32m {local_head}\033[0m / Remote: \033[32m{remote_head}\033[0m")
         except Exception as e:
             bt.logging.error(f"Failed to get version with exception: {e}")
         return

@@ -27,6 +27,7 @@ from template.utils.version import LocalMetadata
 from template.validator import forward
 from template.protocol import BitrecsRequest
 from template.utils.gpu import GPUInfo
+from template.utils import constants as CONST
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -62,7 +63,7 @@ class Validator(BaseValidatorNeuron):
         return await forward(self, pr)
     
     
-    @execute_periodically(timedelta(seconds=180))
+    @execute_periodically(timedelta(seconds=CONST.VERSION_CHECK_INTERVAL))
     async def version_sync(self):
         bt.logging.trace(f"Version sync ran at {int(time.time())}")
         try:
@@ -70,10 +71,12 @@ class Validator(BaseValidatorNeuron):
             self.local_metadata.uid = self.uid
             self.local_metadata.hotkey = self.wallet.hotkey.ss58_address
             local_head = self.local_metadata.head
-            remote_head = self.local_metadata.remote_head
-            bt.logging.info(f"Version:\033[33m {local_head}\033[0m / Remote: \033[33m{remote_head}\033[0m")
+            remote_head = self.local_metadata.remote_head           
             if local_head != remote_head:
+                bt.logging.info(f"Version:\033[33m {local_head}\033[0m / Remote: \033[33m{remote_head}\033[0m")
                 bt.logging.warning(f"Version mismatch: Please update your code to the latest version.")
+            else:
+                 bt.logging.info(f"Version:\033[32m {local_head}\033[0m / Remote: \033[32m{remote_head}\033[0m")
         except Exception as e:
             bt.logging.error(f"Failed to get version with exception: {e}")
         return
