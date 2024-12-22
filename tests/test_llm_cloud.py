@@ -268,7 +268,7 @@ def test_call_all_cloud_providers_1k_woo_products():
                                 temp=0.0, 
                                 user_prompt=prompt)                        
             #print(f"response: {llm_response}")
-            time.sleep(1)
+            #time.sleep(1)
             parsed_recs = PromptFactory.tryparse_llm(llm_response)
             print(f"parsed {len(parsed_recs)} records")
             print(parsed_recs)

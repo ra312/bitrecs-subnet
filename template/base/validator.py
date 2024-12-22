@@ -108,13 +108,7 @@ class BaseValidatorNeuron(BaseNeuron):
         add_validator_args(cls, parser)
 
     def __init__(self, config=None):
-        super().__init__(config=config)
-
-        # Initialize the wandb client
-        self.wandb = WandbHelper(
-            project_name=self.config.wandb.project_name,
-            entity=self.config.wandb.entity,
-        )
+        super().__init__(config=config)      
 
         # Save a copy of the hotkeys to local memory.
         self.hotkeys = copy.deepcopy(self.metagraph.hotkeys)      
@@ -159,6 +153,12 @@ class BaseValidatorNeuron(BaseNeuron):
         self.user_actions: List["UserAction"] = []
 
         self.version_sync()
+
+        # Initialize the wandb client
+        self.wandb = WandbHelper(
+            project_name=self.config.wandb.project_name,
+            entity=self.config.wandb.entity,
+        )
 
 
     def serve_axon(self):
