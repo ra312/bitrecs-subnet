@@ -1,6 +1,10 @@
 import pytest
+import os
 from pydantic import BaseModel
 from template.utils.version import LocalMetadata
+from template import __spec_version__ as spec_version
+from template import __version__ as this_version
+
 
 
 def test_basic_meta_init_state_ok():
@@ -11,6 +15,9 @@ def test_basic_meta_init_state_ok():
     assert m.uid == 0
     assert m.coldkey == ""
     assert m.hotkey == ""
+    assert m.version == this_version
+    assert m.spec == spec_version
+
     assert isinstance(m.head, str)
 
     print(m.head)
@@ -34,4 +41,15 @@ def test_version_check_expected_ok():
         assert m.head != m.remote_head
     else:
         assert m.head == m.remote_head
-    
+
+
+def test_version_returns_ok():
+    v = LocalMetadata.version()
+    assert isinstance(v, str)   
+    print(f"Version: {v}")
+
+
+def test_version_spec_returns_ok():
+    s = LocalMetadata.spec()
+    assert isinstance(s, str)   
+    print(f"Spec: {s}")

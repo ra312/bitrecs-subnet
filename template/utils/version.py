@@ -4,7 +4,8 @@ import template.utils.constants as CONST
 from shlex import split
 from dataclasses import dataclass
 from importlib.metadata import version
-
+from template import __spec_version__ as spec_version
+from template import __version__ as this_version
     
 @dataclass
 class LocalMetadata:
@@ -16,6 +17,8 @@ class LocalMetadata:
     uid: int = 0
     coldkey: str = ""
     hotkey: str = ""
+    version: str = ""
+    spec: str = ""
 
 
     @staticmethod
@@ -23,7 +26,7 @@ class LocalMetadata:
         """Extract the version as current git commit hash"""
         commit_hash = "head error"
         remote_commit_hash = "remote head error"
-        bittensor_version = "metadata exception"
+        bittensor_version = "metadata exception"        
         try:
             bittensor_version = version("bittensor")
             result = subprocess.run(
@@ -54,6 +57,8 @@ class LocalMetadata:
             head=commit_hash,
             remote_head=remote_commit_hash,
             btversion=bittensor_version,
+            version=this_version,
+            spec=spec_version
         )
     
 
@@ -63,3 +68,12 @@ class LocalMetadata:
         if not meta.head or not meta.remote_head:
             raise ValueError("Could not get local or remote head")
         return meta.head == meta.remote_head
+    
+    
+    @staticmethod
+    def version() -> str:
+        return str(this_version)
+    
+    @staticmethod
+    def spec() -> str:
+        return str(spec_version)
