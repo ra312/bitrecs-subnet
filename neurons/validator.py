@@ -17,10 +17,13 @@
 # DEALINGS IN THE SOFTWARE.
 
 
+from datetime import timedelta
 import time
 import bittensor as bt
 import asyncio
 from template.base.validator import BaseValidatorNeuron
+from template.utils.runtime import execute_periodically
+from template.utils.version import LocalMetadata
 from template.validator import forward
 from template.protocol import BitrecsRequest
 from template.utils.gpu import GPUInfo
@@ -58,12 +61,27 @@ class Validator(BaseValidatorNeuron):
         """                
         return await forward(self, pr)
     
+    
+    @execute_periodically(timedelta(seconds=180))
+    async def version_sync(self):
+        bt.logging.trace(f"Version sync ran at {int(time.time())}")
+        try:
+            self.local_metadata = LocalMetadata.local_metadata()
+            self.local_metadata.uid = self.uid
+            self.local_metadata.hotkey = self.wallet.hotkey.ss58_address            
+            commit = self.local_metadata.commit
+            bt.logging.trace(f"Local metadata:\033[33m {commit} \033[0m")            
+        except Exception as e:
+            bt.logging.error(f"Failed to get version with exception: {e}")
+        return
+    
 
 async def main():     
     await GPUInfo.log_gpu_info()
     with Validator() as validator:
         start_time = time.time()        
-        while True:            
+        while True:
+            await validator.version_sync()
             bt.logging.info(f"Validator {validator.uid} running... {int(time.time())}")
             if time.time() - start_time > 300:
                 bt.logging.info(

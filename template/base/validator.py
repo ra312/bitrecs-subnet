@@ -152,13 +152,14 @@ class BaseValidatorNeuron(BaseNeuron):
         self.active_miners: List[int] = []
         self.user_actions: List["UserAction"] = []
 
-        self.version_sync()
+        #self.version_sync()
 
         # Initialize the wandb client
-        self.wandb = WandbHelper(
-            project_name=self.config.wandb.project_name,
-            entity=self.config.wandb.entity,
-        )
+        if 1==2:
+            self.wandb = WandbHelper(
+                project_name=self.config.wandb.project_name,
+                entity=self.config.wandb.entity,
+            )
 
 
     def serve_axon(self):
@@ -247,19 +248,19 @@ class BaseValidatorNeuron(BaseNeuron):
         return
     
     
-    @execute_periodically(timedelta(seconds=600))
-    async def version_sync(self):
-        bt.logging.trace(f"Version sync ran at {int(time.time())}")
-        try:
-            self.local_metadata = LocalMetadata.local_metadata()
-            self.local_metadata.uid = self.uid
-            self.local_metadata.hotkey = self.wallet.hotkey.ss58_address
-            #self.local_metadata.coldkey = self.wallet.coldkeypub.ss58_address
-            bt.logging.trace(f"Local metadata: {self.local_metadata}")
-            bt.logging.trace(f"\033[1;32m Metadata Sucess \033[0m")
-        except Exception as e:
-            bt.logging.error(f"Failed to get version with exception: {e}")
-        return
+    # @execute_periodically(timedelta(seconds=600))
+    # async def version_sync(self):
+    #     bt.logging.trace(f"Version sync ran at {int(time.time())}")
+    #     try:
+    #         self.local_metadata = LocalMetadata.local_metadata()
+    #         self.local_metadata.uid = self.uid
+    #         self.local_metadata.hotkey = self.wallet.hotkey.ss58_address
+    #         #self.local_metadata.coldkey = self.wallet.coldkeypub.ss58_address
+    #         bt.logging.trace(f"Local metadata: {self.local_metadata}")
+    #         bt.logging.trace(f"\033[1;32m Metadata Sucess \033[0m")
+    #     except Exception as e:
+    #         bt.logging.error(f"Failed to get version with exception: {e}")
+    #     return
 
 
     def run(self):
@@ -383,7 +384,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         self.sync()
                         self.loop.run_until_complete(self.miner_sync())
                         self.loop.run_until_complete(self.action_sync())
-                        self.loop.run_until_complete(self.version_sync())
+                        #self.loop.run_until_complete(self.version_sync())
                     except Exception as e:
                         bt.logging.error(traceback.format_exc())
                         bt.logging.error(f"Failed to sync with exception: {e}")
