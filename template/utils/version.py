@@ -21,7 +21,9 @@ class LocalMetadata:
     @staticmethod
     def local_metadata() -> "LocalMetadata":
         """Extract the version as current git commit hash"""
-        commit_hash = ""
+        commit_hash = "head error"
+        remote_commit_hash = "remote head error"
+        bittensor_version = "metadata exception"
         try:
             bittensor_version = version("bittensor")
             result = subprocess.run(
@@ -46,10 +48,18 @@ class LocalMetadata:
             remote_commit_hash = remote_commit[:16]
 
         except Exception as e:
-            commit_hash = "unknown"
+            commit_hash = "exception unknown"
 
         return LocalMetadata(
             head=commit_hash,
             remote_head=remote_commit_hash,
             btversion=bittensor_version,
         )
+    
+
+    @staticmethod
+    def version_match() -> bool:
+        meta = LocalMetadata.local_metadata()
+        if not meta.head or not meta.remote_head:
+            raise ValueError("Could not get local or remote head")
+        return meta.head == meta.remote_head
