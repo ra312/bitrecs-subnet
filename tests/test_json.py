@@ -1,16 +1,13 @@
 import json
 import json_repair
 import jsonschema
-import pandas as pd
-import pytest
+from template.commerce.product import CatalogProvider, ProductFactory
 
-from template.commerce.product import CatalogProvider, Product, ProductFactory
-from template.llms.prompt_factory import PromptFactory
 
 def test_basic_parsing():
     single_rec = "{'sku': '24-UG01', 'name': 'Quest Lumaflex&trade; Band', 'price': '19'}"
-    single_rec2 = "{'sku': '24-UG02', 'name': 'Pursuit Lumaflex&trade; Tone Band', 'price': '16'}"
-    single_rec3 = "{'sku': '24-MG05', 'name': 'Cruise Dual Analog Watch', 'price': '55'}"
+    single_rec2 = "{'sku': '24-UG02', 'name': 'Pursuit Lumaflex&trade; Tone Band', 'price': '16.04'}"
+    single_rec3 = "{'sku': '24-MG05', 'name': 'Cruise Dual Analog Watch', 'price': '55.90'}" 
     multi_rec = [single_rec, single_rec2, single_rec3]
     final_recs = [json.loads(idx.replace("'", '"')) for idx in multi_rec]
     print(final_recs)    
@@ -151,7 +148,6 @@ def test_parse_20k_into_products():
     assert len(products) == 20000
 
 
-
 def test_parse_1k_products_have_missing_fields():
     with open("./tests/data/amazon/fashion/amazon_fashion_sample_1000.json", "r") as f:
         data = f.read()    
@@ -272,6 +268,7 @@ def test_convert_1k_shopify_to_bitrecs():
     products = ProductFactory.dedupe(products)
     assert len(products) == 350
 
-    for p in products:
-        print(f"{p.sku} - {p.name} - {p.price}")  
+    if 1==2:
+        for p in products:
+            print(f"{p.sku} - {p.name} - {p.price}")  
 

@@ -150,9 +150,7 @@ class BaseValidatorNeuron(BaseNeuron):
         self.thread: Union[threading.Thread, None] = None
         self.lock = asyncio.Lock()
         self.active_miners: List[int] = []
-        self.user_actions: List["UserAction"] = []
-
-        #self.version_sync()
+        self.user_actions: List["UserAction"] = []        
 
         # Initialize the wandb client
         if 1==2:
@@ -246,21 +244,6 @@ class BaseValidatorNeuron(BaseNeuron):
         except Exception as e:
             bt.logging.error(f"Failed to get user actions with exception: {e}")
         return
-    
-    
-    # @execute_periodically(timedelta(seconds=600))
-    # async def version_sync(self):
-    #     bt.logging.trace(f"Version sync ran at {int(time.time())}")
-    #     try:
-    #         self.local_metadata = LocalMetadata.local_metadata()
-    #         self.local_metadata.uid = self.uid
-    #         self.local_metadata.hotkey = self.wallet.hotkey.ss58_address
-    #         #self.local_metadata.coldkey = self.wallet.coldkeypub.ss58_address
-    #         bt.logging.trace(f"Local metadata: {self.local_metadata}")
-    #         bt.logging.trace(f"\033[1;32m Metadata Sucess \033[0m")
-    #     except Exception as e:
-    #         bt.logging.error(f"Failed to get version with exception: {e}")
-    #     return
 
 
     def run(self):
