@@ -179,3 +179,4 @@ timestamp.txt
 amazon_fashion_sample_*.json
 
 /tests/logs/*.*
+**/wandb/*

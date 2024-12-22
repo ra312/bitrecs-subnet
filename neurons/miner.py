@@ -26,15 +26,18 @@ import asyncio
 import ast
 import random
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from template.base.miner import BaseMinerNeuron
 from template.protocol import BitrecsRequest
 from template.llms.prompt_factory import PromptFactory
 from template.llms.factory import LLM, LLMFactory
+from template.utils.runtime import execute_periodically
 from template.utils.uids import best_uid
 from template.utils.gpu import GPUInfo
 
 from dotenv import load_dotenv
+
+from template.utils.version import LocalMetadata
 load_dotenv()
 
 
@@ -148,6 +151,8 @@ class Miner(BaseMinerNeuron):
         
         if(self.config.logging.trace):
             bt.logging.trace(f"TRACE ENABLED Miner {self.uid} - {self.llm_provider} - {self.model}")
+
+        
 
 
     async def forward(
@@ -373,23 +378,38 @@ class Miner(BaseMinerNeuron):
         except Exception as e:
             bt.logging.error(f"\033[31mFATAL ERROR calling warmup: {e!r} \033[0m")
         return False
+    
+    
+    @execute_periodically(timedelta(seconds=180))
+    async def version_sync(self):
+        bt.logging.trace(f"Version sync ran at {int(time.time())}")
+        try:
+            self.local_metadata = LocalMetadata.local_metadata()
+            self.local_metadata.uid = self.uid
+            self.local_metadata.hotkey = self.wallet.hotkey.ss58_address            
+            commit = self.local_metadata.commit
+            bt.logging.trace(f"Local metadata:\033[33m {commit} \033[0m")            
+        except Exception as e:
+            bt.logging.error(f"Failed to get version with exception: {e}")
+        return
 
 
         
 async def main():
-    await GPUInfo.log_gpu_info()
+    await GPUInfo.log_gpu_info()    
     with Miner() as miner:
-        start_time = time.time()
-        while True:            
+        start_time = time.time()        
+        while True:
+            await miner.version_sync()
             bt.logging.info(f"Miner {miner.uid} running, waiting for work ... {int(time.time())}")
             if time.time() - start_time > 300:
                 bt.logging.info(
                     f"---Total request in last 5 minutes: {miner.total_request_in_interval}"
                 )
                 start_time = time.time()
-                miner.total_request_in_interval = 0              
+                miner.total_request_in_interval = 0
 
-            await asyncio.sleep(15)
+            await asyncio.sleep(10)
 
 if __name__ == "__main__":  
     asyncio.run(main())
