@@ -7,10 +7,10 @@ jobs:
     name: Dlint
     steps:  
     - name: Checkout
-        uses: actions/checkout@v3
-        with:
-            fetch-depth: 0
-            ref: main  # Ensures the 'main' branch is checked out
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        ref: main  # Ensures the 'main' branch is checked out
               
     # Run the Dlint action
     - uses: dlint-py/dlint-action@master
