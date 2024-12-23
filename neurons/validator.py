@@ -73,7 +73,7 @@ class Validator(BaseValidatorNeuron):
             local_head = self.local_metadata.head
             remote_head = self.local_metadata.remote_head
             code_version = self.local_metadata.version
-            bt.logging.info(f"Code Version:\033[32m {code_version}\033[0m")
+            bt.logging.info(f"Bitrecs Version:\033[32m {code_version}\033[0m")
             if local_head != remote_head:
                 bt.logging.info(f"Head:\033[33m {local_head}\033[0m / Remote: \033[33m{remote_head}\033[0m")                
                 bt.logging.warning(f"{self.neuron_type} version mismatch: Please update your code to the latest version.")

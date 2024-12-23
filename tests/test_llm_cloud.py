@@ -41,6 +41,8 @@ LOCAL_PROVIDERS = [LLM.OLLAMA_LOCAL]
 MASTER_SKU = "B08XYRDKDV" 
 #HP Envy 6455e Wireless Color All-in-One Printer with 6 Months Free Ink (223R1A) (Renewed Premium)
 
+#7 passed, 4 warnings in 42.26s
+
 def product_woo():
     woo_catalog = "./tests/data/woocommerce/product_catalog.csv" #2038 records
     catalog = ProductFactory.tryload_catalog_to_json(CatalogProvider.WOOCOMMERCE, woo_catalog)
@@ -81,8 +83,6 @@ def get_local_answer(provider: LLM, prompt: str, model: str, num_recs: int) -> l
                                  temp=0.0, user_prompt=prompt)
     parsed_recs = PromptFactory.tryparse_llm(llm_response)
     return parsed_recs
-
-
 
 
 def test_print_setup():

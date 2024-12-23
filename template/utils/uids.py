@@ -5,9 +5,6 @@ import numpy as np
 import random
 from typing import List
 
-#from template.base.neuron import BaseNeuron
-#from template.protocol import BitrecsRequest
-
 
 def check_uid_availability(
     metagraph: "bt.metagraph.Metagraph", uid: int, vpermit_tao_limit: int

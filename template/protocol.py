@@ -18,7 +18,7 @@
 
 import bittensor as bt
 import pydantic
-from typing import List
+
 
 class BitrecsRequest(bt.Synapse):
     created_at: str | None
