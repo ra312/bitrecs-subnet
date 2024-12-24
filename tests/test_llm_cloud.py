@@ -45,6 +45,7 @@ LOCAL_PROVIDERS = [LLM.OLLAMA_LOCAL]
 MASTER_SKU = "B08XYRDKDV" 
 #HP Envy 6455e Wireless Color All-in-One Printer with 6 Months Free Ink (223R1A) (Renewed Premium)
 
+# 7 passed, 1 skipped, 4 warnings in 35.79s
 #7 passed, 4 warnings in 42.26s
 #7 passed, 4 warnings in 60.06s (0:01:00)
 #2 failed, 6 passed, 4 warnings in 200.12s (0:03:20)
@@ -258,7 +259,8 @@ def test_call_all_cloud_providers_1k_woo_products():
     success_count = 0
     for provider in CLOUD_PROVIDERS:
         model = [m for m in map if m["provider"] == provider][0]["model"]
-        try:            
+        try:   
+            st = time.time()         
             llm_response = LLMFactory.query_llm(server=provider,
                                 model=model,
                                 system_prompt="You are a helpful assistant", 
@@ -267,7 +269,9 @@ def test_call_all_cloud_providers_1k_woo_products():
             parsed_recs = PromptFactory.tryparse_llm(llm_response)
             print(f"parsed {len(parsed_recs)} records")
             print(parsed_recs)
-
+            et = time.time()
+            diff = et-st
+            print(f"provider: \033[32m {provider} run \033[0m {model} : {diff:.2f} seconds")
             assert len(parsed_recs) == num_recs
             #check uniques
             skus = [item['sku'] for item in parsed_recs]
@@ -279,9 +283,10 @@ def test_call_all_cloud_providers_1k_woo_products():
             assert user_prompt not in skus
 
             success_count += 1
-            print(f"provider: \033[32m {provider} PASSED woocommerce \033[0m with: {model}")            
+           
+            print(f"provider: \033[32m {provider} PASSED woocommerce \033[0m with: {model} in {diff:.2f} seconds")                 
         except Exception as e:
-            print(f"provider: {provider} \033[31m FAILED woocommerce \033[0m using: {model}")            
+            print(f"provider: {provider} \033[31m FAILED woocommerce \033[0m using: {model}")
             continue
 
     assert len(CLOUD_PROVIDERS) == success_count

@@ -32,16 +32,4 @@ def validate_br_request(synapse: BitrecsRequest) -> bool:
         bt.logging.error(f"Number of recommendations should be less than {CONST.MAX_RECS_PER_REQUEST}!: {synapse}")
         return False
     
-    store_catalog: list[Product] = ProductFactory.try_parse_context(synapse.context)
-    if len(store_catalog) < CONST.MIN_CATALOG_SIZE or len(store_catalog) > CONST.MAX_CATALOG_SIZE:
-        bt.logging.error(f"Invalid catalog size: {len(store_catalog)}")
-        return False
-    
-    dupe_threshold = .10
-    dupes = ProductFactory.get_dupe_count(store_catalog)
-    if dupes > len(store_catalog) * dupe_threshold:
-        bt.logging.error(f"Too many duplicates in catalog: {dupes}")
-        return False
-
-
     return True

@@ -22,18 +22,11 @@ ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 auth_data = dict()
 request_counts = {}
 
+
 SECRET_KEY = "change-me"
 
 
-async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str):
-    """
-    Verify HMAC signature of the request   
-   
-    """
-
-    # bt.logging.trace(f"API verify_request x_signature: {x_signature}")
-    # bt.logging.trace(f"API verify_request x_timestamp: {x_timestamp}")
-
+async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str): 
     d = {
         'created_at': request.created_at,
         'user': request.user,
@@ -53,8 +46,7 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
         string_to_sign.encode('utf-8'),
         hashlib.sha256
     ).hexdigest()
-
-    # Verify signature
+    
     if not hmac.compare_digest(x_signature, expected_signature):
         raise HTTPException(status_code=401, detail="Invalid signature")
     
@@ -63,7 +55,7 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
     if current_time - timestamp > 300:  # 5 minutes
         raise HTTPException(status_code=401, detail="Request expired")
     
-    bt.logging.info(f"\033[1;32m Signature Verified\033[0m")
+    bt.logging.info(f"\033[1;32m New Request Signature Verified\033[0m")
     
 
 
@@ -118,36 +110,50 @@ class ApiServer:
             x_signature: str = Header(...),
             x_timestamp: str = Header(...)
     ):  
-        
-        # headers = request.to_headers()
-        # bt.logging.info(f"{headers}")
+        """
+            Main Bitrecs Handler
+            Generate n recommendations for a given query and context.
+
+            Query is sent to random miners to generate a valid response in a reasonable time.
+
+            TODO: rate limiting
+
+        """
 
         try:
           
-            await verify_request(request, x_signature, x_timestamp)
+            await verify_request(request, x_signature, x_timestamp)            
 
-            stuff = ProductFactory.try_parse_context(request.context)
-            catalog_size = len(stuff)
+            store_catalog = ProductFactory.try_parse_context(request.context)
+            catalog_size = len(store_catalog)
             bt.logging.trace(f"REQUEST CATALOG SIZE: {catalog_size}")
-            if catalog_size < CONST.MIN_CATALOG_SIZE:
-                bt.logging.error(f"API generate_product_rec catalog size too small")
+            if catalog_size < CONST.MIN_CATALOG_SIZE or catalog_size > CONST.MAX_CATALOG_SIZE:
+                bt.logging.error(f"API invalid catalog size")
                 self.log_counter(False)
                 return JSONResponse(status_code=400,
-                                    content={"detail": "error - invalid catalog", "status_code": 400})
+                                    content={"detail": "error - invalid catalog", "status_code": 400})            
             
+            dupes = ProductFactory.get_dupe_count(store_catalog)
+            if dupes > catalog_size * CONST.CATALOG_DUPE_THRESHOLD:
+                bt.logging.error(f"API Too many duplicates in catalog: {dupes}")
+                self.log_counter(False)
+                return JSONResponse(status_code=400,
+                                    content={"detail": "error - dupe threshold reached", "status_code": 400})
+                
+
+
             st = time.time()
             response = await self.forward_fn(request)
             total_time = time.time() - st
 
             if len(response.results) == 0:
-                bt.logging.error(f"API generate_product_rec response has no results")
+                bt.logging.error(f"API forward_fn response has no results")
                 self.log_counter(False)
                 return JSONResponse(status_code=500,
                                     content={"detail": "error", "status_code": 500})
 
 
-            final_recs = []            
-            # Remove single quotes from the string and convert items to JSON objects
+            final_recs = []
             final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
             #bt.logging.trace(f"API generate_product_rec final_recs: {final_recs}")
             response_text = "Bitrecs Took {:.2f} seconds to process this request".format(total_time)
@@ -155,7 +161,7 @@ class ApiServer:
             response = {
                 "user": response.user, 
                 "original_query": response.query,
-                "status_code": "200",
+                "status_code": "200", #front end widgets expects this do not change
                 "status_text": "OK", #front end widgets expects this do not change
                 "response_text": response_text,
                 "created_at": response.created_at,

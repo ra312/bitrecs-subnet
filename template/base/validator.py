@@ -150,14 +150,18 @@ class BaseValidatorNeuron(BaseNeuron):
         self.thread: Union[threading.Thread, None] = None
         self.lock = asyncio.Lock()
         self.active_miners: List[int] = []
-        self.user_actions: List["UserAction"] = []        
+        self.user_actions: List[UserAction] = []
+        self.loop.run_until_complete(self.action_sync())
+        if len(self.user_actions) == 0:
+            bt.logging.error("No user actions found - check bitrecs api")
 
         # Initialize the wandb client
         if 1==2:
             self.wandb = WandbHelper(
                 project_name=self.config.wandb.project_name,
                 entity=self.config.wandb.entity,
-            )
+            )       
+
 
 
     def serve_axon(self):
@@ -363,11 +367,10 @@ class BaseValidatorNeuron(BaseNeuron):
                     if self.should_exit:
                         return
 
-                    try:                        
+                    try:
                         self.sync()
                         self.loop.run_until_complete(self.miner_sync())
-                        self.loop.run_until_complete(self.action_sync())
-                        #self.loop.run_until_complete(self.version_sync())
+                        self.loop.run_until_complete(self.action_sync())                        
                     except Exception as e:
                         bt.logging.error(traceback.format_exc())
                         bt.logging.error(f"Failed to sync with exception: {e}")
@@ -657,6 +660,7 @@ class BaseValidatorNeuron(BaseNeuron):
         # self.step = state["step"]
         # self.scores = state["scores"]
         # self.hotkeys = state["hotkeys"]
+           
         ts = read_timestamp()
         if not ts:
             bt.logging.error("NO STATE FOUND - first step")

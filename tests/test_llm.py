@@ -232,7 +232,7 @@ def test_call_local_llm_with_5k():
     counter = Counter(skus)
     for sku, count in counter.items():
         print(f"{sku}: {count}")
-        assert count == 1    
+        assert count == 1
 
 
 def test_call_local_llm_with_20k():
@@ -390,7 +390,7 @@ def test_call_open_router_with_20k_random_logic():
     print(parsed_recs)
   
     assert len(parsed_recs) == num_recs
-  
+
 
     #check uniques
     skus = [item['sku'] for item in parsed_recs]
@@ -438,7 +438,7 @@ def test_call_gemini_with_20k_random_logic():
     print(f"prompt length: {len(prompt)}")    
 
     model = "gemini-1.5-flash-8b"
-    #model = "gemini-2.0-flash-exp"    
+    #model = "gemini-2.0-flash-exp"
     
 
     llm_response = LLMFactory.query_llm(server=LLM.GEMINI,
