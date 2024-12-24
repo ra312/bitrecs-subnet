@@ -22,9 +22,13 @@ map = [
     {"provider": LLM.VLLM, "model": "NousResearch/Meta-Llama-3-8B-Instruct"},
 
     {"provider": LLM.CHAT_GPT, "model": "gpt-4o-mini"},    
-    {"provider": LLM.OPEN_ROUTER, "model": "nvidia/llama-3.1-nemotron-70b-instruct"},    
+    #{"provider": LLM.OPEN_ROUTER, "model": "nvidia/llama-3.1-nemotron-70b-instruct"},    
     #{"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-lite-v1"},
     #{"provider": LLM.OPEN_ROUTER, "model": "meta-llama/llama-3.2-3b-instruct:free"},
+    #{"provider": LLM.OPEN_ROUTER, "model": "cohere/command-r7b-12-2024"},
+    {"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-micro-v1"},
+  
+  
     
     {"provider": LLM.GROK, "model": "grok-2-latest"},
     {"provider": LLM.GEMINI, "model": "gemini-1.5-flash-8b"},
@@ -42,6 +46,8 @@ MASTER_SKU = "B08XYRDKDV"
 #HP Envy 6455e Wireless Color All-in-One Printer with 6 Months Free Ink (223R1A) (Renewed Premium)
 
 #7 passed, 4 warnings in 42.26s
+#7 passed, 4 warnings in 60.06s (0:01:00)
+#2 failed, 6 passed, 4 warnings in 200.12s (0:03:20)
 
 def product_woo():
     woo_catalog = "./tests/data/woocommerce/product_catalog.csv" #2038 records
@@ -222,15 +228,15 @@ def test_call_all_cloud_providers_warmup():
 
 
 #@pytest.mark.skip(reason="skipped")
-def test_call_all_cloud_providers_1k_woo_products():
-    #raw_products = product_1k()
+def test_call_all_cloud_providers_1k_woo_products():    
     raw_products = product_woo()
     products = ProductFactory.dedupe(raw_products)
     print(f"after de-dupe: {len(products)} records")
   
     rp = safe_random.choice(products)
     user_prompt = rp.sku
-    num_recs = 3
+    #num_recs = 3
+    num_recs = safe_random.choice([1, 5, 9, 10, 11, 16, 20])
     debug_prompts = False
 
     match = [products for products in products if products.sku == user_prompt][0]
@@ -249,16 +255,14 @@ def test_call_all_cloud_providers_1k_woo_products():
     print(f"prompt length: {len(prompt)}")
 
     print("********** LOOPING PROVIDERS ")
+    success_count = 0
     for provider in CLOUD_PROVIDERS:
-
         model = [m for m in map if m["provider"] == provider][0]["model"]
-
-        try:
-            #print(f"asked: {prompt}")
+        try:            
             llm_response = LLMFactory.query_llm(server=provider,
                                 model=model,
                                 system_prompt="You are a helpful assistant", 
-                                temp=0.0, 
+                                temp=0.0,
                                 user_prompt=prompt)
             parsed_recs = PromptFactory.tryparse_llm(llm_response)
             print(f"parsed {len(parsed_recs)} records")
@@ -274,11 +278,74 @@ def test_call_all_cloud_providers_1k_woo_products():
 
             assert user_prompt not in skus
 
-
-            print(f"provider: \033[32m {provider} PASSED woo \033[0m with: {model}")
-            count += 1
-
+            success_count += 1
+            print(f"provider: \033[32m {provider} PASSED woocommerce \033[0m with: {model}")            
         except Exception as e:
-            print(f"provider: {provider} \033[31m FAILED woo \033[0m using: {model}")            
+            print(f"provider: {provider} \033[31m FAILED woocommerce \033[0m using: {model}")            
             continue
+
+    assert len(CLOUD_PROVIDERS) == success_count
     
+
+
+
+@pytest.mark.skip(reason="skipped - stalled")
+def test_call_all_cloud_providers_1k_amazon_random():
+    raw_products = product_1k()    
+    products = ProductFactory.dedupe(raw_products)
+    print(f"after de-dupe: {len(products)} records")
+
+    time.sleep(3)
+    rp = safe_random.choice(products)
+    user_prompt = rp.sku
+    #num_recs = 3
+    num_recs = safe_random.choice([1, 5, 9, 10, 11, 16, 20])
+
+    debug_prompts = False
+
+    match = [products for products in products if products.sku == user_prompt][0]
+    print(match)    
+    print(f"num_recs: {num_recs}")
+
+    context = json.dumps([asdict(products) for products in products])
+    factory = PromptFactory(sku=user_prompt, 
+                            context=context, 
+                            num_recs=num_recs, 
+                            load_catalog=False, 
+                            debug=debug_prompts)
+    
+    prompt = factory.generate_prompt()
+    #print(prompt)
+    print(f"prompt length: {len(prompt)}")
+
+    print("********** LOOPING PROVIDERS ")
+    success_count = 0
+    for provider in CLOUD_PROVIDERS:
+        model = [m for m in map if m["provider"] == provider][0]["model"]
+        try:            
+            llm_response = LLMFactory.query_llm(server=provider,
+                                model=model,
+                                system_prompt="You are a helpful assistant", 
+                                temp=0.0, 
+                                user_prompt=prompt)
+            parsed_recs = PromptFactory.tryparse_llm(llm_response)
+            print(f"parsed {len(parsed_recs)} records")
+            print(parsed_recs)
+
+            assert len(parsed_recs) == num_recs
+
+            skus = [item['sku'] for item in parsed_recs]
+            counter = Counter(skus)
+            for sku, count in counter.items():
+                print(f"{sku}: {count}")
+                assert count == 1
+
+            assert user_prompt not in sku
+            
+            success_count += 1
+            print(f"provider: \033[32m {provider} PASSED amazon \033[0m with: {model}")
+        except Exception as e:
+            print(f"provider: {provider} \033[31m FAILED amazon \033[0m using: {model}")            
+            continue
+
+    assert len(CLOUD_PROVIDERS) == success_count

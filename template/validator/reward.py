@@ -169,7 +169,7 @@ def reward(
         if not response.is_success:
             return 0.0
         
-        if len(response.results) != num_recs:            
+        if len(response.results) != num_recs:
             return 0.0
 
         if not validate_result_schema(num_recs, response.results):
@@ -179,11 +179,15 @@ def reward(
         valid_items = set()
         for result in response.results:
             try:
-                product: Product = json_repair.loads(result)                
+                product: Product = json_repair.loads(result)
                 sku = product["sku"]
+                if sku.lower() == response.query.lower():
+                    bt.logging.warning(f"Miner {response.miner_uid} has query in results: {response.miner_hotkey}")
+                    return 0.0
+                                    
                 if sku in valid_items:
                     bt.logging.warning(f"Miner {response.miner_uid} has duplicate results: {response.miner_hotkey}")
-                    return 0.0                
+                    return 0.0
                 
                 if not does_sku_exist(sku, store_catalog):
                     bt.logging.warning(f"Miner {response.miner_uid} has invalid results: {response.miner_hotkey}")
@@ -247,7 +251,7 @@ def get_rewards(
 
     if num_recs < 1 or num_recs > CONST.MAX_RECS_PER_REQUEST:
         bt.logging.error(f"Invalid number of recommendations: {num_recs}")
-        return np.zeros(len(responses), dtype=float)        
+        return np.zeros(len(responses), dtype=float)    
     
     store_catalog: list[Product] = ProductFactory.try_parse_context(ground_truth.context)
     if len(store_catalog) < CONST.MIN_CATALOG_SIZE or len(store_catalog) > CONST.MAX_CATALOG_SIZE:

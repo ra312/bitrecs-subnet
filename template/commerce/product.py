@@ -185,7 +185,8 @@ class ProductFactory:
                 return 0
             sku_counts = Counter(product.sku for product in products)
             return sum(count - 1 for count in sku_counts.values() if count > 1)
-        except AttributeError:
+        except AttributeError as a:
+            bt.logging.error(f"WARNING - get_dupe_count failed: {a}")
             return 0
         
     
