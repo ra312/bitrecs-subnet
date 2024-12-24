@@ -16,18 +16,17 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-
-from datetime import timedelta
 import time
 import bittensor as bt
 import asyncio
-from template.base.validator import BaseValidatorNeuron
-from template.utils.runtime import execute_periodically
-from template.utils.version import LocalMetadata
-from template.validator import forward
-from template.protocol import BitrecsRequest
-from template.utils.gpu import GPUInfo
-from template.utils import constants as CONST
+from datetime import timedelta
+from bitrecs.base.validator import BaseValidatorNeuron
+from bitrecs.utils.runtime import execute_periodically
+from bitrecs.utils.version import LocalMetadata
+from bitrecs.validator import forward
+from bitrecs.protocol import BitrecsRequest
+from bitrecs.utils.gpu import GPUInfo
+from bitrecs.utils import constants as CONST
 from dotenv import load_dotenv
 load_dotenv()
 

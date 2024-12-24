@@ -1,11 +1,11 @@
 import subprocess
-import template.utils.constants as CONST
+import bitrecs.utils.constants as CONST
 
 from shlex import split
 from dataclasses import dataclass
 from importlib.metadata import version
-from template import __spec_version__ as spec_version
-from template import __version__ as this_version
+from bitrecs import __spec_version__ as spec_version
+from bitrecs import __version__ as this_version
     
 @dataclass
 class LocalMetadata:

@@ -1,16 +1,12 @@
 import os
-import sys
-import time
-import typing
 import bittensor as bt
-from datetime import datetime, timezone
 from enum import Enum
 
-from template.llms.gemini import Gemini
-from template.llms.llama_local import OllamaLocal
-from template.llms.open_router import OpenRouter
-from template.llms.chat_gpt import ChatGPT
-from template.llms.vllm_router import vLLM
+from bitrecs.llms.gemini import Gemini
+from bitrecs.llms.llama_local import OllamaLocal
+from bitrecs.llms.open_router import OpenRouter
+from bitrecs.llms.chat_gpt import ChatGPT
+from bitrecs.llms.vllm_router import vLLM
 
 
 class LLM(Enum):

@@ -20,9 +20,9 @@ import time
 import bittensor as bt
 import random
 from datetime import datetime, timezone
-from template.protocol import BitrecsRequest
-from template.validator.reward import get_rewards
-from template.utils.uids import get_random_uids
+from bitrecs.protocol import BitrecsRequest
+from bitrecs.validator.reward import get_rewards
+from bitrecs.utils.uids import get_random_uids
 
 
 def get_bitrecs_dummy_request(num_results) -> BitrecsRequest:
@@ -61,7 +61,7 @@ async def forward(self, pr: BitrecsRequest = None):
 
     Args:
         self (:obj:`bittensor.neuron.Neuron`): The neuron object which contains all the necessary state for the validator.
-        pr (:obj:`template.protocol.BitrecsRequest`): The end user request object to be sent to the network (from API)
+        pr (:obj:`bitrecs.protocol.BitrecsRequest`): The end user request object to be sent to the network (from API)
 
     """
     bt.logging.info(f"VALIDATOR FORWARD Forwarding request: {pr}")

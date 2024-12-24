@@ -1,5 +1,3 @@
-import bittensor as bt
-import requests
 from openai import OpenAI
 
 class vLLM:

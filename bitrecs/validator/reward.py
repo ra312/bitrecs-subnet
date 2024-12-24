@@ -24,11 +24,11 @@ import numpy as np
 import bittensor as bt
 import jsonschema
 import json_repair
-from template.commerce.user_action import UserAction, ActionType
-from template.protocol import BitrecsRequest
 from typing import List
-from template.commerce.product import Product, ProductFactory
-from template.utils import constants as CONST
+from bitrecs.commerce.user_action import UserAction, ActionType
+from bitrecs.protocol import BitrecsRequest
+from bitrecs.commerce.product import Product, ProductFactory
+from bitrecs.utils import constants as CONST
 
 BASE_BOOST = 1/256
 BASE_REWARD = 0.80
