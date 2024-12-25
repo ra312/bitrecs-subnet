@@ -73,13 +73,14 @@ async def do_work(user_prompt: str,
                             context=context, 
                             num_recs=num_recs, 
                             load_catalog=False, 
-                            debug=debug_prompts)
-    
+                            debug=debug_prompts)    
     prompt = factory.generate_prompt()
-    system_prompt = "You are a helpful assistant."
-    
+
     try:        
-        llm_response = LLMFactory.query_llm(server=server, model=model, system_prompt=system_prompt, temp=0.0, user_prompt=prompt)
+        llm_response = LLMFactory.query_llm(server=server, 
+                                            model=model, 
+                                            system_prompt=system_prompt, 
+                                            temp=0.0, user_prompt=prompt)
         if not llm_response or len(llm_response) < 10:
             bt.logging.error("LLM response is empty.")
             return []
@@ -174,7 +175,11 @@ class Miner(BaseMinerNeuron):
         st = time.time()
         debug_prompts = self.config.logging.trace
         try:
-            results = await do_work(user_prompt=synapse.query, context=context, num_recs=num_recs, server=server, model=model, debug_prompts=debug_prompts)            
+            results = await do_work(user_prompt=synapse.query, 
+                                    context=context, 
+                                    num_recs=num_recs, 
+                                    server=server, 
+                                    model=model, debug_prompts=debug_prompts)            
             bt.logging.info(f"LLM {self.model} - Results: count ({len(results)})")
         except Exception as e:
             bt.logging.error(f"\033[31mFATAL ERROR calling do_work: {e!r} \033[0m")
@@ -188,12 +193,12 @@ class Miner(BaseMinerNeuron):
         #Do some cleanup - schema is validated in the reward function
         final_results = []
         for item in results:            
-            cleaned_item = str(item).replace("\\'", "'")  # Fix escaped single quotes            
+            cleaned_item = str(item).replace("\\'", "'")
             dictionary_item = ast.literal_eval(cleaned_item)
             if "name" not in dictionary_item:
                 bt.logging.error(f"Item does not contain 'name' key: {dictionary_item}")
                 continue
-            dictionary_item["name"] = dictionary_item["name"].replace("'", "-")  # Remove single quotes
+            dictionary_item["name"] = dictionary_item["name"].replace("'", "-")
             recommendation = str(dictionary_item)
             final_results.append(recommendation)        
       
