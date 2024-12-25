@@ -33,10 +33,10 @@ def is_api_data_valid(data) -> tuple[bool, str]:
 def load_api_config() -> Optional[dict]:
     bt.logging.trace("Loading API config")
     try:
-        if not os.path.exists("template/api/api.json"):
-            raise Exception(f"{'template/api/api.json'} does not exist")
+        if not os.path.exists("bitrecs/api/api.json"):
+            raise Exception(f"{'bitrecs/api/api.json'} does not exist")
 
-        with open("template/api/api.json", 'r') as file:
+        with open("bitrecs/api/api.json", 'r') as file:
             api_data = json.load(file)
             #bt.logging.trace("api_data", api_data)
             valid, reason = is_api_data_valid(api_data)
