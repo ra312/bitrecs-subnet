@@ -23,7 +23,7 @@ class GPUInfo:
 
         gpus = GPUInfo.n_gpus
         if gpus == 0:
-            logger.error("WARNING - No GPUs found on this server")
+            logger.warning("WARNING - No GPUs found on this server")
             return
         
         logger.info(f"Total GPU memory: {GPUInfo.total_memory} GB")
