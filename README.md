@@ -12,7 +12,7 @@
 </div>
 
 ## Introduction
-Bitrecs is a novel recommendation engine built on the Bittensor network. Our implementation provides a framework for serving e-commerce recommendations via the latest LLMs. Miners are encouraged to experiment with their own implementations to improve latency and quality. 
+Bitrecs is a novel [recommendation engine](https://www.perplexity.ai/search/recommendation-engine-NpaNi7MHQ5OFA.btgIQ4QQ) built on the Bittensor network. Our implementation provides a framework for serving e-commerce recommendations via the latest LLMs. Miners are encouraged to experiment with their own implementations to improve latency and quality. 
 
 ## Goal
 **Maximize sales for online retailers (merchants)**
@@ -70,21 +70,28 @@ Over time, as the baseline gets set (i.e quality recs at a max request time < 3 
 ## Roadmap
 
 ### Q1 2025
+
 Testnet (Jan)
-- launch testnet with v1 LLM rec engine supporting Shopify/Woocommerce
-- iterate and refine incentive mechanism
+- launch testnet with v1 engine supporting Shopify/Woocommerce
+- iterate, refine and balance incentive mechanism
 - complete merchant/miner/validator portal for easy onboarding
 
 Mainnet (Feb-March)
 
 - launch on mainnet baring any critical design/incentive flaws
+- establish baselines for quality of service and uptime across the subnet
+- improve and harden onsite metrics tracking
 
 ### Q2 2025
-- aggressively market and onboard merchants
 
+- aggressively market and onboard merchants
+- integrate additional platforms (magento, bigcommerce, wix)
+- evolve the V1 engine with new prompting and models, miner innovations
 
 ### Q3 2025
-- additional platforms (magento, bigcommerce, wix)
+
+- explore potential Fiber rewrite / V2
+
 
 ## Getting Started
 
