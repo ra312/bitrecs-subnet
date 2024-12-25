@@ -30,7 +30,7 @@ Global e-commerce is a ~20T market with a 15% CAGR. A large portion of online sa
 
 This problem is a subset of the much larger General Recommendation space which powers most of the Internet today (think Netflix movie recommendations, TikTok reels, Google search suggestions, etc)
 
-We are addressing a more narrow but equally important area of e-commerce - **onsite product recommendations for merchants**
+We are addressing a more narrow but equally important area of e-commerce - [onsite product recommendations for merchants](https://www.perplexity.ai/search/onsite-product-recommendations-PmY8e84GSxavnmdSW9934A)
 
 ## Solution
 Bitrecs aims to tap into the intelligence of the Bittensor network to service product recommendations for retailers directly via miners using novel methods. 
@@ -39,7 +39,7 @@ Our first generation solution uses prompting and ICL to coerce recs from the lat
 
 Additionally, many LLM's have encoded valuable information about shopping cohorts, seasonality, brand affinities, customer journeys etc which we try to unlock using prompting.  The recent advances in context window size has opened up the door for this type of solution as we essentially ask 'given this customer scenario and this set of products, pick X next products the customer would buy'. 
 
-As we evolve this network we get closer to **1-to-1 marketing** which is viewed as the holy grail of marketing (imagine every product page you view on the web as personalized just for you, without being invasive or exploitive).  Amazon is close to this experience but falls short in many areas - not to any fault of their own, but they often sell the same products their customers sell and this creates a conflict of interest.  
+As we evolve this network we get closer to **1-to-1 marketing** which is viewed as the holy grail of marketing (imagine every product page you view on the web as personalized just for you, without being invasive or exploitive).  Amazon is close to this experience but falls short in many areas - not to any fault of their own, but they often sell the same products their merchants sell and this creates a conflict of interest.  
 
 Smaller retailers need access to this technology to remain competitive, and our solution is built to work with existing onsite catalogs (we never recommend 3rd party products or divert traffic to other sites - this is critical to winning merchants trust)
 
