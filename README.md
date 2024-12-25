@@ -64,7 +64,7 @@ The incentive mechanism ranks miner responses by performance metrics and sales e
 
 ## Opportunity
 
-We think this is a huge opportunity to showcase the power of Bittensor incentives to real-world e-commerce and to create a fully aligned network of parties and incentives, creating an elegant flywheel of value. The barrier to entry for miners is low on this network as a GPU is **not required** to mine. Miners are allowed (and often encouraged) to call LLMs via APIs as the initial boostrap of the network will mostly be driven for speed and accuracy.
+We think this is a great opportunity to showcase the power of Bittensor incentives with e-commerce and to create a fully aligned network of parties and incentives - an elegant flywheel of value. The barrier to entry for miners is low on this network as a GPU is **not required** to mine. Miners are allowed (and often encouraged) to call LLMs via APIs as the initial bootstrap of the network will mostly be driven for speed and accuracy.
 
 Over time, as the baseline gets set (i.e quality recs at a max request time < 3 seconds) the sales focused incentive mechanism drives miners to search and compete for more impactful recommendations. We hope that we can fine tune and balance the incitive mechanism to achieve a network that is always performing a 'best effort' on every request, with outsized rewards given to top performers which drive real, measurable value for merchants and helping them compete with the incumbents - a win for every party invovled.
 
@@ -108,8 +108,8 @@ Interested in running a validator? See our [validator setup instructions](docs/r
 ``` 
 Ensure you have the sample .json and .csv files in the /tests/data folder
 
-pytest ./tests/test_json.py -s
-pytest ./tests/test_llm.py -s
+pytest ./tests/test_json.py -s --durations=0
+pytest ./tests/test_llm.py -s --durations=0
 pytest ./tests/test_llm.py -s -k 'test_call_local_llm_with_20k'
  ```
 
