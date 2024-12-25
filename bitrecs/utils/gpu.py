@@ -1,6 +1,5 @@
-import numpy as np
-import bittensor as bt
 import torch
+import numpy as np
 from typing import Callable, Any
 from loguru import logger
 

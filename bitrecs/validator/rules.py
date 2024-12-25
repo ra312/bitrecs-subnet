@@ -1,9 +1,6 @@
-
-
 import bittensor as bt
-from template.commerce.product import Product, ProductFactory
-from template.protocol import BitrecsRequest
-from template.utils import constants as CONST
+from bitrecs.protocol import BitrecsRequest
+from bitrecs.utils import constants as CONST
 
 
 def validate_br_request(synapse: BitrecsRequest) -> bool:        

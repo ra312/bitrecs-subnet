@@ -21,20 +21,20 @@ import sys
 import time
 import typing
 import bittensor as bt
-import template
+import bitrecs
 import asyncio
 import ast
 from typing import List
 from datetime import datetime, timedelta, timezone
-from template.base.miner import BaseMinerNeuron
-from template.protocol import BitrecsRequest
-from template.llms.prompt_factory import PromptFactory
-from template.llms.factory import LLM, LLMFactory
-from template.utils.runtime import execute_periodically
-from template.utils.uids import best_uid
-from template.utils.gpu import GPUInfo
-from template.utils.version import LocalMetadata
-from template.utils import constants as CONST
+from bitrecs.base.miner import BaseMinerNeuron
+from bitrecs.protocol import BitrecsRequest
+from bitrecs.llms.prompt_factory import PromptFactory
+from bitrecs.llms.factory import LLM, LLMFactory
+from bitrecs.utils.runtime import execute_periodically
+from bitrecs.utils.uids import best_uid
+from bitrecs.utils.gpu import GPUInfo
+from bitrecs.utils.version import LocalMetadata
+from bitrecs.utils import constants as CONST
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -158,10 +158,10 @@ class Miner(BaseMinerNeuron):
         Takes an API request and generates recs
 
         Args:
-            synapse (template.protocol.BitrecsRequest): The synapse object containing the 'BitrecsRequest' data.
+            synapse (bitrecs.protocol.BitrecsRequest): The synapse object containing the 'BitrecsRequest' data.
 
         Returns:
-            template.protocol.BitrecsRequest: The synapse object with the recs - same object modified with updated fields.
+            bitrecs.protocol.BitrecsRequest: The synapse object with the recs - same object modified with updated fields.
 
         """
         bt.logging.info(f"MINER {self.uid} FORWARD PASS {synapse.query}")
@@ -219,7 +219,7 @@ class Miner(BaseMinerNeuron):
         
 
     async def blacklist(
-        self, synapse: template.protocol.BitrecsRequest
+        self, synapse: bitrecs.protocol.BitrecsRequest
     ) -> typing.Tuple[bool, str]:
         """
         Determines whether an incoming request should be blacklisted and thus ignored. Your implementation should
@@ -230,7 +230,7 @@ class Miner(BaseMinerNeuron):
         requests before they are deserialized to avoid wasting resources on requests that will be ignored.
 
         Args:
-            synapse (template.protocol.BitrecsRequest): A synapse object constructed from the headers of the incoming request.
+            synapse (bitrecs.protocol.BitrecsRequest): A synapse object constructed from the headers of the incoming request.
 
         Returns:
             Tuple[bool, str]: A tuple containing a boolean indicating whether the synapse's hotkey is blacklisted,
@@ -287,7 +287,7 @@ class Miner(BaseMinerNeuron):
 
         return False, "Hotkey recognized!"
 
-    async def priority(self, synapse: template.protocol.BitrecsRequest) -> float:
+    async def priority(self, synapse: bitrecs.protocol.BitrecsRequest) -> float:
         """
         The priority function determines the order in which requests are handled. More valuable or higher-priority
         requests are processed before others. You should design your own priority mechanism with care.
@@ -295,7 +295,7 @@ class Miner(BaseMinerNeuron):
         This implementation assigns priority to incoming requests based on the calling entity's stake in the metagraph.
 
         Args:
-            synapse (template.protocol.BitrecsRequest): The synapse object that contains metadata about the incoming request.
+            synapse (bitrecs.protocol.BitrecsRequest): The synapse object that contains metadata about the incoming request.
 
         Returns:
             float: A priority score derived from the stake of the calling entity.

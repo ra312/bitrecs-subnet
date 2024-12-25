@@ -11,11 +11,11 @@ from fastapi import FastAPI, HTTPException, Request, APIRouter, Response, Header
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from bittensor.core.axon import FastAPIThreadedServer
-from template.commerce.product import ProductFactory
-from template.protocol import BitrecsRequest
-from template.api.api_counter import APICounter
-from template.api.utils import api_key_validator
-from template.utils import constants as CONST
+from bitrecs.commerce.product import ProductFactory
+from bitrecs.protocol import BitrecsRequest
+from bitrecs.api.api_counter import APICounter
+from bitrecs.api.utils import api_key_validator
+from bitrecs.utils import constants as CONST
 
 ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 

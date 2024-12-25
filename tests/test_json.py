@@ -1,7 +1,7 @@
 import json
 import json_repair
 import jsonschema
-from template.commerce.product import CatalogProvider, ProductFactory
+from bitrecs.commerce.product import CatalogProvider, ProductFactory
 
 
 def test_basic_parsing():

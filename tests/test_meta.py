@@ -1,9 +1,9 @@
 import pytest
 import os
 from pydantic import BaseModel
-from template.utils.version import LocalMetadata
-from template import __spec_version__ as spec_version
-from template import __version__ as this_version
+from bitrecs.utils.version import LocalMetadata
+from bitrecs import __spec_version__ as spec_version
+from bitrecs import __version__ as this_version
 
 
 

@@ -5,11 +5,9 @@ import bittensor as bt
 import pandas as pd
 import sqlite3
 from datetime import datetime, timezone
-
 from typing_extensions import List
 from logging.handlers import RotatingFileHandler
-
-from template.protocol import BitrecsRequest
+from bitrecs.protocol import BitrecsRequest
 
 
 EVENTS_LEVEL_NUM = 38

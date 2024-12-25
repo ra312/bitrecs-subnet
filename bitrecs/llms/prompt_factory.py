@@ -1,11 +1,8 @@
-import ast
 import json
 import re
 import os
 import pandas as pd
 import bittensor as bt
-
-from template.commerce.product import CatalogProvider
 
 
 class PromptFactory:

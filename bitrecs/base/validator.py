@@ -33,28 +33,28 @@ from traceback import print_exception
 from dataclasses import dataclass
 from queue import SimpleQueue, Empty
 
-from template.base.neuron import BaseNeuron
-from template.base.utils.weight_utils import (
+from bitrecs.base.neuron import BaseNeuron
+from bitrecs.base.utils.weight_utils import (
     process_weights_for_netuid,
     convert_weights_and_uids_for_emit, 
 )
-from template.utils.config import add_validator_args
-from template.api.api_server import ApiServer
-from template.protocol import BitrecsRequest
-from template.utils.uids import get_random_uids, ping_uid
-from template.utils.version import LocalMetadata
-from template.validator.reward import get_rewards
-from template.utils.logging import (
+from bitrecs.utils.config import add_validator_args
+from bitrecs.api.api_server import ApiServer
+from bitrecs.protocol import BitrecsRequest
+from bitrecs.utils.uids import get_random_uids, ping_uid
+from bitrecs.utils.version import LocalMetadata
+from bitrecs.validator.reward import get_rewards
+from bitrecs.utils.logging import (
     log_miner_responses, 
     read_timestamp, 
     write_timestamp, 
     log_miner_responses_to_sql
 )
-from template.utils import constants as CONST
-from template.utils.wandb import WandbHelper
-from template.utils.runtime import execute_periodically
-from template.validator.rules import validate_br_request
-from template.commerce.user_action import UserAction
+from bitrecs.utils import constants as CONST
+from bitrecs.utils.wandb import WandbHelper
+from bitrecs.utils.runtime import execute_periodically
+from bitrecs.validator.rules import validate_br_request
+from bitrecs.commerce.user_action import UserAction
 
 from dotenv import load_dotenv
 load_dotenv()
