@@ -28,34 +28,30 @@ This subnet is dedicated to maximizing these 3 goals for online merchants using 
 ## Problem
 Global e-commerce is an estimated 20T market with a ~15% CAGR. A large portion of online sales are directly attributed to onsite recommendations (e.g customers who bought x also bought y, bundled products, last minute checkout items etc). Famously, Amazon attributes 35% of their total online sales</a> to their proprietary recommendation engine.  Unfortunately this engine is out of reach for most online retailers who are operating on smaller platforms (e.g Shopify, Woocommerce etc) which have their own recommendation solutions and widgets, often using older rules-based technology.
 
-This problem is a subset of the much larger General Recommendation space which powers most of the Internet today (think Netflix movie recommendations, TikTok reels, Google search suggestions, etc)
+This problem is a subset of the much larger General Recommendations space which powers most of the Internet today (e.g Netflix movie recommendations, TikTok reels, Google search suggestions, etc)
 
 We are addressing a more narrow but vital area of e-commerce - [onsite product recommendations for merchants](https://www.perplexity.ai/search/onsite-product-recommendations-PmY8e84GSxavnmdSW9934A)
 
 ## Solution
 
+Tap the intelligence of Bittensor to generate realtime product recommendations for online merchants. 
 
-
-Bitrecs taps the intelligence of Bittensor to generate realtime product recommendations for online merchants
-
-Our first generation solution uses prompting and ICL to coerce recs from the latest LLMs. We believe LLM's are best suited for this task as they excel at cold-start, few/zero shot learning
+Our first generation solution uses prompting and ICL to coerce recs from the latest LLMs. With a rapidly declining cost per token, we believe LLM's are well suited for this task as they excel at cold-start, zero/few shot learning
 
 <img src="docs/br_request1.png" alt="basic query" style="border: solid 3px #059669;"/>
 
+V1 uses a very basic prompt template but we expect it to evolve rapidly as miners are onboarded. 
+Additionally, many LLM's have encoded valuable information about shopping cohorts, seasonality, brand affinities, customer journeys etc which we try to unlock using prompting.  
 
-Additionally, many LLM's have encoded valuable information about shopping cohorts, seasonality, brand affinities, customer journeys etc which we try to unlock using prompting.  The recent advances in context window size has opened up the door for this type of solution as we essentially ask 'given this customer scenario and this set of products, pick Y next products the customer would buy. 
+The solution has been designed to offer merchants a free and simple plugin that works out of the box, while hiding all the complexity and abstractions of Bittensor away from them so they can continue to focus on selling and running an online business. Subnet miners can focus on competing and evolving the prompting science to produce increasingly valuable and timely product recommendations.
 
-As we evolve this network we get closer to **1-to-1 marketing** which is viewed as the holy grail of marketing (imagine every product page you view on the web as personalized just for you, without being invasive or exploitive).  Amazon is close to this experience but falls short in many areas - they often directly sell the same products their merchants sell and this arguably creates a conflict of interest when they recommend products.
-
-Smaller retailers need access to this technology to remain competitive, and our solution is built to work with existing onsite catalogs (we never recommend 3rd party products or divert traffic to other sites - this is critical to winning merchants trust)
-
-The solution has been designed to offer merchants a free and simple plugin that works out of the box, while hiding all the complexity and abstractions of Bittensor away from them so they can continue to focus on selling and running an online business.  When merchant concerns met, subnet miners can remain focused on competing and evolving the prompting science to produce increasingly valuable and timely product recommendations.
+Validators provide the gateway to the miners, which send and collect requests through the network, scoring them and selecting a top candidate to return to the client. 
 
 ## Product
-The subnet operates through an incentive mechanism where miners produce arrays of product SKUs from a given input SKUs, a catalog of store inventory and (when applicable) supplementary user order history. The protocol enables:
+The subnet operates through an incentive mechanism where miners produce arrays of product SKUs from a given input SKUs, a catalog of store inventory and prompting. The protocol enables:
 
 - Easy integration for e-commerce shop owners through our plugins
-- Base miner class with support for several popular LLM models and providers
+- Base miner class with support for several popular LLM model providers
 - Validator API proxy for marshalling requests between e-commerce sites and the bittensor network
 
 ## Incentive
@@ -73,14 +69,17 @@ We think this is a great opportunity to showcase the power of Bittensor incentiv
 
 Over time, as the baseline gets set (i.e quality recs at a max request time < 3 seconds) the sales focused incentive mechanism drives miners to search and compete for more impactful recommendations. We hope that we can fine tune and balance the incitive mechanism to achieve a network that is always performing a 'best effort' on every request, with outsized rewards given to top performers which drive real, measurable value for merchants and helping them compete with the incumbents - a win for every party involved.
 
-#### Thoughts
+## Evolution
 
-Merchants put enormous time and $ into their online stores, constantly updating and polishing them to make them convert higher.  What better place to showcase Bittensor technology then directly on these sites, where the valuable intelligence of the network gets consumed and utilized in a real-world scenario? Customers are happy to get better overall recommendations, merchants win with higher sales and conversions and Bittensor benefits from having a subnet that can generate measurable value for businesses.
+As we evolve this network we get closer to **1-to-1 marketing** which is viewed as the holy grail of marketing (imagine every product page you view on the web as personalized just for you, without being invasive or exploitive).  Amazon is close to this experience but falls short in many areas - they often directly sell the same products their merchants sell and this arguably creates a conflict of interest when they recommend products.
+
+Smaller retailers need access to this technology to remain competitive, and our solution is built to work with existing onsite catalogs (we never recommend 3rd party products or divert traffic to other sites - this is critical to winning merchants trust)
+
+Merchants put enormous time and $ into their online stores, constantly updating and polishing them to make them convert higher.  What better place to showcase Bittensor technology then directly on these sites, where the valuable intelligence of the network gets consumed in a real-world scenario? Customers are happy to get better overall recommendations, merchants win with higher sales and conversions and Bittensor benefits from having a subnet that can generate measurable value for thousands of independent merchants.
 
 ## Privacy
 
 Bitrecs does not use, collect or farm any customer data, PII or anything related to the end user which would otherwise be considered invasive or intrusive.  Our solution is privacy preserving, with final control of what data gets sent to the network in the merchants hands via the plugin.  By default, minimal, anonymous information is gathered to generate the recommendations.
-
 
 ## Roadmap
 
@@ -91,22 +90,23 @@ Testnet (Jan)
 - iterate, refine and balance incentive mechanism
 - complete merchant/miner/validator portal for easy onboarding
 
-Mainnet (Feb-March)
+### Q2 2025
 
 - launch on mainnet 
 - establish baselines for quality of service and uptime across the subnet
 - ramp up miners and validators
 - improve and harden onsite metrics tracking
 
-### Q2 2025
+### Q3 2025
 
 - aggressively market and onboard merchants
 - integrate additional platforms (magento, bigcommerce, wix)
 - evolve the V1 engine with new prompting and models, miner innovations
 
-### Q3 2025
+### Q4 2025
 
-- explore potential Fiber rewrite / V2
+- improve plugins
+- overall UX, reskin and make the experience more delightful for merchants
 
 
 ## Getting Started
