@@ -12,7 +12,7 @@
 </div>
 
 ## Introduction
-Bitrecs is a novel <a href="https://www.perplexity.ai/search/recommendation-engine-NpaNi7MHQ5OFA.btgIQ4QQ" target="_blank">recommendation engine</a> built on the Bittensor network. Our implementation provides a framework for serving e-commerce recommendations via the latest LLMs. Miners are encouraged to experiment with their own implementations to improve latency and quality. 
+Bitrecs is a novel recommendation engine</a> built on the Bittensor network. Our implementation provides a framework for serving e-commerce recommendations via the latest LLMs. Miners are encouraged to experiment with their own implementations to improve latency and quality. 
 
 ## Goal
 **Maximize sales for online retailers (merchants)**
@@ -26,29 +26,35 @@ Common objectives shared by merchants:
 This subnet is dedicated to maximizing these 3 goals for online merchants using existing store data and traffic (onsite). 
 
 ## Problem
-Global e-commerce is an estimated 20T market with a ~15% CAGR. A large portion of online sales are directly attributed to onsite recommendations (e.g customers who bought x also bought y, bundled products, last minute checkout items etc). Famously, Amazon attributes <a href="https://www.perplexity.ai/search/how-much-does-amazon-product-r-ccxRVV5OReGL_12_QzBGzQ" target="_blank">35% of their total online sales</a> to their proprietary recommendation engine.  Unfortunately this engine is out of reach for most online retailers who are operating on smaller platforms (e.g Shopify, Woocommerce etc) which have their own recommendation solutions and widgets, often using older rules-based technology.
+Global e-commerce is an estimated 20T market with a ~15% CAGR. A large portion of online sales are directly attributed to onsite recommendations (e.g customers who bought x also bought y, bundled products, last minute checkout items etc). Famously, Amazon attributes 35% of their total online sales</a> to their proprietary recommendation engine.  Unfortunately this engine is out of reach for most online retailers who are operating on smaller platforms (e.g Shopify, Woocommerce etc) which have their own recommendation solutions and widgets, often using older rules-based technology.
 
 This problem is a subset of the much larger General Recommendation space which powers most of the Internet today (think Netflix movie recommendations, TikTok reels, Google search suggestions, etc)
 
 We are addressing a more narrow but vital area of e-commerce - [onsite product recommendations for merchants](https://www.perplexity.ai/search/onsite-product-recommendations-PmY8e84GSxavnmdSW9934A)
 
 ## Solution
-Bitrecs taps into the intelligence of the Bittensor network to service product recommendations for retailers directly via miners using novel methods.
 
-Our first generation solution uses prompting and ICL to coerce recs from the latest LLMs. We believe LLM's are best suited for this task as they excel at cold-start, one/zero shot learning which is often the weakness of legacy rec engines using older methods (collaborative filtering, content-based filtering etc).
 
-Additionally, many LLM's have encoded valuable information about shopping cohorts, seasonality, brand affinities, customer journeys etc which we try to unlock using prompting.  The recent advances in context window size has opened up the door for this type of solution as we essentially ask 'given this customer scenario and this set of products, pick X next products the customer would buy. 
 
-As we evolve this network we get closer to **1-to-1 marketing** which is viewed as the holy grail of marketing (imagine every product page you view on the web as personalized just for you, without being invasive or exploitive).  Amazon is close to this experience but falls short in many areas - they often directly sell the same products their merchants sell and this creates a conflict of interest.  
+Bitrecs taps the intelligence of Bittensor to generate realtime product recommendations for online merchants
+
+Our first generation solution uses prompting and ICL to coerce recs from the latest LLMs. We believe LLM's are best suited for this task as they excel at cold-start, few/zero shot learning
+
+<img src="docs/br_request1.png" alt="basic query" style="border: solid 3px #059669;"/>
+
+
+Additionally, many LLM's have encoded valuable information about shopping cohorts, seasonality, brand affinities, customer journeys etc which we try to unlock using prompting.  The recent advances in context window size has opened up the door for this type of solution as we essentially ask 'given this customer scenario and this set of products, pick Y next products the customer would buy. 
+
+As we evolve this network we get closer to **1-to-1 marketing** which is viewed as the holy grail of marketing (imagine every product page you view on the web as personalized just for you, without being invasive or exploitive).  Amazon is close to this experience but falls short in many areas - they often directly sell the same products their merchants sell and this arguably creates a conflict of interest when they recommend products.
 
 Smaller retailers need access to this technology to remain competitive, and our solution is built to work with existing onsite catalogs (we never recommend 3rd party products or divert traffic to other sites - this is critical to winning merchants trust)
 
-Everything has been designed to offer the merchant a free and simple plugin that works out of the box on product pages, while hiding all the complexity and abstractions of Bittensor away from them so they can continue to focus on selling and running an online business.  With merchant concerns met, network miners can remain focused on competing and evolving the prompting science to produce increasingly valuable and timely product recommendations.
+The solution has been designed to offer merchants a free and simple plugin that works out of the box, while hiding all the complexity and abstractions of Bittensor away from them so they can continue to focus on selling and running an online business.  When merchant concerns met, subnet miners can remain focused on competing and evolving the prompting science to produce increasingly valuable and timely product recommendations.
 
 ## Product
 The subnet operates through an incentive mechanism where miners produce arrays of product SKUs from a given input SKUs, a catalog of store inventory and (when applicable) supplementary user order history. The protocol enables:
 
-- Easy integration for e-commerce shop owners through our WooCommerce and Shopify plugins
+- Easy integration for e-commerce shop owners through our plugins
 - Base miner class with support for several popular LLM models and providers
 - Validator API proxy for marshalling requests between e-commerce sites and the bittensor network
 
@@ -87,8 +93,9 @@ Testnet (Jan)
 
 Mainnet (Feb-March)
 
-- launch on mainnet baring any critical design/incentive flaws
+- launch on mainnet 
 - establish baselines for quality of service and uptime across the subnet
+- ramp up miners and validators
 - improve and harden onsite metrics tracking
 
 ### Q2 2025
@@ -117,9 +124,14 @@ Ensure you have the sample .json and .csv files in the /tests/data folder
 
 pytest ./tests/test_json.py -s --durations=0
 pytest ./tests/test_llm.py -s --durations=0
-pytest ./tests/test_llm.py -s -k 'test_call_local_llm_with_20k'
+pytest ./tests/test_llm_2.py -s -k 'test_call_local_llm_with_20k'
  ```
 
+### References
+
+<a href="https://www.perplexity.ai/search/recommendation-engine-NpaNi7MHQ5OFA.btgIQ4QQ" target="_blank">Recommendation Engine Perplexity</a>
+
+<a href="https://www.perplexity.ai/search/how-much-does-amazon-product-r-ccxRVV5OReGL_12_QzBGzQ" target="_blank">Amazon Sales</a>
 
 ## License
 
