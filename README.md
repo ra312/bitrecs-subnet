@@ -40,7 +40,7 @@ Our first generation solution uses prompting and ICL to coerce recs from the lat
 
 <img src="docs/br_request1.png" alt="basic query" style="border: solid 3px #059669;"/>
 
-V1 uses a very basic prompt template but we expect it to evolve rapidly as miners are onboarded. 
+V1 uses a simple prompt template but we expect it to evolve rapidly as miners are onboarded. 
 Additionally, many LLM's have encoded valuable information about shopping cohorts, seasonality, brand affinities, customer journeys etc which we try to unlock using prompting.  
 
 The solution has been designed to offer merchants a free and simple plugin that works out of the box, while hiding all the complexity and abstractions of Bittensor away from them so they can continue to focus on selling and running an online business. Subnet miners can focus on competing and evolving the prompting science to produce increasingly valuable and timely product recommendations.
@@ -67,11 +67,11 @@ The incentive mechanism ranks miner responses by performance metrics and sales e
 
 We think this is a great opportunity to showcase the power of Bittensor incentives with e-commerce and to create a fully aligned network of parties - an elegant flywheel of value. The barrier to entry for miners is low on this network as a GPU is **not required** to mine. Miners are allowed (and often encouraged) to call LLMs via APIs as the initial bootstrap of the network will mostly be driven for speed and accuracy.
 
-Over time, as the baseline gets set (i.e quality recs at a max request time < 3 seconds) the sales focused incentive mechanism drives miners to search and compete for more impactful recommendations. We hope that we can fine tune and balance the incitive mechanism to achieve a network that is always performing a 'best effort' on every request, with outsized rewards given to top performers which drive real, measurable value for merchants and helping them compete with the incumbents - a win for every party involved.
+Over time, as the baseline gets set (i.e quality recs at a max request time < 3 seconds) the sales focused incentive mechanism drives miners to search and compete for more impactful recommendations. We hope that we can fine tune and balance the incentive mechanism to achieve a network that is always performing a 'best effort' on every request, with outsized rewards given to top performers which drive real, measurable value for merchants and helping them compete with the incumbents - a win for every party involved.
 
 ## Evolution
 
-As we evolve this network we get closer to **1-to-1 marketing** which is viewed as the holy grail of marketing (imagine every product page you view on the web as personalized just for you, without being invasive or exploitive).  Amazon is close to this experience but falls short in many areas - they often directly sell the same products their merchants sell and this arguably creates a conflict of interest when they recommend products.
+As we evolve this network we get closer to **1-to-1 marketing** which is viewed as the holy grail of marketing (imagine every product page you view on the web as personalized just for you, without being invasive or exploitative).  Amazon is close to this experience but falls short in many areas - they often directly sell the same products their merchants sell and this arguably creates a conflict of interest when they recommend products.
 
 Smaller retailers need access to this technology to remain competitive, and our solution is built to work with existing onsite catalogs (we never recommend 3rd party products or divert traffic to other sites - this is critical to winning merchants trust)
 

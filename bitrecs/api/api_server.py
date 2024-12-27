@@ -153,7 +153,6 @@ class ApiServer:
                                     content={"detail": "error", "status_code": 500})
 
 
-            final_recs = []
             final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
             #bt.logging.trace(f"API generate_product_rec final_recs: {final_recs}")
             response_text = "Bitrecs Took {:.2f} seconds to process this request".format(total_time)
