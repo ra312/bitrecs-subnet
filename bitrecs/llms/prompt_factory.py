@@ -3,6 +3,7 @@ import re
 import os
 import pandas as pd
 import bittensor as bt
+import tiktoken
 
 
 class PromptFactory:
@@ -153,7 +154,7 @@ class PromptFactory:
         13) Each recommendation should be unique (use 'sku' as the key field for uniqueness).
         14) Never say 'Based on the provided query' or 'I have determined'. 
         15) Never explain yourself and no smalltalk.
-        16) assert each recommendation is unique ('sku' is the key).
+        16) assert each recommendation is unique ('sku' is the key) and <query> not in recommendations.
         17) assert len(recommendations) == {}. If not, start over until assert is true.
         18) Return JSON.
             
@@ -194,7 +195,19 @@ class PromptFactory:
         except Exception as e:
             bt.logging.error(str(e))
             return []
+        
 
+    @staticmethod
+    def get_token_count(prompt: str, encoding_name: str = "o200k_base") -> int:        
+        encoding = tiktoken.get_encoding(encoding_name)        
+        tokens = encoding.encode(prompt)
+        return len(tokens)
+    
+    
+    @staticmethod
+    def get_word_count(prompt: str) -> int:
+        return len(prompt.split())
+    
 
 class ExampleRecs:
     
