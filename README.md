@@ -8,11 +8,11 @@
 [![Discord Chat](https://img.shields.io/discord/308323056592486420.svg)](https://discord.gg/bittensor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
 
-[Discord](https://discord.gg/bittensor) • [Network](https://taostats.io/) • [Research](https://bittensor.com/whitepaper)
+[Discord](https://discord.gg/bittensor) • [Website](https://bitrecs.ai/)
 </div>
 
 ## Introduction
-Bitrecs is a novel recommendation engine</a> built on the Bittensor network. Our implementation provides a framework for serving e-commerce recommendations via the latest LLMs. Miners are encouraged to experiment with their own implementations to improve latency and quality. 
+Bitrecs is a novel recommendation engine</a> built on the Bittensor network. Our implementation provides a framework for serving realtime e-commerce recommendations using LLMs. Miners are encouraged to experiment with their own implementations to improve latency and quality.
 
 ## Goal
 **Maximize sales for online retailers (merchants)**
@@ -36,9 +36,9 @@ We are addressing a more narrow but vital area of e-commerce - [onsite product r
 
 Tap the intelligence of Bittensor to generate realtime product recommendations for online merchants. 
 
-Our first generation solution uses prompting and ICL to coerce recs from the latest LLMs. With a rapidly declining cost per token, we believe LLM's are well suited for this task as they excel at cold-start, zero/few shot learning
+Our first generation solution uses prompting and ICL via a Mixture of Experts to coerce recs from the latest LLMs. With a rapidly declining cost per token, we believe LLM's are well suited for this task as they excel at cold-start, zero/few shot learning
 
-<img src="docs/br_request1.png" alt="basic query" style="border: solid 3px #059669;"/>
+<img src="docs/bitrecs_moe.png" alt="basic query" style="border: solid 3px #059669;"/>
 
 V1 uses a simple prompt template but we expect it to evolve rapidly as miners are onboarded. 
 Additionally, many LLM's have encoded valuable information about shopping cohorts, seasonality, brand affinities, customer journeys etc which we try to unlock using prompting.  
@@ -59,13 +59,13 @@ The incentive mechanism ranks miner responses by performance metrics and sales e
 
 - Latency to response
 - Diversity of recs
-- Quality of responses (recs cannot be hallucinated, recs cannot be dupes, etc)
-- Coherence to prompt parameters (seasonality, gender etc)
-- End user actions such as add to cart and order checkout
+- Quality of responses
+- Coherence to prompt parameters
+- End user actions such as add to cart and purchases
 
 ## Opportunity
 
-We think this is a great opportunity to showcase the power of Bittensor incentives with e-commerce and to create a fully aligned network of parties - an elegant flywheel of value. The barrier to entry for miners is low on this network as a GPU is **not required** to mine. Miners are allowed (and often encouraged) to call LLMs via APIs as the initial bootstrap of the network will mostly be driven for speed and accuracy.
+We think this is a great opportunity to showcase the power of Bittensor incentives with e-commerce and to create a fully aligned network of parties - an elegant flywheel of value. The barrier to entry for miners is low on this network as a GPU is not required to mine. Miners are allowed (and often encouraged) to call LLMs via APIs as the initial bootstrap of the network will mostly be driven for speed and accuracy.
 
 Over time, as the baseline gets set (i.e quality recs at a max request time < 3 seconds) the sales focused incentive mechanism drives miners to search and compete for more impactful recommendations. We hope that we can fine tune and balance the incentive mechanism to achieve a network that is always performing a 'best effort' on every request, with outsized rewards given to top performers which drive real, measurable value for merchants and helping them compete with the incumbents - a win for every party involved.
 

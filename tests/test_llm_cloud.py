@@ -476,15 +476,7 @@ def test_call_multiple_open_router_amazon_5k_random():
     prompt = factory.generate_prompt()
     #print(prompt)
     print(f"PROMPT SIZE: {len(prompt)}")
-
-    """
-       16) assert each recommendation is unique ('sku' is the key).
-       17) assert len(recommendations) == {}. If not, start over until assert is true.
-       18) Return JSON.
-       19) 
-    """
-    #prompt += "\n19) Never return the query in the results."
-
+ 
     wc = PromptFactory.get_word_count(prompt)
     print(f"word count: {wc}")
 
