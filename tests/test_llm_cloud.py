@@ -20,15 +20,19 @@ OLLAMA_MODEL = "mistral-nemo"
 map = [
     {"provider": LLM.OLLAMA_LOCAL, "model": "mistral-nemo"},
     {"provider": LLM.VLLM, "model": "NousResearch/Meta-Llama-3-8B-Instruct"},
+    {"provider": LLM.CHAT_GPT, "model": "gpt-4o-mini"},
 
-    {"provider": LLM.CHAT_GPT, "model": "gpt-4o-mini"},    
-    #{"provider": LLM.OPEN_ROUTER, "model": "nvidia/llama-3.1-nemotron-70b-instruct"},    
-    #{"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-lite-v1"},
-    #{"provider": LLM.OPEN_ROUTER, "model": "meta-llama/llama-3.2-3b-instruct:free"},
+    {"provider": LLM.OPEN_ROUTER, "model": "nvidia/llama-3.1-nemotron-70b-instruct"},
+
+    #{"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-lite-v1"},    
     #{"provider": LLM.OPEN_ROUTER, "model": "cohere/command-r7b-12-2024"},
-    {"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-micro-v1"},
-  
-  
+    #{"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-micro-v1"},
+    
+    #{"provider": LLM.OPEN_ROUTER, "model": "google/google/gemini-flash-1.5-8b"},
+    {"provider": LLM.OPEN_ROUTER, "model": "google/gemini-2.0-flash-exp:free"},
+    #{"provider": LLM.OPEN_ROUTER, "model": "google/gemini-exp-1206:free"},
+
+    {"provider": LLM.OPEN_ROUTER, "model": "deepseek/deepseek-chat"},
     
     {"provider": LLM.GROK, "model": "grok-2-latest"},
     {"provider": LLM.GEMINI, "model": "gemini-1.5-flash-8b"},
@@ -284,9 +288,9 @@ def test_call_all_cloud_providers_1k_woo_products():
 
             success_count += 1
            
-            print(f"provider: \033[32m {provider} PASSED woocommerce \033[0m with: {model} in {diff:.2f} seconds")                 
+            print(f"provider: \033[32m {provider} PASSED woocommerce catalog \033[0m with: {model} in {diff:.2f} seconds")                 
         except Exception as e:
-            print(f"provider: {provider} \033[31m FAILED woocommerce \033[0m using: {model}")
+            print(f"provider: {provider} \033[31m FAILED woocommerce catalog \033[0m using: {model}")
             continue
 
     assert len(CLOUD_PROVIDERS) == success_count
@@ -348,9 +352,179 @@ def test_call_all_cloud_providers_1k_amazon_random():
             assert user_prompt not in sku
             
             success_count += 1
-            print(f"provider: \033[32m {provider} PASSED amazon \033[0m with: {model}")
+            print(f"provider: \033[32m {provider} PASSED amazon catalog \033[0m with: {model}")
         except Exception as e:
-            print(f"provider: {provider} \033[31m FAILED amazon \033[0m using: {model}")            
+            print(f"provider: {provider} \033[31m FAILED amazon catalog \033[0m using: {model}")            
             continue
 
     assert len(CLOUD_PROVIDERS) == success_count
+
+
+
+
+#@pytest.mark.skip(reason="skipped - stalled")
+def test_call_multiple_open_router_1k_amazon_random():
+    raw_products = product_1k()    
+    products = ProductFactory.dedupe(raw_products)
+    print(f"after de-dupe: {len(products)} records")
+
+    time.sleep(3)
+    rp = safe_random.choice(products)
+    user_prompt = rp.sku
+    #num_recs = 3
+    num_recs = safe_random.choice([1, 5, 9, 10, 11, 16, 20])
+
+    debug_prompts = False
+
+    match = [products for products in products if products.sku == user_prompt][0]
+    print(match)    
+    print(f"num_recs: {num_recs}")
+
+    context = json.dumps([asdict(products) for products in products])
+    factory = PromptFactory(sku=user_prompt, 
+                            context=context, 
+                            num_recs=num_recs, 
+                            load_catalog=False, 
+                            debug=debug_prompts)
+    
+    prompt = factory.generate_prompt()
+    #print(prompt)
+    print(f"prompt length: {len(prompt)}")
+
+    """
+       16) assert each recommendation is unique ('sku' is the key).
+       17) assert len(recommendations) == {}. If not, start over until assert is true.
+       18) Return JSON.
+       19) 
+    """
+
+    #prompt += "\n19) Never return the query in the results."
+
+    print("********** LOOPING PROVIDERS ")
+    
+    providers = [p for p in map if p["provider"] == LLM.OPEN_ROUTER]
+    attempt_count = 0
+    success_count = 0
+    for provider in providers:
+        print(f"provider: {provider}")
+        attempt_count += 1
+
+        model = provider["model"]
+        this_provider = provider["provider"]
+
+        try:            
+            llm_response = LLMFactory.query_llm(server=this_provider,
+                                model=model,
+                                system_prompt="You are a helpful assistant", 
+                                temp=0.0, 
+                                user_prompt=prompt)
+            parsed_recs = PromptFactory.tryparse_llm(llm_response)
+            print(f"parsed {len(parsed_recs)} records")
+            print(parsed_recs)
+
+            assert len(parsed_recs) == num_recs
+
+            skus = [item['sku'] for item in parsed_recs]
+            counter = Counter(skus)
+            for sku, count in counter.items():
+                print(f"{sku}: {count}")
+                assert count == 1
+
+            print("asserting user_prompt not in sku")
+            assert user_prompt not in sku
+            
+            success_count += 1
+            print(f"provider: \033[32m {this_provider} PASSED amazon \033[0m with: {model}")
+        except Exception as e:
+            print(f"provider: {this_provider} \033[31m FAILED amazon \033[0m using: {model}")            
+            continue
+
+    provider_length = len(providers)
+    assert attempt_count == provider_length
+    print("PARTIAL PASS")
+
+    assert attempt_count == success_count
+    print("FULL PASS")
+
+
+def test_call_multiple_open_router_amazon_5k_random():
+    raw_products = product_5k()    
+    products = ProductFactory.dedupe(raw_products)
+    print(f"after de-dupe: {len(products)} records")
+
+    time.sleep(3)
+    rp = safe_random.choice(products)
+    user_prompt = rp.sku
+    #num_recs = 3
+    #num_recs = safe_random.choice([1, 5, 9, 10, 11, 16, 20])
+
+    num_recs = safe_random.choice([3, 4, 5])
+
+    debug_prompts = False
+
+    match = [products for products in products if products.sku == user_prompt][0]
+    print(match)    
+    print(f"num_recs: {num_recs}")
+
+    context = json.dumps([asdict(products) for products in products])
+    factory = PromptFactory(sku=user_prompt, 
+                            context=context, 
+                            num_recs=num_recs, 
+                            load_catalog=False, 
+                            debug=debug_prompts)
+    
+    prompt = factory.generate_prompt()
+    #print(prompt)
+    print(f"PROMPT SIZE: {len(prompt)}")
+ 
+    wc = PromptFactory.get_word_count(prompt)
+    print(f"word count: {wc}")
+
+    tc = PromptFactory.get_token_count(prompt)
+    print(f"token count: {tc}")    
+
+
+    print("********** LOOPING PROVIDERS ")    
+    providers = [p for p in map if p["provider"] == LLM.OPEN_ROUTER]
+    attempt_count = 0
+    success_count = 0
+    for provider in providers:
+        print(f"provider: {provider}")
+        attempt_count += 1
+
+        model = provider["model"]
+        this_provider = provider["provider"]
+        try:
+            llm_response = LLMFactory.query_llm(server=this_provider,
+                                model=model,
+                                system_prompt="You are a helpful assistant", 
+                                temp=0.0, 
+                                user_prompt=prompt)
+            parsed_recs = PromptFactory.tryparse_llm(llm_response)
+            print(f"parsed {len(parsed_recs)} records")
+            print(parsed_recs)
+
+            assert len(parsed_recs) == num_recs
+
+            skus = [item['sku'] for item in parsed_recs]
+            counter = Counter(skus)
+            for sku, count in counter.items():
+                print(f"{sku}: {count}")
+                assert count == 1
+
+            print("asserting user_prompt not in sku")
+            assert user_prompt not in sku
+            
+            success_count += 1
+            print(f"provider: \033[32m {this_provider} PASSED amazon \033[0m with: {model}")
+        except Exception as e:
+            print(f"provider: {this_provider} \033[31m FAILED amazon \033[0m using: {model}")            
+            continue
+
+    provider_length = len(providers)
+    assert attempt_count == provider_length
+    print("PARTIAL PASS")
+    
+    assert attempt_count == success_count
+    print("FULL PASS")
+
