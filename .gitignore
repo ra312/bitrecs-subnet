@@ -176,7 +176,7 @@ api_counter.json
 proxy_counter.json
 timestamp.txt
 
-amazon_fashion_sample_*.json
+
 
 /tests/logs/*.*
 **/wandb/*
