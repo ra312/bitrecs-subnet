@@ -65,7 +65,7 @@ class OllamaLocalInterface:
         self.model = model
         self.system_prompt = system_prompt
         self.temp = temp        
-        self.OLLAMA_LOCAL_URL = os.environ.get("OLLAMA_LOCAL_URL")
+        self.OLLAMA_LOCAL_URL = os.environ.get("OLLAMA_LOCAL_URL").removesuffix("/")
         if not self.OLLAMA_LOCAL_URL:
              bt.logging.error("OLLAMA_LOCAL_URL not set.")        
     

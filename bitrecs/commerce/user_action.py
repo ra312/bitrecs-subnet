@@ -1,4 +1,5 @@
 
+import os
 import bittensor as bt
 import requests
 from enum import Enum
@@ -29,8 +30,9 @@ class UserAction:
         Load all the actions attributed to this miner
         """
         actions = []
-        try:
-            r = requests.get(f"https://api.bitrecs.ai/miner/{hot_key}")
+        try:             
+            proxy_url = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
+            r = requests.get(f"{proxy_url}/miner/{hot_key}")
             actions = r.json()
         except Exception as e:
             bt.logging.error(f"load_user_actions Exception: {e}")
@@ -48,7 +50,8 @@ class UserAction:
             dt_to = int(end_date.timestamp())
             if dt_from >= dt_to:                
                 raise ValueError("Start date must be less than end date")
-            r = requests.get(f"https://api.bitrecs.ai/miner/stats/from/{dt_from}/to/{dt_to}")
+            proxy_url = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
+            r = requests.get(f"{proxy_url}/miner/stats/from/{dt_from}/to/{dt_to}")
             actions = r.json()
         except Exception as e:
             bt.logging.error(f"load_user_actions Exception: {e}")
