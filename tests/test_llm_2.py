@@ -15,9 +15,9 @@ os.environ["NEST_ASYNCIO"] = "0"
 
 LOCAL_OLLAMA_URL = "http://10.0.0.40:11434/api/chat"
 
-OLLAMA_MODEL = "mistral-nemo" #8/8 8 passed, 5 skipped, 4 warnings in 61.01s (0:01:01)  | 7 passed, 5 skipped, 3 warnings in 50.73s | 8 passed, 5 skipped, 4 warnings in 59.86s 
+OLLAMA_MODEL = "mistral-nemo" #8/8 8 passed, 5 skipped, 4 warnings in 61.01s (0:01:01)  | 8 passed, 5 skipped, 3 warnings in 62.52s (0:01:02) |  7 passed, 5 skipped, 3 warnings in 50.73s | 8 passed, 5 skipped, 4 warnings in 59.86s 
 #6 passed, 5 skipped, 3 warnings in 52.57s | 6 passed, 5 skipped, 3 warnings in 57.67s | 1 failed, 5 passed, 5 skipped, 3 warnings in 67.16s (0:01:07) |  1 failed, 5 passed, 5 skipped, 3 warnings in 62.38s (0:01:02) |1 failed, 6 passed, 5 skipped, 3 warnings in 57.55s 
-#2 failed, 6 passed, 5 skipped, 4 warnings in 80.10s (0:01:20) |  1 failed, 7 passed, 5 skipped, 4 warnings in 69.80s (0:01:09) | 1 failed, 7 passed, 5 skipped, 4 warnings in 79.59s 
+#2 failed, 6 passed, 5 skipped, 4 warnings in 80.10s (0:01:20) |  1 failed, 7 passed, 5 skipped, 4 warnings in 69.80s (0:01:09) | 1 failed, 7 passed, 5 skipped, 4 warnings in 79.59s | 1 failed, 7 passed, 5 skipped, 3 warnings in 68.21s (0:01:08)
 
 #OLLAMA_MODEL = "nemotron:70b-instruct-q4_K_M" #6/6 6 passed, 5 skipped, 3 warnings in 159.35s (0:02:39) 
 #OLLAMA_MODEL = "llama3.1:70b" #6/6 6 passed, 5 skipped, 3 warnings in 133.20s (0:02:13)
@@ -35,7 +35,7 @@ OLLAMA_MODEL = "mistral-nemo" #8/8 8 passed, 5 skipped, 4 warnings in 61.01s (0:
 
 
 #OLLAMA_MODEL = "llama3.1" #3/6
-#OLLAMA_MODEL = "llama3.3" #3/5
+#OLLAMA_MODEL = "llama3.3" #3/5 context length errors in logs
 #OLLAMA_MODEL = "llama3.3:70b-instruct-q2_K" #2/5
 #OLLAMA_MODEL = "qwq" #4/6
 #OLLAMA_MODEL = "gemma2:27b-instruct-fp16" # 4 failed, 2 passed, 5 skipped, 3 warnings in 119.31s (0:01:59)
@@ -43,6 +43,10 @@ OLLAMA_MODEL = "mistral-nemo" #8/8 8 passed, 5 skipped, 4 warnings in 61.01s (0:
 #OLLAMA_MODEL = "llama3.2-vision:90b-instruct-q4_K_M" #2 failed, 4 passed, 5 skipped, 3 warnings in 216.71s (0:03:36)
 #OLLAMA_MODEL = "qwen2.5:72b-instruct-q4_0" dnf
 #OLLAMA_MODEL = "mistral-nemo:12b-instruct-2407-fp16"
+
+#OLLAMA_MODEL = "phi4" # 1 failed, 7 passed, 5 skipped, 3 warnings in 124.66s (0:02:04) coldstart |  2 failed, 6 passed, 5 skipped, 3 warnings in 202.52s (0:03:22) 
+#OLLAMA_MODEL = "phi4:14b-fp16" # 4 failed, 4 passed, 5 skipped, 3 warnings in 129.96s (0:02:09)
+#OLLAMA_MODEL = "phi4:14b-q8_0" #1 failed, 7 passed, 5 skipped, 3 warnings in 90.35s (0:01:30) 
 
 MASTER_SKU = "B08XYRDKDV" #HP Envy 6455e Wireless Color All-in-One Printer with 6 Months Free Ink (223R1A) (Renewed Premium)
 
