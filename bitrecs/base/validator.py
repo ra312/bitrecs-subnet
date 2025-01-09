@@ -16,7 +16,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-
+import os
 import copy
 import numpy as np
 import asyncio
@@ -109,6 +109,9 @@ class BaseValidatorNeuron(BaseNeuron):
 
     def __init__(self, config=None):
         super().__init__(config=config)      
+
+        if not os.environ.get("BITRECS_PROXY_URL"):
+            raise Exception("Please set the BITRECS_PROXY_URL environment variable.")
 
         # Save a copy of the hotkeys to local memory.
         self.hotkeys = copy.deepcopy(self.metagraph.hotkeys)      
