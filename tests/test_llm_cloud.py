@@ -24,15 +24,13 @@ map = [
 
     {"provider": LLM.OPEN_ROUTER, "model": "nvidia/llama-3.1-nemotron-70b-instruct"},
 
-    #{"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-lite-v1"},    
+    {"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-lite-v1"},    
     #{"provider": LLM.OPEN_ROUTER, "model": "cohere/command-r7b-12-2024"},
     #{"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-micro-v1"},
     
     #{"provider": LLM.OPEN_ROUTER, "model": "google/google/gemini-flash-1.5-8b"},
-    {"provider": LLM.OPEN_ROUTER, "model": "google/gemini-2.0-flash-exp:free"},
-    #{"provider": LLM.OPEN_ROUTER, "model": "google/gemini-exp-1206:free"},
-
-    {"provider": LLM.OPEN_ROUTER, "model": "deepseek/deepseek-chat"},
+    {"provider": LLM.OPEN_ROUTER, "model": "google/gemini-2.0-flash-exp:free"},    
+    #{"provider": LLM.OPEN_ROUTER, "model": "deepseek/deepseek-chat"},
     
     {"provider": LLM.GROK, "model": "grok-2-latest"},
     {"provider": LLM.GEMINI, "model": "gemini-1.5-flash-8b"},
@@ -49,6 +47,7 @@ LOCAL_PROVIDERS = [LLM.OLLAMA_LOCAL]
 MASTER_SKU = "B08XYRDKDV" 
 #HP Envy 6455e Wireless Color All-in-One Printer with 6 Months Free Ink (223R1A) (Renewed Premium)
 
+# 1 failed, 8 passed, 1 skipped, 4 warnings in 147.16s (0:02:27
 # 7 passed, 1 skipped, 4 warnings in 35.79s
 #7 passed, 4 warnings in 42.26s
 #7 passed, 4 warnings in 60.06s (0:01:00)
@@ -230,6 +229,7 @@ def test_call_all_cloud_providers_warmup():
             print(f"provider: {provider} \033[31m FAILED \033[0m using: {model}")            
             continue            
                      
+    assert count == len(CLOUD_PROVIDERS)
 
 
 #@pytest.mark.skip(reason="skipped")
