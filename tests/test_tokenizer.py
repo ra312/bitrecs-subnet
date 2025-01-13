@@ -53,13 +53,13 @@ copy_pastas = ["ok I need PRICE TO GO UP. I cant take this anymore. every day I 
 def test_get_word_count():    
     for i, pasta in enumerate(copy_pastas):
         #print(f"pasta: {pasta}")
-        tc = PromptFactory.get_word_count(pasta)
-        print(tc)
+        wc = PromptFactory.get_word_count(pasta)
+        print(wc)
         match i:
-            case 0: assert tc == 56
-            case 1: assert tc == 53
-            case 2: assert tc == 23
-            case 3: assert tc == 46
+            case 0: assert wc == 56
+            case 1: assert wc == 53
+            case 2: assert wc == 23
+            case 3: assert wc == 46
 
 
 def test_get_token_count():    

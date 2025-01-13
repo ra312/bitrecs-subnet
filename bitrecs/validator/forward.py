@@ -30,9 +30,7 @@ def get_bitrecs_dummy_request(num_results) -> BitrecsRequest:
     Returns a dummy BitrecsRequest object for testing purposes.
 
     """
-
-    #num_results = random.choice([1, 2, 3, 4, 5])    
-    #query = "24-WB03" #Divine backpack
+  
     queries = ["WT02-M-Green", "WT05-L-Purple", "24-MB02", "WSH11-28-Blue", "MH11"]
     query = random.choice(queries)
 
@@ -65,21 +63,17 @@ async def forward(self, pr: BitrecsRequest = None):
 
     """
     bt.logging.info(f"VALIDATOR FORWARD Forwarding request: {pr}")
-
-    #num_results = random.choice([1, 2, 3, 4, 5])  
+    
     num_results = 0
-
     if pr is not None: #API REQUEST
         raise NotImplementedError("API requests not implemented here")
-        next_request = pr
-        num_results = pr.num_results
+     
     else:
         num_results = 5
         next_request = get_bitrecs_dummy_request(num_results)
 
     num_recs = next_request.num_results
-    miner_uids = get_random_uids(self,  k=self.config.neuron.sample_size)
-    #miner_uids = [5]
+    miner_uids = get_random_uids(self,  k=self.config.neuron.sample_size)    
 
     bt.logging.info(f"** UID uids: {miner_uids}")
     start_time = time.time()
@@ -106,4 +100,5 @@ async def forward(self, pr: BitrecsRequest = None):
 
     bt.logging.info(f"Scored responses: {rewards}")
     
-    self.update_scores(rewards, miner_uids)
+    #TODO synthetics disabled for now
+    #self.update_scores(rewards, miner_uids)

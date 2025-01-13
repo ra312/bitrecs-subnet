@@ -172,13 +172,12 @@ class ApiServer:
                 "reasoning": "Bitrecs AI"
             }
 
-            await self.log_counter(True)
-            #bt.logging.debug(f"API generate_product_rec JSONResponse bitrecs_rec: {bitrecs_rec}")
+            await self.log_counter(True)            
             return JSONResponse(status_code=200, content=response)
 
         except Exception as e:
             bt.logging.error(f"ERROR API generate_product_rec error:  {e}")
-            self.log_counter(False)
+            await self.log_counter(False)
             return JSONResponse(status_code=500,
                                 content={"detail": "error", "status_code": 500})
 
@@ -190,15 +189,6 @@ class ApiServer:
     def stop(self):
         self.fast_server.stop()
         bt.logging.info("API server stopped")
-
-
-    # def log_counter(self, success: bool) -> None:
-    #     try: 
-    #         self.api_counter.update(is_success=success)
-    #         self.api_counter.save()
-    #     except Exception as e:
-    #         bt.logging.error(f"ERROR API could not update counter log:  {e}")
-    #         pass  
 
 
     async def log_counter(self, success: bool) -> None:

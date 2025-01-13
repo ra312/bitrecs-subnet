@@ -85,6 +85,7 @@ class Validator(BaseValidatorNeuron):
 
 async def main():     
     await GPUInfo.log_gpu_info()
+    bt.logging.info(f"\033[32m Starting Bitrecs Validator\033[0m ... {int(time.time())}")
     with Validator() as validator:
         start_time = time.time()        
         while True:

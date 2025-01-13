@@ -106,6 +106,7 @@ class Miner(BaseMinerNeuron):
     
     You can override this by setting the --llm.provider argument in the config.
     For example, --llm.provider OLLAMA_LOCAL will use the local ollama instance to generate recommendations.
+    Additionally, --llm.model "model_name" can be used to override the default model.
 
     Note: check your .env file for the appropriate API key settings and urls for the LLM provider configured.
 
@@ -168,14 +169,15 @@ class Miner(BaseMinerNeuron):
         bt.logging.info(f"MINER {self.uid} FORWARD PASS {synapse.query}")
 
         results = []
-        model = self.model
-        server = self.llm_provider      
+        query = synapse.query
         context = synapse.context
         num_recs = synapse.num_results
+        model = self.model
+        server = self.llm_provider        
         st = time.time()
         debug_prompts = self.config.logging.trace
         try:
-            results = await do_work(user_prompt=synapse.query, 
+            results = await do_work(user_prompt=query,
                                     context=context, 
                                     num_recs=num_recs, 
                                     server=server, 
@@ -197,7 +199,7 @@ class Miner(BaseMinerNeuron):
             dictionary_item = ast.literal_eval(cleaned_item)
             if "name" not in dictionary_item:
                 bt.logging.error(f"Item does not contain 'name' key: {dictionary_item}")
-                continue
+                continue        
             dictionary_item["name"] = dictionary_item["name"].replace("'", "-")
             recommendation = str(dictionary_item)
             final_results.append(recommendation)        
