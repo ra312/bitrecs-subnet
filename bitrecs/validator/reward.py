@@ -49,8 +49,9 @@ def does_sku_exist(sku: str, store_catalog: List[Product]) -> bool:
         return False
     if len(store_catalog) == 0:
         return False
+    match = sku.lower().strip()
     for product in store_catalog:
-        if product["sku"].lower().strip() == sku.lower().strip():
+        if product["sku"].lower().strip() == match:
             return True
     return False
    
