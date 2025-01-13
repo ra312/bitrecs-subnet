@@ -160,10 +160,10 @@ class PromptFactory:
             
         """.format(self.num_recs, self.num_recs)
 
-        #print(prompt)
-        #bt.logging.info("generated prompt: {}".format(prompt))
         prompt_length = len(prompt)
         bt.logging.info(f"LLM QUERY Prompt length: {prompt_length}")
+        token_count = self.get_token_count(prompt)
+        bt.logging.info(f"LLM QUERY Prompt Token count: {token_count}")
 
         if self.debug:
             bt.logging.debug("Prompt: {}".format(prompt))
