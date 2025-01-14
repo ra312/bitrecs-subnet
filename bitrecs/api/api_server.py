@@ -59,6 +59,7 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
     
 
 
+
 class ApiServer:
     app: FastAPI
     fast_server: FastAPIThreadedServer
@@ -68,7 +69,7 @@ class ApiServer:
     def __init__(self, axon_port: int, forward_fn: ForwardFn, api_json: str):
         self.forward_fn = forward_fn
         self.app = FastAPI()        
-        self.app.middleware('http')(api_key_validator)        
+        self.app.middleware('http')(api_key_validator)
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         #self.app.middleware('http')(auth_rate_limiting_middleware)
 
@@ -129,18 +130,16 @@ class ApiServer:
             bt.logging.trace(f"REQUEST CATALOG SIZE: {catalog_size}")
             if catalog_size < CONST.MIN_CATALOG_SIZE or catalog_size > CONST.MAX_CATALOG_SIZE:
                 bt.logging.error(f"API invalid catalog size")
-                self.log_counter(False)
+                await self.log_counter(False)
                 return JSONResponse(status_code=400,
                                     content={"detail": "error - invalid catalog", "status_code": 400})            
             
             dupes = ProductFactory.get_dupe_count(store_catalog)
             if dupes > catalog_size * CONST.CATALOG_DUPE_THRESHOLD:
                 bt.logging.error(f"API Too many duplicates in catalog: {dupes}")
-                self.log_counter(False)
+                await self.log_counter(False)
                 return JSONResponse(status_code=400,
                                     content={"detail": "error - dupe threshold reached", "status_code": 400})
-                
-
 
             st = time.time()
             response = await self.forward_fn(request)
@@ -148,10 +147,9 @@ class ApiServer:
 
             if len(response.results) == 0:
                 bt.logging.error(f"API forward_fn response has no results")
-                self.log_counter(False)
+                await self.log_counter(False)
                 return JSONResponse(status_code=500,
                                     content={"detail": "error", "status_code": 500})
-
 
             final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
             #bt.logging.trace(f"API generate_product_rec final_recs: {final_recs}")

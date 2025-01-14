@@ -32,6 +32,7 @@ from bitrecs.utils import constants as CONST
 
 BASE_BOOST = 1/256
 BASE_REWARD = 0.80
+MAX_BOOST = 0.20
 ALPHA_TIME_DECAY = 0.05
 
 ACTION_WEIGHTS = {
@@ -129,12 +130,11 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
         if total_boost == 0:
             return 0.0
         
-        #TODO review this 
-        MAX_BOOST = 0.20
+        #TODO review this       
         if total_boost > BASE_BOOST:
             total_boost = MAX_BOOST / (1 + math.exp(-total_boost + BASE_BOOST))
         
-        return min(max(total_boost, 0.0), MAX_BOOST)    
+        return min(max(total_boost, 0.0), MAX_BOOST)
     except Exception as e:
         bt.logging.error(f"Error in calculate_miner_boost: {e}")
         traceback.print_exc()

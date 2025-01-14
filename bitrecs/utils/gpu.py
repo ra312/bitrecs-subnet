@@ -13,23 +13,24 @@ class classproperty:
 
 class GPUInfo:
     async def log_gpu_info():
-        
-        # logger.info(
-        #     f"""Total GPU memory: {GPUInfo.total_memory} GB\n
-        #             Free GPU memory: {GPUInfo.free_memory} GB\n
-        #             Used GPU memory: {GPUInfo.used_memory} GB\n
-        #             GPU utilization: {GPUInfo.gpu_utilization * 100}%"""
-        # )
 
         gpus = GPUInfo.n_gpus
         if gpus == 0:
             logger.warning("WARNING - No GPUs found on this server")
             return
         
-        logger.info(f"Total GPU memory: {GPUInfo.total_memory} GB")
-        logger.info(f"Free GPU memory:  {GPUInfo.free_memory} GB")
-        logger.info(f"Used GPU memory: {GPUInfo.used_memory} GB")
-        logger.info(f"GPU utilization: {GPUInfo.gpu_utilization * 100}%")
+        try:
+
+            logger.info(f"Total GPU memory: {GPUInfo.total_memory} GB")
+            logger.info(f"Free GPU memory:  {GPUInfo.free_memory} GB")
+            logger.info(f"Used GPU memory: {GPUInfo.used_memory} GB")
+            logger.info(f"GPU utilization: {GPUInfo.gpu_utilization * 100}%")
+
+        except Exception as e:
+            logger.error(f"Error in log_gpu_info: {e}")
+            logger.warning("WARNING - GPUs found on this server with problems")
+            pass
+        
 
     @classproperty
     def total_memory(cls):
