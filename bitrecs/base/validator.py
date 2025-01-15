@@ -534,7 +534,8 @@ class BaseValidatorNeuron(BaseNeuron):
 
             # Log weights to wandb before chain update
             weights_dict = {str(uid): float(weight) for uid, weight in zip(uint_uids, uint_weights)}
-            self.wandb.log_weights(self.step, weights_dict)
+            if self.wandb:
+                self.wandb.log_weights(self.step, weights_dict)
 
         except Exception as e:
             bt.logging.error(f"convert_weights_and_uids_for_emit function error: {e}")
@@ -553,10 +554,12 @@ class BaseValidatorNeuron(BaseNeuron):
             )
             if result is True:
                 bt.logging.info(f"set_weights on chain successfully! msg: {msg}")
-                self.wandb.log_metrics({"weight_update_success": 1})
+                if self.wandb:
+                    self.wandb.log_metrics({"weight_update_success": 1})
             else:
                 bt.logging.error(f"set_weights on chain failed {msg}")
-                self.wandb.log_metrics({"weight_update_success": 0})
+                if self.wandb:
+                    self.wandb.log_metrics({"weight_update_success": 0})
         except Exception as e:
             bt.logging.error(f"set_weights failed with exception: {e}")
 
