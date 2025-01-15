@@ -1,6 +1,7 @@
 import os
 import json
 import time
+from jsonschema import Validator
 import uvicorn
 import traceback
 import bittensor as bt
@@ -11,7 +12,6 @@ from fastapi import FastAPI, HTTPException, Request, APIRouter, Response, Header
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from bittensor.core.axon import FastAPIThreadedServer
-from bitrecs.base.validator import BaseValidatorNeuron
 from bitrecs.commerce.product import ProductFactory
 from bitrecs.protocol import BitrecsRequest
 from bitrecs.api.api_counter import APICounter
@@ -69,7 +69,7 @@ class ApiServer:
     router: APIRouter
     forward_fn: ForwardFn
 
-    def __init__(self, validator: BaseValidatorNeuron, axon_port: int, forward_fn: ForwardFn, api_json: str):
+    def __init__(self, validator: Validator, axon_port: int, forward_fn: ForwardFn, api_json: str):
         self.validator = validator
         self.forward_fn = forward_fn
         self.app = FastAPI()        

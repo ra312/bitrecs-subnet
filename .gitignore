@@ -176,7 +176,8 @@ api_counter.json
 proxy_counter.json
 timestamp.txt
 
-
-
 /tests/logs/*.*
 **/wandb/*
+*.csr
+*.key
+*.pem
