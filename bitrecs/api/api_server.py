@@ -2,7 +2,7 @@ import os
 import json
 import ssl
 import time
-from jsonschema import Validator
+
 import uvicorn
 import traceback
 import bittensor as bt
@@ -18,6 +18,7 @@ from bitrecs.protocol import BitrecsRequest
 from bitrecs.api.api_counter import APICounter
 from bitrecs.api.utils import api_key_validator
 from bitrecs.utils import constants as CONST
+from neurons.validator import Validator
 
 ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 
@@ -27,7 +28,11 @@ request_counts = {}
 
 SECRET_KEY = "change-me"
 SSL_CERT_FILE = os.environ.get("SSL_CERT_FILE")
+if not SSL_CERT_FILE:
+    raise ValueError("SSL_CERT_FILE not set")
 SSL_KEY_FILE = os.environ.get("SSL_KEY_FILE")
+if not SSL_KEY_FILE:
+    raise ValueError("SSL_KEY_FILE not set")
 
 
 async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str): 
