@@ -30,12 +30,12 @@ request_counts = {}
 
 
 SECRET_KEY = "change-me"
-SSL_CERT_FILE = os.environ.get("SSL_CERT_FILE")
-if not SSL_CERT_FILE:
-    raise ValueError("SSL_CERT_FILE not set")
-SSL_KEY_FILE = os.environ.get("SSL_KEY_FILE")
-if not SSL_KEY_FILE:
-    raise ValueError("SSL_KEY_FILE not set")
+# SSL_CERT_FILE = os.environ.get("SSL_CERT_FILE")
+# if not SSL_CERT_FILE:
+#     raise ValueError("SSL_CERT_FILE not set")
+# SSL_KEY_FILE = os.environ.get("SSL_KEY_FILE")
+# if not SSL_KEY_FILE:
+#     raise ValueError("SSL_KEY_FILE not set")
 
 
 async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str): 
@@ -91,9 +91,9 @@ class ApiServer:
             self.app,
             host="0.0.0.0",
             port=axon_port,
-            log_level="trace" if bt.logging.__trace_on__ else "critical",            
-            ssl_certfile=SSL_CERT_FILE,
-            ssl_keyfile=SSL_KEY_FILE          
+            log_level="trace" if bt.logging.__trace_on__ else "critical",
+            # ssl_certfile=SSL_CERT_FILE,
+            # ssl_keyfile=SSL_KEY_FILE
         ))
 
         self.router = APIRouter()
