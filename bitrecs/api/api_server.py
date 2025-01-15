@@ -1,5 +1,6 @@
 import os
 import json
+import ssl
 import time
 from jsonschema import Validator
 import uvicorn
@@ -77,14 +78,19 @@ class ApiServer:
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         self.hot_key = validator.wallet.hotkey.ss58_address
         #self.app.middleware('http')(auth_rate_limiting_middleware)
-
+        
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
             self.app,
             host="0.0.0.0",
             port=axon_port,
             log_level="trace" if bt.logging.__trace_on__ else "critical",            
             ssl_certfile=SSL_CERT_FILE,
-            ssl_keyfile=SSL_KEY_FILE
+            ssl_keyfile=SSL_KEY_FILE,
+            ssl_version=ssl.PROTOCOL_TLS,
+            ssl_keyfile_password=None,  
+            ssl_cert_reqs=ssl.CERT_NONE, 
+            ssl_ca_certs=None,
+            ssl_ciphers=None
         ))
         self.router = APIRouter()
         self.router.add_api_route(
