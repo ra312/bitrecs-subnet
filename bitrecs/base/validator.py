@@ -108,10 +108,7 @@ class BaseValidatorNeuron(BaseNeuron):
         add_validator_args(cls, parser)
 
     def __init__(self, config=None):
-        super().__init__(config=config)      
-
-        if not os.environ.get("BITRECS_PROXY_URL"):
-            raise Exception("Please set the BITRECS_PROXY_URL environment variable.")
+        super().__init__(config=config)
 
         # Save a copy of the hotkeys to local memory.
         self.hotkeys = copy.deepcopy(self.metagraph.hotkeys)      
@@ -141,6 +138,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 axon_port=self.config.axon.port,
                 forward_fn=api_forward,
                 api_json=self.config.api_json,
+                validator=self
             )
             api_server.start()            
             bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: {api_server.fast_server.config.host} on Axon: {api_server.fast_server.config.port} \033[0m")
@@ -153,6 +151,9 @@ class BaseValidatorNeuron(BaseNeuron):
         self.thread: Union[threading.Thread, None] = None
         self.lock = asyncio.Lock()
         self.active_miners: List[int] = []
+
+        if not os.environ.get("BITRECS_PROXY_URL"):
+            raise Exception("Please set the BITRECS_PROXY_URL environment variable.")
         self.user_actions: List[UserAction] = []
         self.loop.run_until_complete(self.action_sync())
         if len(self.user_actions) == 0:

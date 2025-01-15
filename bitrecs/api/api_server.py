@@ -11,6 +11,7 @@ from fastapi import FastAPI, HTTPException, Request, APIRouter, Response, Header
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from bittensor.core.axon import FastAPIThreadedServer
+from bitrecs.base.validator import BaseValidatorNeuron
 from bitrecs.commerce.product import ProductFactory
 from bitrecs.protocol import BitrecsRequest
 from bitrecs.api.api_counter import APICounter
@@ -24,6 +25,8 @@ request_counts = {}
 
 
 SECRET_KEY = "change-me"
+SSL_CERT_FILE = os.environ.get("SSL_CERT_FILE")
+SSL_KEY_FILE = os.environ.get("SSL_KEY_FILE")
 
 
 async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str): 
@@ -39,8 +42,8 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
         'miner_uid': request.miner_uid,
         'miner_hotkey': request.miner_hotkey
     }
-    body_str = json.dumps(d, sort_keys=True)    
-    string_to_sign = f"{x_timestamp}.{body_str}"    
+    body_str = json.dumps(d, sort_keys=True)
+    string_to_sign = f"{x_timestamp}.{body_str}"
     expected_signature = hmac.new(
         SECRET_KEY.encode('utf-8'),
         string_to_sign.encode('utf-8'),
@@ -66,18 +69,22 @@ class ApiServer:
     router: APIRouter
     forward_fn: ForwardFn
 
-    def __init__(self, axon_port: int, forward_fn: ForwardFn, api_json: str):
+    def __init__(self, validator: BaseValidatorNeuron, axon_port: int, forward_fn: ForwardFn, api_json: str):
+        self.validator = validator
         self.forward_fn = forward_fn
         self.app = FastAPI()        
         self.app.middleware('http')(api_key_validator)
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
+        self.hot_key = validator.wallet.hotkey.ss58_address
         #self.app.middleware('http')(auth_rate_limiting_middleware)
 
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
             self.app,
             host="0.0.0.0",
             port=axon_port,
-            log_level="trace" if bt.logging.__trace_on__ else "critical"
+            log_level="trace" if bt.logging.__trace_on__ else "critical",            
+            ssl_certfile=SSL_CERT_FILE,
+            ssl_keyfile=SSL_KEY_FILE
         ))
         self.router = APIRouter()
         self.router.add_api_route(
