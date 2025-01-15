@@ -18,7 +18,7 @@ from bitrecs.protocol import BitrecsRequest
 from bitrecs.api.api_counter import APICounter
 from bitrecs.api.utils import api_key_validator
 from bitrecs.utils import constants as CONST
-from neurons.validator import Validator
+#from neurons.validator import Validator
 
 ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 
@@ -75,10 +75,10 @@ class ApiServer:
     router: APIRouter
     forward_fn: ForwardFn
 
-    def __init__(self, validator: Validator, axon_port: int, forward_fn: ForwardFn, api_json: str):
+    def __init__(self, validator, axon_port: int, forward_fn: ForwardFn, api_json: str):
         self.validator = validator
         self.forward_fn = forward_fn
-        self.app = FastAPI()        
+        self.app = FastAPI()
         self.app.middleware('http')(api_key_validator)
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         self.hot_key = validator.wallet.hotkey.ss58_address
@@ -90,13 +90,9 @@ class ApiServer:
             port=axon_port,
             log_level="trace" if bt.logging.__trace_on__ else "critical",            
             ssl_certfile=SSL_CERT_FILE,
-            ssl_keyfile=SSL_KEY_FILE,
-            ssl_version=ssl.PROTOCOL_TLS,
-            ssl_keyfile_password=None,  
-            ssl_cert_reqs=ssl.CERT_NONE, 
-            ssl_ca_certs=None,
-            ssl_ciphers=None
+            ssl_keyfile=SSL_KEY_FILE          
         ))
+        
         self.router = APIRouter()
         self.router.add_api_route(
             "/ping", 
