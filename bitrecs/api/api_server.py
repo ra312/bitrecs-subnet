@@ -19,6 +19,9 @@ from bitrecs.api.api_counter import APICounter
 from bitrecs.api.utils import api_key_validator
 from bitrecs.utils import constants as CONST
 #from neurons.validator import Validator
+from dotenv import load_dotenv
+load_dotenv()
+
 
 ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 
@@ -92,7 +95,7 @@ class ApiServer:
             ssl_certfile=SSL_CERT_FILE,
             ssl_keyfile=SSL_KEY_FILE          
         ))
-        
+
         self.router = APIRouter()
         self.router.add_api_route(
             "/ping", 
