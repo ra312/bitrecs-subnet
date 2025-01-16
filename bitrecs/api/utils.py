@@ -2,6 +2,7 @@ import os
 import json
 import bittensor as bt
 import traceback
+import httpx
 import requests
 
 from typing import Any, Dict, Optional
@@ -95,3 +96,14 @@ async def check_validator_status(ip, port, timeout=3) -> bool:
     except Exception as e:
         bt.logging.error(f"Error checking server status: {e}")
         return False
+    
+
+def get_proxy_public_key(proxy_url: str) -> bytes:
+    with httpx.Client(timeout=httpx.Timeout(10)) as client:
+        response = client.get(
+            f"{proxy_url}/public_key",
+        )
+    response.raise_for_status()    
+    pub_key = response.json()["public_key"]
+    raw_bytes = bytes.fromhex(pub_key)
+    return raw_bytes

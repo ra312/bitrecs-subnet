@@ -1,10 +1,7 @@
 import os
 import json
-import ssl
 import time
-import httpx
 import uvicorn
-import traceback
 import bittensor as bt
 import hmac
 import hashlib
@@ -16,32 +13,21 @@ from bittensor.core.axon import FastAPIThreadedServer
 from bitrecs.commerce.product import ProductFactory
 from bitrecs.protocol import BitrecsRequest
 from bitrecs.api.api_counter import APICounter
-from bitrecs.api.utils import api_key_validator
+from bitrecs.api.utils import api_key_validator, get_proxy_public_key
 from bitrecs.utils import constants as CONST
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.exceptions import InvalidSignature
+from bitrecs.utils.misc import ttl_cache
 from dotenv import load_dotenv
 load_dotenv()
 
-ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 
-auth_data = dict()
-request_counts = {}
+ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 
 SECRET_KEY = "change-me"
 PROXY_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
-
-def get_proxy_public_key() -> bytes:
-    with httpx.Client(timeout=httpx.Timeout(30)) as client:
-        response = client.get(
-            f"{PROXY_URL}/public_key",
-        )
-    response.raise_for_status()    
-    pub_key = response.json()["public_key"]
-    raw_bytes = bytes.fromhex(pub_key)
-    return raw_bytes
-
-SERVICE_PUBLIC_KEY : bytes = get_proxy_public_key()
+if not PROXY_URL:
+    raise ValueError("BITRECS_PROXY_URL missing")
 
 
 async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str): 
@@ -76,39 +62,6 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
     bt.logging.info(f"\033[1;32m New Request Signature Verified\033[0m")
 
 
-    
-async def verify_request2(request: BitrecsRequest, x_signature: str, x_timestamp: str): 
-    timestamp = int(x_timestamp)
-    current_time = int(time.time())
-    if current_time - timestamp > 300:  # 5 minutes
-        bt.logging.error(f"\033[1;31m Expired Request!\033[0m")
-        raise HTTPException(status_code=401, detail="Request expired")
-
-    d = {
-        'created_at': request.created_at,
-        'user': request.user,
-        'num_results': request.num_results,
-        'query': request.query,
-        'context': request.context,
-        'site_key': request.site_key,
-        'results': request.results,
-        'models_used': request.models_used,
-        'miner_uid': request.miner_uid,
-        'miner_hotkey': request.miner_hotkey
-    }
-
-    body_str = json.dumps(d, sort_keys=True)
-    message = f"{x_timestamp}.{body_str}".encode('utf-8')
-    client_sig = bytes.fromhex(x_signature)
-    public_key = Ed25519PublicKey.from_public_bytes(SERVICE_PUBLIC_KEY)  
-    try:
-        public_key.verify(client_sig, message)
-    except InvalidSignature:
-        bt.logging.error(f"\033[1;31m Invalid signature!\033[0m")
-        raise HTTPException(status_code=401, detail="Invalid signature") 
-    
-    bt.logging.info(f"\033[1;32m New Request - Signature Verified\033[0m")
-
 
 class ApiServer:
     app: FastAPI
@@ -122,7 +75,8 @@ class ApiServer:
         self.app = FastAPI()
         self.app.middleware('http')(api_key_validator)
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
-        self.hot_key = validator.wallet.hotkey.ss58_address        
+        self.hot_key = validator.wallet.hotkey.ss58_address
+        self.proxy_public_key : bytes = None
         
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
             self.app,
@@ -141,17 +95,60 @@ class ApiServer:
             "/rec",
             self.generate_product_rec,
             methods=["POST"]
-        )
-        
+        )        
         self.app.include_router(self.router)
-        self.api_json = api_json #TODO not used
+     
+        try:
+            self.proxy_public_key = get_proxy_public_key(PROXY_URL)
+        except Exception as e:
+            bt.logging.error(f"ERROR API could not get proxy public key:  {e}")
+            bt.logging.warning(f"WARNING - your validator is in limp mode, please restart")
+            return
 
-        self.api_counter = APICounter(
-            os.path.join(self.app.root_path, "api_counter.json")
-        )
+        self.api_json = api_json #TODO not used
+        self.api_counter = APICounter(os.path.join(self.app.root_path, "api_counter.json"))
         bt.logging.info(f"\033[1;33m API Counter set {self.api_counter.save_path} \033[0m")
+
         bt.logging.info(f"\033[1;32m API Server initialized \033[0m")
 
+
+    async def verify_request2(self, request: BitrecsRequest, x_signature: str, x_timestamp: str): 
+        timestamp = int(x_timestamp)
+        current_time = int(time.time())
+        if current_time - timestamp > 300:  # 5 minutes
+            bt.logging.error(f"\033[1;31m Expired Request!\033[0m")
+            raise HTTPException(status_code=401, detail="Request expired")
+
+        d = {
+            'created_at': request.created_at,
+            'user': request.user,
+            'num_results': request.num_results,
+            'query': request.query,
+            'context': request.context,
+            'site_key': request.site_key,
+            'results': request.results,
+            'models_used': request.models_used,
+            'miner_uid': request.miner_uid,
+            'miner_hotkey': request.miner_hotkey
+        }
+
+        body_str = json.dumps(d, sort_keys=True)
+        message = f"{x_timestamp}.{body_str}".encode('utf-8')
+        signature = bytes.fromhex(x_signature)
+        public_key = Ed25519PublicKey.from_public_bytes(self.proxy_public_key)
+        try:
+            public_key.verify(signature, message)
+        except InvalidSignature:
+            bt.logging.error(f"\033[1;31m Invalid signature!\033[0m")
+            raise HTTPException(status_code=401, detail="Invalid signature") 
+        
+        bt.logging.info(f"\033[1;32m New Request - Signature Verified\033[0m")
+
+    
+    # @ttl_cache(maxsize=1, ttl=30)
+    # def ttl_get_public_key(self) -> bytes:
+    #     return get_proxy_public_key(PROXY_URL)
+    
     
     async def ping(self):
         bt.logging.info(f"\033[1;32m API Server ping \033[0m")
