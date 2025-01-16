@@ -227,7 +227,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 ip = self.metagraph.axons[uid].ip              
                 if ping_uid(self, uid, 3):
                     bt.logging.trace(f"\033[1;32m ping: {ip}:OK \033[0m")
-                    selected_miners.append(int(uid))
+                    selected_miners.append(uid)
             except Exception as e:
                 bt.logging.error(f"ping failed with exception: {e}")
                 continue

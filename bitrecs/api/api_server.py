@@ -2,7 +2,7 @@ import os
 import json
 import ssl
 import time
-
+import httpx
 import uvicorn
 import traceback
 import bittensor as bt
@@ -18,24 +18,30 @@ from bitrecs.protocol import BitrecsRequest
 from bitrecs.api.api_counter import APICounter
 from bitrecs.api.utils import api_key_validator
 from bitrecs.utils import constants as CONST
-#from neurons.validator import Validator
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+from cryptography.exceptions import InvalidSignature
 from dotenv import load_dotenv
 load_dotenv()
-
 
 ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 
 auth_data = dict()
 request_counts = {}
 
-
 SECRET_KEY = "change-me"
-# SSL_CERT_FILE = os.environ.get("SSL_CERT_FILE")
-# if not SSL_CERT_FILE:
-#     raise ValueError("SSL_CERT_FILE not set")
-# SSL_KEY_FILE = os.environ.get("SSL_KEY_FILE")
-# if not SSL_KEY_FILE:
-#     raise ValueError("SSL_KEY_FILE not set")
+PROXY_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
+
+def get_proxy_public_key() -> bytes:
+    with httpx.Client(timeout=httpx.Timeout(30)) as client:
+        response = client.get(
+            f"{PROXY_URL}/public_key",
+        )
+    response.raise_for_status()    
+    pub_key = response.json()["public_key"]
+    raw_bytes = bytes.fromhex(pub_key)
+    return raw_bytes
+
+SERVICE_PUBLIC_KEY : bytes = get_proxy_public_key()
 
 
 async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str): 
@@ -68,8 +74,40 @@ async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp:
         raise HTTPException(status_code=401, detail="Request expired")
     
     bt.logging.info(f"\033[1;32m New Request Signature Verified\033[0m")
-    
 
+
+    
+async def verify_request2(request: BitrecsRequest, x_signature: str, x_timestamp: str): 
+    timestamp = int(x_timestamp)
+    current_time = int(time.time())
+    if current_time - timestamp > 300:  # 5 minutes
+        bt.logging.error(f"\033[1;31m Expired Request!\033[0m")
+        raise HTTPException(status_code=401, detail="Request expired")
+
+    d = {
+        'created_at': request.created_at,
+        'user': request.user,
+        'num_results': request.num_results,
+        'query': request.query,
+        'context': request.context,
+        'site_key': request.site_key,
+        'results': request.results,
+        'models_used': request.models_used,
+        'miner_uid': request.miner_uid,
+        'miner_hotkey': request.miner_hotkey
+    }
+
+    body_str = json.dumps(d, sort_keys=True)
+    message = f"{x_timestamp}.{body_str}".encode('utf-8')
+    client_sig = bytes.fromhex(x_signature)
+    public_key = Ed25519PublicKey.from_public_bytes(SERVICE_PUBLIC_KEY)  
+    try:
+        public_key.verify(client_sig, message)
+    except InvalidSignature:
+        bt.logging.error(f"\033[1;31m Invalid signature!\033[0m")
+        raise HTTPException(status_code=401, detail="Invalid signature") 
+    
+    bt.logging.info(f"\033[1;32m New Request - Signature Verified\033[0m")
 
 
 class ApiServer:
@@ -84,16 +122,13 @@ class ApiServer:
         self.app = FastAPI()
         self.app.middleware('http')(api_key_validator)
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
-        self.hot_key = validator.wallet.hotkey.ss58_address
-        #self.app.middleware('http')(auth_rate_limiting_middleware)
+        self.hot_key = validator.wallet.hotkey.ss58_address        
         
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
             self.app,
             host="0.0.0.0",
             port=axon_port,
-            log_level="trace" if bt.logging.__trace_on__ else "critical",
-            # ssl_certfile=SSL_CERT_FILE,
-            # ssl_keyfile=SSL_KEY_FILE
+            log_level="trace" if bt.logging.__trace_on__ else "critical",         
         ))
 
         self.router = APIRouter()
@@ -107,6 +142,7 @@ class ApiServer:
             self.generate_product_rec,
             methods=["POST"]
         )
+        
         self.app.include_router(self.router)
         self.api_json = api_json #TODO not used
 
@@ -130,8 +166,8 @@ class ApiServer:
     ):  
         """
             Main Bitrecs Handler
-            Generate n recommendations for a given query and context.
 
+            Generate n recommendations for a given query and context.
             Query is sent to random miners to generate a valid response in a reasonable time.
 
             TODO: rate limiting
@@ -140,7 +176,7 @@ class ApiServer:
 
         try:
           
-            await verify_request(request, x_signature, x_timestamp)            
+            await verify_request(request, x_signature, x_timestamp)
 
             store_catalog = ProductFactory.try_parse_context(request.context)
             catalog_size = len(store_catalog)
