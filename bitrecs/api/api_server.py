@@ -26,8 +26,6 @@ ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 
 SECRET_KEY = "change-me"
 PROXY_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
-if not PROXY_URL:
-    raise ValueError("BITRECS_PROXY_URL missing")
 
 
 async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str): 
@@ -145,10 +143,6 @@ class ApiServer:
         bt.logging.info(f"\033[1;32m New Request - Signature Verified\033[0m")
 
     
-    # @ttl_cache(maxsize=1, ttl=30)
-    # def ttl_get_public_key(self) -> bytes:
-    #     return get_proxy_public_key(PROXY_URL)
-    
     
     async def ping(self):
         bt.logging.info(f"\033[1;32m API Server ping \033[0m")
@@ -162,7 +156,7 @@ class ApiServer:
             x_timestamp: str = Header(...)
     ):  
         """
-            Main Bitrecs Handler
+            Main Bitrecs Handler - localnet
 
             Generate n recommendations for a given query and context.
             Query is sent to random miners to generate a valid response in a reasonable time.
@@ -217,7 +211,7 @@ class ApiServer:
                 "catalog_size": str(catalog_size),
                 "miner_uid": response.miner_uid,
                 "miner_hotkey": response.miner_hotkey,
-                "reasoning": "Bitrecs AI"
+                "reasoning": "Bitrecs AI - localnet"
             }
 
             await self.log_counter(True)            
@@ -228,6 +222,91 @@ class ApiServer:
             await self.log_counter(False)
             return JSONResponse(status_code=500,
                                 content={"detail": "error", "status_code": 500})
+        
+
+    async def generate_product_rec_testnet(
+            self, 
+            request: BitrecsRequest,
+            x_signature: str = Header(...),
+            x_timestamp: str = Header(...)
+    ):  
+        """
+            Main Bitrecs Handler - testnet
+
+            Generate n recommendations for a given query and context.
+            Query is sent to random miners to generate a valid response in a reasonable time.
+
+            TODO: rate limiting
+
+        """
+
+        try:
+          
+            await self.verify_request2(request, x_signature, x_timestamp)
+
+            store_catalog = ProductFactory.try_parse_context(request.context)
+            catalog_size = len(store_catalog)
+            bt.logging.trace(f"REQUEST CATALOG SIZE: {catalog_size}")
+            if catalog_size < CONST.MIN_CATALOG_SIZE or catalog_size > CONST.MAX_CATALOG_SIZE:
+                bt.logging.error(f"API invalid catalog size")
+                await self.log_counter(False)
+                return JSONResponse(status_code=400,
+                                    content={"detail": "error - invalid catalog", "status_code": 400})            
+            
+            dupes = ProductFactory.get_dupe_count(store_catalog)
+            if dupes > catalog_size * CONST.CATALOG_DUPE_THRESHOLD:
+                bt.logging.error(f"API Too many duplicates in catalog: {dupes}")
+                await self.log_counter(False)
+                return JSONResponse(status_code=400,
+                                    content={"detail": "error - dupe threshold reached", "status_code": 400})
+
+            st = time.time()
+            response = await self.forward_fn(request)
+            total_time = time.time() - st
+
+            if len(response.results) == 0:
+                bt.logging.error(f"API forward_fn response has no results")
+                await self.log_counter(False)
+                return JSONResponse(status_code=500,
+                                    content={"detail": "error", "status_code": 500})
+
+            final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
+            #bt.logging.trace(f"API generate_product_rec final_recs: {final_recs}")
+            response_text = "Bitrecs Took {:.2f} seconds to process this request".format(total_time)
+
+            response = {
+                "user": response.user, 
+                "original_query": response.query,
+                "status_code": "200", #front end widgets expects this do not change
+                "status_text": "OK", #front end widgets expects this do not change
+                "response_text": response_text,
+                "created_at": response.created_at,
+                "results": final_recs,
+                "models_used": response.models_used,
+                "catalog_size": str(catalog_size),
+                "miner_uid": response.miner_uid,
+                "miner_hotkey": response.miner_hotkey,
+                "reasoning": "Bitrecs AI - testnet"
+            }
+
+            await self.log_counter(True)            
+            return JSONResponse(status_code=200, content=response)
+
+        except Exception as e:
+            bt.logging.error(f"ERROR API generate_product_rec error:  {e}")
+            await self.log_counter(False)
+            return JSONResponse(status_code=500,
+                                content={"detail": "error", "status_code": 500})
+        
+
+    async def generate_product_rec_mainnet(
+            self, 
+            request: BitrecsRequest,
+            x_signature: str = Header(...),
+            x_timestamp: str = Header(...)
+    ):  
+        raise NotImplementedError("Mainnet API not implemented")
+
 
     def start(self):
         self.fast_server.start()
@@ -245,5 +324,5 @@ class ApiServer:
             self.api_counter.save()
         except Exception as e:
             bt.logging.error(f"ERROR API could not update counter log:  {e}")
-            pass
+            pass            
    

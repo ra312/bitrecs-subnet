@@ -103,7 +103,7 @@ def get_proxy_public_key(proxy_url: str) -> bytes:
         response = client.get(
             f"{proxy_url}/public_key",
         )
-    response.raise_for_status()    
+    response.raise_for_status()
     pub_key = response.json()["public_key"]
     raw_bytes = bytes.fromhex(pub_key)
     return raw_bytes

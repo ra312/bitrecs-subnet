@@ -1,8 +1,9 @@
-import requests
-requests.packages.urllib3.disable_warnings() 
-import urllib3
-urllib3.disable_warnings()
 import pytest
+import requests
+import urllib3
+requests.packages.urllib3.disable_warnings() 
+urllib3.disable_warnings()
+
 
 VALIDATOR_IP = "10.0.0.40"
 VALIDATOR_PORT = "8091"

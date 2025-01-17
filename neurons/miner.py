@@ -150,7 +150,8 @@ class Miner(BaseMinerNeuron):
         self.total_request_in_interval = 0
         
         if(self.config.logging.trace):
-            bt.logging.trace(f"TRACE ENABLED Miner {self.uid} - {self.llm_provider} - {self.model}")        
+            bt.logging.trace(f"TRACE ENABLED Miner {self.uid} - {self.llm_provider} - {self.model}")            
+        
 
 
     async def forward(
