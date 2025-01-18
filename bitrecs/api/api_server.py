@@ -17,7 +17,6 @@ from bitrecs.api.utils import api_key_validator, get_proxy_public_key
 from bitrecs.utils import constants as CONST
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.exceptions import InvalidSignature
-from bitrecs.utils.misc import ttl_cache
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -75,6 +74,7 @@ class ApiServer:
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         self.hot_key = validator.wallet.hotkey.ss58_address
         self.proxy_public_key : bytes = None
+        self.network = os.environ.get("NETWORK").trim().lower() #localnet / testnet / mainnet
         
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
             self.app,
@@ -89,25 +89,35 @@ class ApiServer:
             self.ping,
             methods=["GET"],
         )
-        self.router.add_api_route(
-            "/rec",
-            self.generate_product_rec,
-            methods=["POST"]
-        )        
+        if self.network == "local":
+            self.router.add_api_route(
+                "/rec",
+                self.generate_product_rec_localnet,
+                methods=["POST"]
+            ) 
+        elif self.network == "testnet":
+             self.router.add_api_route(
+                "/rec",
+                self.generate_product_rec_testnet,
+                methods=["POST"]
+            )
+        else:
+            raise not NotImplementedError("Mainnet API not implemented")
+
         self.app.include_router(self.router)
      
         try:
             self.proxy_public_key = get_proxy_public_key(PROXY_URL)
         except Exception as e:
-            bt.logging.error(f"ERROR API could not get proxy public key:  {e}")
+            bt.logging.error(f"\033[1;31mERROR API could not get proxy public key:  {e} \033[0m")
             bt.logging.warning(f"WARNING - your validator is in limp mode, please restart")
             return
 
         self.api_json = api_json #TODO not used
         self.api_counter = APICounter(os.path.join(self.app.root_path, "api_counter.json"))
         bt.logging.info(f"\033[1;33m API Counter set {self.api_counter.save_path} \033[0m")
-
-        bt.logging.info(f"\033[1;32m API Server initialized \033[0m")
+        
+        bt.logging.info(f"\033[1;33m API Server initialized on {self.network} \033[0m")
 
 
     async def verify_request2(self, request: BitrecsRequest, x_signature: str, x_timestamp: str): 
@@ -149,7 +159,7 @@ class ApiServer:
         return JSONResponse(status_code=200, content={"detail": "pong"})
     
     
-    async def generate_product_rec(
+    async def generate_product_rec_localnet(
             self, 
             request: BitrecsRequest,
             x_signature: str = Header(...),
