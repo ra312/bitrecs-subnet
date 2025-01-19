@@ -80,26 +80,10 @@ async def api_key_validator(request, call_next) -> Response:
 
     response: Response = await call_next(request)
     return response
-
-
-async def check_validator_status(ip, port, timeout=3) -> bool:
-    try:
-        api_key_info = load_api_config()
-        if api_key_info is None or "keys" not in api_key_info:
-            bt.logging.error(f"ERROR - MISSING API request key")
-            return False
-        key = str(next(iter(api_key_info["keys"])))
-        url = f"http://{ip}:{port}/ping"
-        headers = {"Authorization": f"Bearer {key}"}
-        r = requests.get(url, headers=headers, timeout=timeout)
-        return r.status_code == 200
-    except Exception as e:
-        bt.logging.error(f"Error checking server status: {e}")
-        return False
     
 
 def get_proxy_public_key(proxy_url: str) -> bytes:
-    with httpx.Client(timeout=httpx.Timeout(10)) as client:
+    with httpx.Client(timeout=httpx.Timeout(30)) as client:
         response = client.get(
             f"{proxy_url}/public_key",
         )
