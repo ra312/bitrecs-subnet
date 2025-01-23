@@ -304,8 +304,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         chosen_uids : list[int] = self.active_miners or []
                         if len(chosen_uids) == 0:
                             available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-                            chosen_uids : list[int] = available_uids.tolist()
-                            chosen_uids.append(1) #add local miner for now #TODO remove
+                            chosen_uids : list[int] = available_uids.tolist()                            
                             chosen_uids = list(set(chosen_uids))
                         if len(chosen_uids) == 0:
                             bt.logging.error("No active miners, skipping - check your connectivity")

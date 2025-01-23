@@ -38,13 +38,12 @@ def load_api_config() -> Optional[dict]:
             raise Exception(f"{'bitrecs/api/api.json'} does not exist")
 
         with open("bitrecs/api/api.json", 'r') as file:
-            api_data = json.load(file)
-            #bt.logging.trace("api_data", api_data)
+            api_data = json.load(file)            
             valid, reason = is_api_data_valid(api_data)
             if not valid:
                 raise Exception(f"{'api/api.json'} is poorly formatted. {reason}")
             if "change-me" in api_data["keys"]:
-                bt.logging.error("YOU ARE USING THE DEFAULT API KEY. CHANGE IT FOR SECURITY REASONS.")
+                bt.logging.error("\033[33m YOU ARE USING THE DEFAULT API KEY. CHANGE IT FOR SECURITY REASONS. \033[0m")
         return api_data
     except Exception as e:
         bt.logging.error("Error loading API config:", e)
