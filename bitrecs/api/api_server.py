@@ -27,7 +27,7 @@ SECRET_KEY = "change-me"
 PROXY_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
 
 
-async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str): 
+async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str):     
     d = {
         'created_at': request.created_at,
         'user': request.user,
@@ -154,7 +154,7 @@ class ApiServer:
             public_key.verify(signature, message)
         except InvalidSignature:
             bt.logging.error(f"\033[1;31m Invalid signature!\033[0m")
-            raise HTTPException(status_code=401, detail="Invalid signature") 
+            raise HTTPException(status_code=401, detail="Invalid signature")
         
         bt.logging.info(f"\033[1;32m New Request - Signature Verified\033[0m")
     
@@ -218,10 +218,9 @@ class ApiServer:
                 bt.logging.error(f"API forward_fn response has no results")
                 await self.log_counter(False)
                 return JSONResponse(status_code=500,
-                                    content={"detail": "error", "status_code": 500})
+                                    content={"detail": "error - forward", "status_code": 500})
 
-            final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
-            #bt.logging.trace(f"API generate_product_rec final_recs: {final_recs}")
+            final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]            
             response_text = "Bitrecs Took {:.2f} seconds to process this request".format(total_time)
 
             response = {
@@ -241,9 +240,15 @@ class ApiServer:
 
             await self.log_counter(True)            
             return JSONResponse(status_code=200, content=response)
+        
+        except HTTPException as h:
+            bt.logging.error(f"ERROR API generate_product_rec_localnet:  {h}")
+            await self.log_counter(False)
+            return JSONResponse(status_code=h.status_code,
+                                content={"detail": "error", "status_code": h.status_code})
 
         except Exception as e:
-            bt.logging.error(f"ERROR API generate_product_rec error:  {e}")
+            bt.logging.error(f"ERROR API generate_product_rec_localnet:  {e}")
             await self.log_counter(False)
             return JSONResponse(status_code=500,
                                 content={"detail": "error", "status_code": 500})

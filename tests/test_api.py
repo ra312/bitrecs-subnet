@@ -3,6 +3,7 @@ import socket
 import time
 import requests
 from bitrecs.utils.version import LocalMetadata
+from bitrecs.validator.forward import get_bitrecs_dummy_request
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -93,12 +94,40 @@ def test_version_ok_validator():
     headers = {
         "Authorization": f"Bearer {BITRECS_API_KEY}"
     }
-
     response = requests.get(url, headers=headers)
     print(response.text)    
     assert response.status_code == 200
     meta_json = response.json()["meta_data"]
     md = LocalMetadata(**meta_json)
+    #print(md)
     assert md.head != "head error"
+
+
+def test_rec_no_sig_is_rejected_ok():
+    url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/rec"
+    headers = {
+        "Authorization": f"Bearer {BITRECS_API_KEY}",
+        "x-timestamp": str(int(time.time()))
+    }
+    br = get_bitrecs_dummy_request(5)
+    data = br.model_dump()
+    response = requests.post(url, headers=headers, json=data)
+    print(response.text)
+    assert response.status_code == 422 #missing headers
+
+
+
+def test_rec_wrong_sig_rejected_ok():
+    url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/rec"
+    headers = {
+        "Authorization": f"Bearer {BITRECS_API_KEY}",
+        "x-signature": "wrong",
+        "x-timestamp": str(int(time.time()))
+    }
+    br = get_bitrecs_dummy_request(5)
+    data = br.model_dump()
+    response = requests.post(url, headers=headers, json=data)
+    print(response.text)
+    assert response.status_code == 500 #422 missing headers
 
 
