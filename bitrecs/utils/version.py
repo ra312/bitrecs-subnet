@@ -20,6 +20,18 @@ class LocalMetadata:
     version: str = ""
     spec: str = ""
 
+    def to_dict(self):
+        return {
+            'head': self.head,
+            'remote_head': self.remote_head,
+            'btversion': self.btversion,
+            'uid': self.uid,
+            'coldkey': self.coldkey,
+            'hotkey': self.hotkey,
+            'version': self.version,
+            'spec': self.spec
+        }
+
 
     @staticmethod
     def local_metadata() -> "LocalMetadata":

@@ -159,8 +159,9 @@ class ApiServer:
         if not self.validator.local_metadata:
             bt.logging.error(f"\033[1;31m API Server ping - No metadata \033[0m")
             return JSONResponse(status_code=200, content={"detail": "pong", "metadata": "WARNING - NO METADATA"})        
-        meta_data = json.dumps(self.validator.local_metadata, sort_keys=True)        
-        return JSONResponse(status_code=200, content={"detail": "pong", "metadata": meta_data})
+        d = self.validator.local_metadata.to_dict()
+        #meta_data = json.dumps(self.validator.local_metadata, sort_keys=True)
+        return JSONResponse(status_code=200, content={"detail": "pong", "metadata": d})
     
     
     async def generate_product_rec_localnet(
