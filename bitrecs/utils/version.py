@@ -31,6 +31,8 @@ class LocalMetadata:
             'version': self.version,
             'spec': self.spec
         }
+    
+
 
 
     @staticmethod

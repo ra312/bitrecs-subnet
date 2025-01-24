@@ -169,9 +169,9 @@ class ApiServer:
         bt.logging.info(f"\033[1;32m API Server version \033[0m")
         if not self.validator.local_metadata:
             bt.logging.error(f"\033[1;31m API Server version - No metadata \033[0m")
-            return JSONResponse(status_code=200, content={"detail": "version", "version": {}})
+            return JSONResponse(status_code=200, content={"detail": "version", "meta_data": {}})
         v = self.validator.local_metadata.to_dict()
-        return JSONResponse(status_code=200,  content={"detail": "version", "version": v})
+        return JSONResponse(status_code=200, content={"detail": "version", "meta_data": v})
     
     
     async def generate_product_rec_localnet(

@@ -1,6 +1,8 @@
 import os
 import socket
+import time
 import requests
+from bitrecs.utils.version import LocalMetadata
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -23,18 +25,17 @@ def socket_ip(ip, port, timeout=10) -> bool:
         sock.settimeout(timeout)        
         sock.connect((ip, port))
         return True
-    except ConnectionRefusedError:        
-        #bt.logging.error(f"Port {port} on IP {ip} is not connected.")
+    except ConnectionRefusedError:
+        print(f"Connection refused to {ip}:{port}")
         return False
-    except socket.timeout:        
-        #bt.logging.error(f"No response from Port {port} on IP {ip}.")
+    except socket.timeout:
+        print(f"Connection timeout to {ip}:{port}")
         return False
-    except Exception as e:        
-        #bt.logging.error(f"An error occurred: {e}")
+    except Exception as e:
+        print(f"Error connecting to {ip}:{port} - {e}")
         return False
 
-    finally:
-        # Close the socket regardless of whether an exception was raised
+    finally:        
         if 'sock' in locals():
             sock.close()
    
@@ -45,7 +46,7 @@ def test_can_reach_validator():
     assert success == True
 
 
-def test_no_auth_error_validator():    
+def test_no_auth_error_validator():
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
     response = requests.get(url)
     print(response.text)
@@ -54,7 +55,6 @@ def test_no_auth_error_validator():
 
 def test_wrong_auth_error_validator():    
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
-
     headers = {
         "Authorization": "Bearer wrong"
     }            
@@ -65,16 +65,40 @@ def test_wrong_auth_error_validator():
 
 def test_good_auth_validator():    
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
-
     headers = {
         "Authorization": f"Bearer {BITRECS_API_KEY}"
-    }            
+    }
     response = requests.get(url, headers=headers)
     print(response.text)
     assert response.status_code == 200
 
-# def test_ok_auth_validator():    
-#     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
-#     response = requests.get(url)
-#     print(response.text)
-#     assert response.status_code == 400
+
+def test_good_server_time_validator():    
+    url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
+    headers = {
+        "Authorization": f"Bearer {BITRECS_API_KEY}"
+    }
+    response = requests.get(url, headers=headers)
+    print(response.text)
+    assert response.status_code == 200
+    st = response.json()["st"]
+    assert st > 0
+    current_time = int(time.time())
+    over_5_minutes = current_time - st > 300
+    assert over_5_minutes == False
+
+
+def test_version_ok_validator():    
+    url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/version"
+    headers = {
+        "Authorization": f"Bearer {BITRECS_API_KEY}"
+    }
+
+    response = requests.get(url, headers=headers)
+    print(response.text)    
+    assert response.status_code == 200
+    meta_json = response.json()["meta_data"]
+    md = LocalMetadata(**meta_json)
+    assert md.head != "head error"
+
+
