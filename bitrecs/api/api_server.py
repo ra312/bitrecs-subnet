@@ -89,6 +89,12 @@ class ApiServer:
             self.ping,
             methods=["GET"],
         )
+        self.router.add_api_route(
+            "/version", 
+            self.version,
+            methods=["GET"],
+        )
+
         if self.network == "local":
             self.router.add_api_route(
                 "/rec",
@@ -151,17 +157,21 @@ class ApiServer:
             raise HTTPException(status_code=401, detail="Invalid signature") 
         
         bt.logging.info(f"\033[1;32m New Request - Signature Verified\033[0m")
-
     
     
     async def ping(self):
         bt.logging.info(f"\033[1;32m API Server ping \033[0m")
+        st = int(time.time())
+        return JSONResponse(status_code=200, content={"detail": "pong", "st": st})
+    
+    
+    async def version(self):
+        bt.logging.info(f"\033[1;32m API Server version \033[0m")
         if not self.validator.local_metadata:
-            bt.logging.error(f"\033[1;31m API Server ping - No metadata \033[0m")
-            return JSONResponse(status_code=200, content={"detail": "pong", "metadata": "WARNING - NO METADATA"})        
-        d = self.validator.local_metadata.to_dict()
-        #meta_data = json.dumps(self.validator.local_metadata, sort_keys=True)
-        return JSONResponse(status_code=200, content={"detail": "pong", "metadata": d})
+            bt.logging.error(f"\033[1;31m API Server version - No metadata \033[0m")
+            return JSONResponse(status_code=200, content={"detail": "version", "version": {}})
+        v = self.validator.local_metadata.to_dict()
+        return JSONResponse(status_code=200,  content={"detail": "version", "version": v})
     
     
     async def generate_product_rec_localnet(

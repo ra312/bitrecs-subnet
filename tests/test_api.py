@@ -60,9 +60,18 @@ def test_wrong_auth_error_validator():
     }            
     response = requests.get(url, headers=headers)
     print(response.text)
-    assert response.status_code == 400
+    assert response.status_code == 401
 
 
+def test_good_auth_validator():    
+    url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
+
+    headers = {
+        "Authorization": f"Bearer {BITRECS_API_KEY}"
+    }            
+    response = requests.get(url, headers=headers)
+    print(response.text)
+    assert response.status_code == 200
 
 # def test_ok_auth_validator():    
 #     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
