@@ -74,7 +74,7 @@ class ApiServer:
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         self.hot_key = validator.wallet.hotkey.ss58_address
         self.proxy_public_key : bytes = None
-        self.network = os.environ.get("NETWORK").trim().lower() #localnet / testnet / mainnet
+        self.network = os.environ.get("NETWORK").strip().lower() #localnet / testnet / mainnet
         
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
             self.app,
@@ -110,14 +110,14 @@ class ApiServer:
             self.proxy_public_key = get_proxy_public_key(PROXY_URL)
         except Exception as e:
             bt.logging.error(f"\033[1;31mERROR API could not get proxy public key:  {e} \033[0m")
-            bt.logging.warning(f"WARNING - your validator is in limp mode, please restart")
-            return
+            bt.logging.warning(f"\033[1;33mWARNING - your validator is in limp mode, please restart\033[0m")
+            
 
         self.api_json = api_json #TODO not used
         self.api_counter = APICounter(os.path.join(self.app.root_path, "api_counter.json"))
-        bt.logging.info(f"\033[1;33m API Counter set {self.api_counter.save_path} \033[0m")
+        bt.logging.info(f"\033[1;32m API Counter set {self.api_counter.save_path} \033[0m")
         
-        bt.logging.info(f"\033[1;33m API Server initialized on {self.network} \033[0m")
+        bt.logging.info(f"\033[1;32m API Server initialized on {self.network} \033[0m")
 
 
     async def verify_request2(self, request: BitrecsRequest, x_signature: str, x_timestamp: str): 
@@ -156,7 +156,11 @@ class ApiServer:
     
     async def ping(self):
         bt.logging.info(f"\033[1;32m API Server ping \033[0m")
-        return JSONResponse(status_code=200, content={"detail": "pong"})
+        if not self.validator.local_metadata:
+            bt.logging.error(f"\033[1;31m API Server ping - No metadata \033[0m")
+            return JSONResponse(status_code=200, content={"detail": "pong", "metadata": "WARNING - NO METADATA"})        
+        meta_data = json.dumps(self.validator.local_metadata, sort_keys=True)        
+        return JSONResponse(status_code=200, content={"detail": "pong", "metadata": meta_data})
     
     
     async def generate_product_rec_localnet(
