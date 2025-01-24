@@ -128,6 +128,6 @@ def test_rec_wrong_sig_rejected_ok():
     data = br.model_dump()
     response = requests.post(url, headers=headers, json=data)
     print(response.text)
-    assert response.status_code == 500 #422 missing headers
+    assert response.status_code == 401
 
 

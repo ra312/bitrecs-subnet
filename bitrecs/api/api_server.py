@@ -242,13 +242,13 @@ class ApiServer:
             return JSONResponse(status_code=200, content=response)
         
         except HTTPException as h:
-            bt.logging.error(f"ERROR API generate_product_rec_localnet:  {h}")
+            bt.logging.error(f"\033[31mERROR API generate_product_rec_localnet:\033[0m {h}")
             await self.log_counter(False)
             return JSONResponse(status_code=h.status_code,
                                 content={"detail": "error", "status_code": h.status_code})
 
         except Exception as e:
-            bt.logging.error(f"ERROR API generate_product_rec_localnet:  {e}")
+            bt.logging.error(f"\033[31mERROR API generate_product_rec_localnet:\033[0m {e}")
             await self.log_counter(False)
             return JSONResponse(status_code=500,
                                 content={"detail": "error", "status_code": 500})
