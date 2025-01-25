@@ -82,9 +82,6 @@ async def api_key_validator(request, call_next) -> Response:
     try:
         response: Response = await call_next(request)
         return response
-    except RateLimitExceeded as r:
-        # Pass through rate limit errors without modification
-        raise r
     except Exception as e:
         bt.logging.error(f"ERROR api_key_validator - {e}")
         return JSONResponse(status_code=500, 
