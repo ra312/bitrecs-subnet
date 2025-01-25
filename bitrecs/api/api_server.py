@@ -1,3 +1,4 @@
+from functools import partial
 import os
 import json
 import time
@@ -10,12 +11,13 @@ from typing import Callable
 from fastapi import Depends, FastAPI, HTTPException, Request, APIRouter, Response, Header
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 from bittensor.core.axon import FastAPIThreadedServer
+from bitrecs.api.api_core import filter_allowed_ips, limiter
 from bitrecs.commerce.product import ProductFactory
 from bitrecs.protocol import BitrecsRequest
 from bitrecs.api.api_counter import APICounter
@@ -31,17 +33,12 @@ ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 SECRET_KEY = "change-me"
 PROXY_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
 
-def get_forwarded_for(request: Request):
-    return request.headers.get("x-forwarded-for")
-
-limiter = Limiter(key_func=get_remote_address)
 
 class ApiServer:
     app: FastAPI
     fast_server: FastAPIThreadedServer
     router: APIRouter
-    forward_fn: ForwardFn
-    #limiter: Limiter
+    forward_fn: ForwardFn    
 
     def __init__(self, validator, axon_port: int, forward_fn: ForwardFn, api_json: str):
         self.validator = validator
@@ -56,14 +53,14 @@ class ApiServer:
             content = {'status_code': 10422, 'message': exc_str, 'data': None}
             return JSONResponse(content=content, status_code=422)
 
-        self.app.add_middleware(SlowAPIMiddleware)
-        self.app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+        self.app.middleware("http")(partial(filter_allowed_ips, self))
+        self.app.state.limiter = limiter
+        self.app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)        
         self.app.add_exception_handler(RequestValidationError, validation_exception_handler)
-
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         self.app.middleware('http')(api_key_validator)
 
-        self.app.state.limiter = limiter
+      
         self.hot_key = validator.wallet.hotkey.ss58_address
         self.proxy_public_key : bytes = None
         self.network = os.environ.get("NETWORK").strip().lower() #localnet / testnet / mainnet
@@ -76,8 +73,6 @@ class ApiServer:
         ))
 
         self.router = APIRouter()
-
-        #rate_limit = self.limiter.limit("600/minute")
         self.router.add_api_route(
             "/ping", 
             self.ping,
@@ -189,7 +184,7 @@ class ApiServer:
         
         bt.logging.info(f"\033[1;32m New Request - Signature Verified\033[0m")
     
-    @limiter.limit("600/minute")
+    #@limiter.limit("600/minute")
     async def ping(self, request: Request):
         bt.logging.info(f"\033[1;32m API Server ping \033[0m")
         st = int(time.time())
