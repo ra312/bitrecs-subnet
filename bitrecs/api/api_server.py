@@ -44,7 +44,21 @@ class ApiServer:
         self.allowed_ips = ["127.0.0.1", "10.0.0.1"]
 
         self.app = FastAPI()
+
         
+        @self.app.exception_handler(Exception)
+        async def general_exception_handler(request: Request, exc: Exception):
+            bt.logging.error(f"Unhandled exception: {request.url} - {str(exc)}")
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "status_code": 500,
+                    "message": "Internal server error",
+                    "data": None
+                }
+            )
+        
+        @self.app.exception_handler(RequestValidationError)
         async def validation_exception_handler(request: Request, exc: RequestValidationError):
             exc_str = f'{exc}'.replace('\n', ' ').replace('   ', ' ')
             bt.logging.error(f"{request}: {exc_str}")
@@ -52,6 +66,7 @@ class ApiServer:
             return JSONResponse(content=content, status_code=422)
         
         
+        @self.app.exception_handler(RateLimitExceeded)
         async def rate_limit_exception_handler(request: Request, exc: RateLimitExceeded):
             bt.logging.warning(f"Rate limit exceeded for {request.client.host}")
             return JSONResponse(
@@ -64,12 +79,14 @@ class ApiServer:
                 headers={"Retry-After": str(exc.retry_after if hasattr(exc, 'retry_after') else 60)}
             )
 
-        
+        self.app.add_exception_handler(Exception, general_exception_handler)
+        self.app.add_exception_handler(RequestValidationError, validation_exception_handler) 
+        self.app.add_exception_handler(RateLimitExceeded, rate_limit_exception_handler)
+
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
-        self.app.add_exception_handler(RequestValidationError, validation_exception_handler)
-        self.app.add_exception_handler(RateLimitExceeded, rate_limit_exception_handler)        
+        
         self.app.middleware("http")(partial(filter_allowed_ips, self))
-        self.app.state.limiter = limiter       
+        self.app.state.limiter = limiter        
         self.app.middleware('http')(api_key_validator)
       
         self.hot_key = validator.wallet.hotkey.ss58_address

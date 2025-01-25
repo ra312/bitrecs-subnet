@@ -13,7 +13,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 
 @limiter.limit("60/minute")
-async def filter_allowed_ips(self, request: Request, call_next): 
+async def filter_allowed_ips(self, request: Request, call_next) -> Response: 
      
     forwarded_for = request.headers.get("x-forwarded-for")
     if not forwarded_for:
