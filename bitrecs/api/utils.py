@@ -8,6 +8,7 @@ import requests
 from typing import Any, Dict, Optional
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
 
 
 def is_api_data_valid(data) -> tuple[bool, str]:
@@ -81,9 +82,13 @@ async def api_key_validator(request, call_next) -> Response:
     try:
         response: Response = await call_next(request)
         return response
-    except Exception as e: 
+    except RateLimitExceeded as r:
+        # Pass through rate limit errors without modification
+        raise r
+    except Exception as e:
         bt.logging.error(f"ERROR api_key_validator - {e}")
-        return JSONResponse(status_code=500, content={"detail": "Internal server error - key validator"})
+        return JSONResponse(status_code=500, 
+                            content={"detail": "Internal server error - key validator"})
     
     
 
