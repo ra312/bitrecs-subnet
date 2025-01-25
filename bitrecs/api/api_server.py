@@ -30,42 +30,8 @@ ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 SECRET_KEY = "change-me"
 PROXY_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
 
-
 def get_forwarded_for(request: Request):
     return request.headers.get("x-forwarded-for")
-
-
-async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str):     
-    d = {
-        'created_at': request.created_at,
-        'user': request.user,
-        'num_results': request.num_results,
-        'query': request.query,
-        'context': request.context,
-        'site_key': request.site_key,
-        'results': request.results,
-        'models_used': request.models_used,
-        'miner_uid': request.miner_uid,
-        'miner_hotkey': request.miner_hotkey
-    }
-    body_str = json.dumps(d, sort_keys=True)
-    string_to_sign = f"{x_timestamp}.{body_str}"
-    expected_signature = hmac.new(
-        SECRET_KEY.encode('utf-8'),
-        string_to_sign.encode('utf-8'),
-        hashlib.sha256
-    ).hexdigest()
-    
-    if not hmac.compare_digest(x_signature, expected_signature):
-        raise HTTPException(status_code=401, detail="Invalid signature")
-    
-    timestamp = int(x_timestamp)
-    current_time = int(time.time())
-    if current_time - timestamp > 300:  # 5 minutes
-        raise HTTPException(status_code=401, detail="Request expired")
-    
-    bt.logging.info(f"\033[1;32m New Request Signature Verified\033[0m")
-
 
 
 class ApiServer:
@@ -101,12 +67,12 @@ class ApiServer:
 
         self.router = APIRouter()
 
-        #rate_limit = self.limiter.limit("60/minute")
+        rate_limit = self.limiter.limit("600/minute")
         self.router.add_api_route(
             "/ping", 
             self.ping,
             methods=["GET"],
-            #dependencies=[Depends(rate_limit)]
+            dependencies=[Depends(rate_limit)]
         )
         self.router.add_api_route(
             "/version", 
@@ -148,6 +114,38 @@ class ApiServer:
         
         bt.logging.info(f"\033[1;32m API Server initialized on {self.network} \033[0m")
 
+    
+    async def verify_request(self, request: BitrecsRequest, x_signature: str, x_timestamp: str):     
+        d = {
+            'created_at': request.created_at,
+            'user': request.user,
+            'num_results': request.num_results,
+            'query': request.query,
+            'context': request.context,
+            'site_key': request.site_key,
+            'results': request.results,
+            'models_used': request.models_used,
+            'miner_uid': request.miner_uid,
+            'miner_hotkey': request.miner_hotkey
+        }
+        body_str = json.dumps(d, sort_keys=True)
+        string_to_sign = f"{x_timestamp}.{body_str}"
+        expected_signature = hmac.new(
+            SECRET_KEY.encode('utf-8'),
+            string_to_sign.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+        
+        if not hmac.compare_digest(x_signature, expected_signature):
+            raise HTTPException(status_code=401, detail="Invalid signature")
+        
+        timestamp = int(x_timestamp)
+        current_time = int(time.time())
+        if current_time - timestamp > 300:  # 5 minutes
+            raise HTTPException(status_code=401, detail="Request expired")
+        
+        bt.logging.info(f"\033[1;32m New Request Signature Verified\033[0m")
+
 
     async def verify_request2(self, request: BitrecsRequest, x_signature: str, x_timestamp: str): 
         timestamp = int(x_timestamp)
@@ -181,7 +179,7 @@ class ApiServer:
         
         bt.logging.info(f"\033[1;32m New Request - Signature Verified\033[0m")
     
-    @limiter.limit("60/minute")
+    
     async def ping(self):
         bt.logging.info(f"\033[1;32m API Server ping \033[0m")
         st = int(time.time())
@@ -216,7 +214,7 @@ class ApiServer:
 
         try:
           
-            await verify_request(request, x_signature, x_timestamp)
+            await self.verify_request(request, x_signature, x_timestamp)
 
             store_catalog = ProductFactory.try_parse_context(request.context)
             catalog_size = len(store_catalog)
