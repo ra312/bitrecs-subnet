@@ -97,7 +97,7 @@ class ApiServer:
             "/ping", 
             self.ping,
             methods=["GET"],
-            dependencies=[Depends(Limiter.limit("60/minute"))]
+            dependencies=[Depends(self.limiter.limit("60/minute"))]
         )
         self.router.add_api_route(
             "/version", 
