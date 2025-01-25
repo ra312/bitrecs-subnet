@@ -46,8 +46,7 @@ class ApiServer:
         self.forward_fn = forward_fn
         self.limiter = Limiter(key_func=get_forwarded_for)
         
-        self.app = FastAPI()        
-        self.app.state.limiter = self.limiter
+        self.app = FastAPI()
         self.app.add_middleware(SlowAPIMiddleware)
         self.app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
@@ -67,12 +66,12 @@ class ApiServer:
 
         self.router = APIRouter()
 
-        rate_limit = self.limiter.limit("600/minute")
+        #rate_limit = self.limiter.limit("600/minute")
         self.router.add_api_route(
             "/ping", 
             self.ping,
             methods=["GET"],
-            dependencies=[Depends(rate_limit)]
+            dependencies=[Depends(self.limiter.limit("600/minute"))]
         )
         self.router.add_api_route(
             "/version", 
