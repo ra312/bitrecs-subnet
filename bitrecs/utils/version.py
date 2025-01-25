@@ -33,8 +33,6 @@ class LocalMetadata:
         }
     
 
-
-
     @staticmethod
     def local_metadata() -> "LocalMetadata":
         """Extract the version as current git commit hash"""

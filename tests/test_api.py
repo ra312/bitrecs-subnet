@@ -1,12 +1,18 @@
 import os
 import socket
 import time
+import warnings
+import pytest
 import requests
+import pandas as pd
 from bitrecs.utils.version import LocalMetadata
 from bitrecs.validator.forward import get_bitrecs_dummy_request
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from dotenv import load_dotenv
 load_dotenv()
 
+os.environ["NEST_ASYNCIO"] = "0"
 
 TEST_VALIDATOR_IP = os.getenv("TEST_VALIDATOR_IP")
 if not TEST_VALIDATOR_IP:
@@ -131,3 +137,76 @@ def test_rec_wrong_sig_rejected_ok():
     assert response.status_code == 401
 
 
+
+def make_get_request(url, headers):
+    start_time = time.time()  
+    try:
+        response = requests.get(url, headers=headers)
+        print(f"Request to {url} - {response.status_code}")
+        end_time = time.time()
+        if response.status_code == 200:
+            return {"status": "OK", "time": end_time - start_time}
+        else:
+            return {"status": f"Failed {response.status_code}", "time": end_time - start_time}
+    except requests.RequestException as e:
+        end_time = time.time()
+        return {"status": f"Exception {str(e)}", "time": end_time - start_time}
+    
+
+
+def make_endpoint_request(url, headers, num_requests, num_threads) -> pd.DataFrame:
+    df = pd.DataFrame(columns=['Request_Number', 'Status', 'Response_Time'])
+    start_time = time.time()
+    if headers is None:
+        headers = {"Authorization": f"Bearer {BITRECS_API_KEY}"}      
+
+    with warnings.catch_warnings():
+
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+            future_to_request = {executor.submit(make_get_request, url, headers): i for i in range(num_requests)}
+            for future in as_completed(future_to_request):
+                request_num = future_to_request[future]
+                result = future.result()
+
+                warnings.filterwarnings("ignore", category=FutureWarning)
+                df = pd.concat([df, pd.DataFrame({
+                    'Request_Number': [request_num],
+                    'Status': [result['status']],
+                    'Response_Time': [result['time']]
+                })], ignore_index=True)
+
+    end_time = time.time()
+    total_time = end_time - start_time    
+    total_requests = len(df)
+    ok_requests = (df['Status'] == 'OK').sum()
+    failed_requests = total_requests - ok_requests    
+    summary = pd.DataFrame({
+        'Metric': ['Total Requests', 'OK Requests', 'Failed Requests', 'Total Time (sec)', 'Avg Response Time (sec)'],
+        'Value': [total_requests, ok_requests, failed_requests, total_time, df['Response_Time'].mean()]
+    })    
+    print("\nDetailed Results:")
+    print(df.sort_values(by='Request_Number').to_string(index=False))
+
+    print("\nSummary of Performance Test:")
+    print("url_{} ".format(url))
+    print(summary.to_string(index=False))
+    return summary
+
+
+#@pytest.mark.skip(reason="skipped")    
+def test_rate_limit_hit_on_root_path_ok():
+    url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
+    headers = {"Authorization": f"Bearer {BITRECS_API_KEY}"}
+
+    num_requests = 100
+    num_threads = 2
+
+    results = make_endpoint_request(url, headers, num_requests, num_threads)
+    print(results.head())
+    total_requests = results['Value'][0]
+    ok_requests = results['Value'][1]
+
+    assert total_requests == num_requests
+    assert ok_requests == num_requests
+
+   
