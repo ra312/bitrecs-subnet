@@ -46,16 +46,16 @@ class ApiServer:
         self.forward_fn = forward_fn
         self.limiter = Limiter(key_func=get_forwarded_for)
         
-        self.app = FastAPI()
+        self.app = FastAPI()        
         self.app.add_middleware(SlowAPIMiddleware)
         self.app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         self.app.middleware('http')(api_key_validator)
 
+        self.app.state.limiter = self.limiter
         self.hot_key = validator.wallet.hotkey.ss58_address
         self.proxy_public_key : bytes = None
-        self.network = os.environ.get("NETWORK").strip().lower() #localnet / testnet / mainnet       
-       
+        self.network = os.environ.get("NETWORK").strip().lower() #localnet / testnet / mainnet
 
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
             self.app,
