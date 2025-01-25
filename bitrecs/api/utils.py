@@ -82,7 +82,7 @@ async def api_key_validator(request, call_next) -> Response:
     
 
 def get_proxy_public_key(proxy_url: str) -> bytes:
-    with httpx.Client(timeout=httpx.Timeout(30)) as client:
+    with httpx.Client(timeout=httpx.Timeout(15)) as client:
         response = client.get(
             f"{proxy_url}/public_key",
         )

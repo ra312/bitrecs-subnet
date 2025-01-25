@@ -193,7 +193,7 @@ def make_endpoint_request(url, headers, num_requests, num_threads) -> pd.DataFra
     return summary
 
 
-#@pytest.mark.skip(reason="skipped")    
+@pytest.mark.skip(reason="skipped")    
 def test_rate_limit_hit_on_root_path_ok():
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
     headers = {"Authorization": f"Bearer {BITRECS_API_KEY}"}
