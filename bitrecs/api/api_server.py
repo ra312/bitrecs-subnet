@@ -68,6 +68,7 @@ class ApiServer:
     fast_server: FastAPIThreadedServer
     router: APIRouter
     forward_fn: ForwardFn
+    limiter: Limiter
 
     def __init__(self, validator, axon_port: int, forward_fn: ForwardFn, api_json: str):
         self.validator = validator
@@ -79,8 +80,8 @@ class ApiServer:
         self.proxy_public_key : bytes = None
         self.network = os.environ.get("NETWORK").strip().lower() #localnet / testnet / mainnet
         
-        limiter = Limiter(key_func=get_remote_address)
-        self.app.state.limiter = limiter
+        self.limiter = Limiter(key_func=get_remote_address)
+        self.app.state.limiter = self.limiter        
         self.app.add_exception_handler(RateLimitExceeded, lambda request, exc: JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"}))
         self.app.add_middleware(SlowAPIMiddleware)
 
@@ -96,7 +97,7 @@ class ApiServer:
             "/ping", 
             self.ping,
             methods=["GET"],
-            dependencies=[Depends(limiter.limit("60/minute"))]
+            dependencies=[Depends(Limiter.limit("60/minute"))]
         )
         self.router.add_api_route(
             "/version", 
