@@ -1,6 +1,7 @@
 import os
 import json
 import time
+from fastapi.exceptions import RequestValidationError
 import uvicorn
 import bittensor as bt
 import hmac
@@ -46,9 +47,18 @@ class ApiServer:
         self.forward_fn = forward_fn
         self.limiter = Limiter(key_func=get_forwarded_for)
         
-        self.app = FastAPI()        
+        self.app = FastAPI()
+        
+        async def validation_exception_handler(request: Request, exc: RequestValidationError):
+            exc_str = f'{exc}'.replace('\n', ' ').replace('   ', ' ')
+            bt.logging.error(f"{request}: {exc_str}")
+            content = {'status_code': 10422, 'message': exc_str, 'data': None}
+            return JSONResponse(content=content, status_code=422)
+
         self.app.add_middleware(SlowAPIMiddleware)
         self.app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+        self.app.add_exception_handler(RequestValidationError, validation_exception_handler)
+
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         self.app.middleware('http')(api_key_validator)
 
