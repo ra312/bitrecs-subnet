@@ -42,7 +42,7 @@ class ApiServer:
         self.validator = validator
         self.forward_fn = forward_fn
         #self.limiter = limiter
-        
+        self.allowed_ips = ["127.0.0.1", "10.0.0.1"]
         self.app = FastAPI()
         
         async def validation_exception_handler(request: Request, exc: RequestValidationError):

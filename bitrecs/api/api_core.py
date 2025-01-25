@@ -14,19 +14,14 @@ limiter = Limiter(key_func=get_remote_address)
 
 
 @limiter.limit("120/minute")
-async def filter_allowed_ips(self, request: Request, call_next):
-    # if self.args.disable_secure:
-    #     response = await call_next(request)
-    #     return response
-    return Response(
-            content="You do not have permission to access this resource",
-            status_code=403,
-        )
-
+async def filter_allowed_ips(self, request: Request, call_next): 
+     
     forwarded_for = request.headers.get("x-forwarded-for")
-    print("Forwarded for:", forwarded_for, flush=True)
+    if not forwarded_for:
+        forwarded_for = get_remote_address(request)
+    bt.logging.trace("Forwarded for:", forwarded_for)
 
-    if 1==2:   
+    if 1==1:   
         if (
             (forwarded_for not in self.allowed_ips)
             and (request.client.host != "127.0.0.1")
