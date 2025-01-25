@@ -79,7 +79,7 @@ class ApiServer:
             return JSONResponse(content=content, status_code=422)
         
         
-        self.app.add_middleware('http')(rate_limit_middleware)
+        self.app.middleware('http')(rate_limit_middleware)
         self.app.middleware("http")(partial(filter_allowed_ips, self))
         self.app.state.limiter = limiter
                 
