@@ -101,7 +101,7 @@ class ApiServer:
 
         self.router = APIRouter()
 
-        rate_limit = self.limiter.limit("60/minute")
+        #rate_limit = self.limiter.limit("60/minute")
         self.router.add_api_route(
             "/ping", 
             self.ping,
@@ -181,7 +181,7 @@ class ApiServer:
         
         bt.logging.info(f"\033[1;32m New Request - Signature Verified\033[0m")
     
-    
+    @limiter.limit("60/minute")
     async def ping(self):
         bt.logging.info(f"\033[1;32m API Server ping \033[0m")
         st = int(time.time())
