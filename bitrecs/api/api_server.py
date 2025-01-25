@@ -83,11 +83,11 @@ class ApiServer:
         self.proxy_public_key : bytes = None
         self.network = os.environ.get("NETWORK").strip().lower() #localnet / testnet / mainnet
         
-        self.app.state.limiter = limiter        
-        self.app.add_exception_handler(RateLimitExceeded, lambda e: JSONResponse(
-            status_code=429,
-            content={"detail": "Too many requests", "status_code": 429}
-        ))        
+        # self.app.state.limiter = limiter        
+        # self.app.add_exception_handler(RateLimitExceeded, lambda e: JSONResponse(
+        #     status_code=429,
+        #     content={"detail": "Too many requests", "status_code": 429}
+        # ))        
 
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
             self.app,
@@ -101,13 +101,13 @@ class ApiServer:
             "/ping", 
             self.ping,
             methods=["GET"],
-            dependencies=[Depends(limiter.limit("60/minute"))]
+            #dependencies=[Depends(limiter.limit("60/minute"))]
         )
         self.router.add_api_route(
             "/version", 
             self.version,
             methods=["GET"],
-            dependencies=[Depends(limiter.limit("60/minute"))]
+            #dependencies=[Depends(limiter.limit("60/minute"))]
         )
 
         if self.network == "localnet":
@@ -115,14 +115,14 @@ class ApiServer:
                 "/rec",
                 self.generate_product_rec_localnet,
                 methods=["POST"],
-                dependencies=[Depends(limiter.limit("30/minute"))]
+                #dependencies=[Depends(limiter.limit("30/minute"))]
             ) 
         elif self.network == "testnet":
              self.router.add_api_route(
                 "/rec",
                 self.generate_product_rec_testnet,
                 methods=["POST"],
-                dependencies=[Depends(limiter.limit("30/minute"))]
+                #dependencies=[Depends(limiter.limit("30/minute"))]
             )
         else:
             raise not NotImplementedError("Mainnet API not implemented")
