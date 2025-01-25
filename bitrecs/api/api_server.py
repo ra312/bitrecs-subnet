@@ -34,19 +34,19 @@ PROXY_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
 def get_forwarded_for(request: Request):
     return request.headers.get("x-forwarded-for")
 
-limiter = Limiter(key_func=get_forwarded_for)
+limiter = Limiter(key_func=get_remote_address)
 
 class ApiServer:
     app: FastAPI
     fast_server: FastAPIThreadedServer
     router: APIRouter
     forward_fn: ForwardFn
-    limiter: Limiter
+    #limiter: Limiter
 
     def __init__(self, validator, axon_port: int, forward_fn: ForwardFn, api_json: str):
         self.validator = validator
         self.forward_fn = forward_fn
-        self.limiter = limiter
+        #self.limiter = limiter
         
         self.app = FastAPI()
         
@@ -63,7 +63,7 @@ class ApiServer:
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         self.app.middleware('http')(api_key_validator)
 
-        self.app.state.limiter = self.limiter
+        self.app.state.limiter = limiter
         self.hot_key = validator.wallet.hotkey.ss58_address
         self.proxy_public_key : bytes = None
         self.network = os.environ.get("NETWORK").strip().lower() #localnet / testnet / mainnet
