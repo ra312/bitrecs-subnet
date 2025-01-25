@@ -44,7 +44,7 @@ class ApiServer:
         self.allowed_ips = ["127.0.0.1", "10.0.0.1"]
 
         self.app = FastAPI()
-
+        self.app.state.limiter = limiter
         
         @self.app.exception_handler(Exception)
         async def general_exception_handler(request: Request, exc: Exception):
@@ -79,15 +79,14 @@ class ApiServer:
                 headers={"Retry-After": str(exc.retry_after if hasattr(exc, 'retry_after') else 60)}
             )
 
-        self.app.add_exception_handler(Exception, general_exception_handler)
-        self.app.add_exception_handler(RequestValidationError, validation_exception_handler) 
-        self.app.add_exception_handler(RateLimitExceeded, rate_limit_exception_handler)
+        # self.app.add_exception_handler(Exception, general_exception_handler)
+        # self.app.add_exception_handler(RequestValidationError, validation_exception_handler) 
+        # self.app.add_exception_handler(RateLimitExceeded, rate_limit_exception_handler)
 
-        self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
-        
-        self.app.middleware("http")(partial(filter_allowed_ips, self))
-        self.app.state.limiter = limiter        
+     
+        self.app.middleware("http")(partial(filter_allowed_ips, self))        
         self.app.middleware('http')(api_key_validator)
+        self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
       
         self.hot_key = validator.wallet.hotkey.ss58_address
         self.proxy_public_key : bytes = None
