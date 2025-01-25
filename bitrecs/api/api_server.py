@@ -34,6 +34,7 @@ PROXY_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
 def get_forwarded_for(request: Request):
     return request.headers.get("x-forwarded-for")
 
+
 async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str):     
     d = {
         'created_at': request.created_at,
@@ -105,7 +106,7 @@ class ApiServer:
             "/ping", 
             self.ping,
             methods=["GET"],
-            dependencies=[Depends(rate_limit)]
+            #dependencies=[Depends(rate_limit)]
         )
         self.router.add_api_route(
             "/version", 
