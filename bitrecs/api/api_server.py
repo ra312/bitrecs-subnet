@@ -34,6 +34,7 @@ PROXY_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
 def get_forwarded_for(request: Request):
     return request.headers.get("x-forwarded-for")
 
+limiter = Limiter(key_func=get_forwarded_for)
 
 class ApiServer:
     app: FastAPI
@@ -45,7 +46,7 @@ class ApiServer:
     def __init__(self, validator, axon_port: int, forward_fn: ForwardFn, api_json: str):
         self.validator = validator
         self.forward_fn = forward_fn
-        self.limiter = Limiter(key_func=get_forwarded_for)
+        self.limiter = limiter
         
         self.app = FastAPI()
         
@@ -81,7 +82,7 @@ class ApiServer:
             "/ping", 
             self.ping,
             methods=["GET"],
-            dependencies=[Depends(self.limiter.limit("600/minute"))]
+            #dependencies=[Depends(self.limiter.limit("600/minute"))]
         )
         self.router.add_api_route(
             "/version", 
