@@ -4,6 +4,8 @@ import bittensor as bt
 from fastapi import Request, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi.responses import JSONResponse
 
 def get_forwarded_for(request: Request):
     return request.headers.get("x-forwarded-for")
@@ -13,32 +15,41 @@ limiter = Limiter(key_func=get_remote_address)
 
 
 @limiter.limit("60/minute")
-async def filter_allowed_ips(self, request: Request, call_next) -> Response: 
-     
-    forwarded_for = request.headers.get("x-forwarded-for")
-    if not forwarded_for:
-        bt.logging.trace(f"Forwarded for not found, get_remote_address ... ")
-        forwarded_for = get_remote_address(request)
-       
-    bt.logging.trace(f"Resolved to: {forwarded_for}")
+async def filter_allowed_ips(self, request: Request, call_next) -> Response:
+    try:
+        forwarded_for = request.headers.get("x-forwarded-for")
+        if not forwarded_for:
+            bt.logging.warning(f"Missing x-forwarded-for using get_remote_address ... ")
+            forwarded_for = get_remote_address(request)
+        
+        bt.logging.trace(f"Resolved to: {forwarded_for}")
 
-    if 1==1:   
         if (
             (forwarded_for not in self.allowed_ips)
             and (request.client.host != "127.0.0.1")
             and self.allowed_ips
         ):
-            print("Blocking an unallowed ip:", forwarded_for, flush=True)
             bt.logging.error(f"Blocked IP: {forwarded_for}")
             return Response(
                 content="You do not have permission to access this resource",
                 status_code=403,
             )
-        
-    #print("Allow an ip:", forwarded_for, flush=True)
-    bt.logging.trace(f"Allowed IP {forwarded_for}")
-    response = await call_next(request)
-    return response
+            
+        bt.logging.trace(f"Allowed IP {forwarded_for}")
+        response = await call_next(request)
+        return response
+
+    except RateLimitExceeded as e:
+        bt.logging.warning(f"Rate limit exceeded for {forwarded_for}")
+        return JSONResponse(
+            status_code=429,
+            content={
+                "detail": "Rate limit exceeded",
+                "status_code": 429,
+                "retry_after": 60
+            },
+            headers={"Retry-After": "60"}
+        )
 
 
 
