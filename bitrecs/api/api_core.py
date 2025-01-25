@@ -18,6 +18,11 @@ async def filter_allowed_ips(self, request: Request, call_next):
     # if self.args.disable_secure:
     #     response = await call_next(request)
     #     return response
+    return Response(
+            content="You do not have permission to access this resource",
+            status_code=403,
+        )
+
     forwarded_for = request.headers.get("x-forwarded-for")
     print("Forwarded for:", forwarded_for, flush=True)
 

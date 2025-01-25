@@ -12,9 +12,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, APIRouter, Respons
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from slowapi import _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
 
 from bittensor.core.axon import FastAPIThreadedServer
 from bitrecs.api.api_core import filter_allowed_ips, limiter
@@ -184,7 +182,7 @@ class ApiServer:
         
         bt.logging.info(f"\033[1;32m New Request - Signature Verified\033[0m")
     
-    #@limiter.limit("600/minute")
+    
     async def ping(self, request: Request):
         bt.logging.info(f"\033[1;32m API Server ping \033[0m")
         st = int(time.time())
