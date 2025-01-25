@@ -9,10 +9,11 @@ from typing import Callable
 from fastapi import Depends, FastAPI, HTTPException, Request, APIRouter, Response, Header
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
-from slowapi import Limiter
+from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+
 from bittensor.core.axon import FastAPIThreadedServer
 from bitrecs.commerce.product import ProductFactory
 from bitrecs.protocol import BitrecsRequest
@@ -29,6 +30,9 @@ ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 SECRET_KEY = "change-me"
 PROXY_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
 
+
+def get_forwarded_for(request: Request):
+    return request.headers.get("x-forwarded-for")
 
 async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str):     
     d = {
@@ -80,9 +84,9 @@ class ApiServer:
         self.proxy_public_key : bytes = None
         self.network = os.environ.get("NETWORK").strip().lower() #localnet / testnet / mainnet
         
-        self.limiter = Limiter(key_func=get_remote_address)
+        self.limiter = Limiter(key_func=get_forwarded_for)
         self.app.state.limiter = self.limiter        
-        self.app.add_exception_handler(RateLimitExceeded, lambda request, exc: JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"}))
+        self.app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
         self.app.add_middleware(SlowAPIMiddleware)
 
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
@@ -93,11 +97,13 @@ class ApiServer:
         ))
 
         self.router = APIRouter()
+
+        rate_limit = self.limiter.limit("60/minute")
         self.router.add_api_route(
             "/ping", 
             self.ping,
             methods=["GET"],
-            dependencies=[Depends(self.limiter.limit("60/minute"))]
+            dependencies=[Depends(rate_limit)]
         )
         self.router.add_api_route(
             "/version", 
