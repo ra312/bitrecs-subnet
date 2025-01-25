@@ -53,7 +53,7 @@ class ApiServer:
                 status_code=500,
                 content={
                     "status_code": 500,
-                    "message": "Internal server error",
+                    "message": "Internal server error - General",
                     "data": None
                 }
             )
@@ -78,13 +78,8 @@ class ApiServer:
                 },
                 headers={"Retry-After": str(exc.retry_after if hasattr(exc, 'retry_after') else 60)}
             )
-
-        # self.app.add_exception_handler(Exception, general_exception_handler)
-        # self.app.add_exception_handler(RequestValidationError, validation_exception_handler) 
-        # self.app.add_exception_handler(RateLimitExceeded, rate_limit_exception_handler)
-
      
-        self.app.middleware("http")(partial(filter_allowed_ips, self))        
+        self.app.middleware("http")(partial(filter_allowed_ips, self))
         self.app.middleware('http')(api_key_validator)
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
       

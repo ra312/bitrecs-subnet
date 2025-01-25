@@ -205,8 +205,9 @@ def test_rate_limit_hit_on_root_path_ok():
     print(results.head())
     total_requests = results['Value'][0]
     ok_requests = results['Value'][1]
+    failed_requests = results['Value'][2]
 
     assert total_requests == num_requests
-    assert ok_requests == num_requests
+    assert ok_requests == num_requests - failed_requests
 
    

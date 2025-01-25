@@ -76,12 +76,14 @@ async def api_key_validator(request, call_next) -> Response:
     if api_key not in api_key_info["keys"]:
         bt.logging.error(f"ERROR - INVALID API request key {request.client.host}")        
         return JSONResponse(status_code=401, content={"detail": "Invalid API key request"})
+    
+    #TODO: this gets called even after a RateLimitExeption has been raised
     try:
         response: Response = await call_next(request)
         return response
-    except Exception as e:
+    except Exception as e: 
         bt.logging.error(f"ERROR api_key_validator - {e}")
-        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+        return JSONResponse(status_code=500, content={"detail": "Internal server error - key validator"})
     
     
 
