@@ -5,7 +5,6 @@ import uvicorn
 import bittensor as bt
 import hmac
 import hashlib
-
 from typing import Callable
 from fastapi import Depends, FastAPI, HTTPException, Request, APIRouter, Response, Header
 from fastapi.responses import JSONResponse
@@ -25,13 +24,10 @@ from cryptography.exceptions import InvalidSignature
 from dotenv import load_dotenv
 load_dotenv()
 
-
 ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 
 SECRET_KEY = "change-me"
 PROXY_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
-limiter = Limiter(key_func=get_remote_address)
-
 
 
 async def verify_request(request: BitrecsRequest, x_signature: str, x_timestamp: str):     
@@ -83,11 +79,10 @@ class ApiServer:
         self.proxy_public_key : bytes = None
         self.network = os.environ.get("NETWORK").strip().lower() #localnet / testnet / mainnet
         
-        # self.app.state.limiter = limiter        
-        # self.app.add_exception_handler(RateLimitExceeded, lambda e: JSONResponse(
-        #     status_code=429,
-        #     content={"detail": "Too many requests", "status_code": 429}
-        # ))        
+        limiter = Limiter(key_func=get_remote_address)
+        self.app.state.limiter = limiter
+        self.app.add_exception_handler(RateLimitExceeded, lambda request, exc: JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"}))
+        self.app.add_middleware(SlowAPIMiddleware)
 
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
             self.app,
@@ -101,7 +96,7 @@ class ApiServer:
             "/ping", 
             self.ping,
             methods=["GET"],
-            #dependencies=[Depends(limiter.limit("60/minute"))]
+            dependencies=[Depends(limiter.limit("60/minute"))]
         )
         self.router.add_api_route(
             "/version", 
@@ -130,6 +125,7 @@ class ApiServer:
         self.app.include_router(self.router)
      
         try:
+            bt.logging.trace(f"\033[1;33mAPI warmup, please standby ...\033[0m")
             self.proxy_public_key = get_proxy_public_key(PROXY_URL)
         except Exception as e:
             bt.logging.error(f"\033[1;31mERROR API could not get proxy public key:  {e} \033[0m")
