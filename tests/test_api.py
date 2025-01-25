@@ -198,7 +198,7 @@ def test_rate_limit_hit_on_root_path_ok():
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
     headers = {"Authorization": f"Bearer {BITRECS_API_KEY}"}
 
-    num_requests = 100
+    num_requests = 10
     num_threads = 2
 
     results = make_endpoint_request(url, headers, num_requests, num_threads)

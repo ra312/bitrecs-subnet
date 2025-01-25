@@ -87,8 +87,7 @@ class ApiServer:
         self.app.add_exception_handler(RateLimitExceeded, lambda e: JSONResponse(
             status_code=429,
             content={"detail": "Too many requests", "status_code": 429}
-        ))
-        self.app.add_middleware(SlowAPIMiddleware)
+        ))        
 
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
             self.app,
