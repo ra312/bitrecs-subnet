@@ -180,13 +180,13 @@ class ApiServer:
         bt.logging.info(f"\033[1;32m New Request - Signature Verified\033[0m")
     
     
-    async def ping(self):
+    async def ping(self, request: Request):
         bt.logging.info(f"\033[1;32m API Server ping \033[0m")
         st = int(time.time())
         return JSONResponse(status_code=200, content={"detail": "pong", "st": st})
     
     
-    async def version(self):
+    async def version(self, request: Request):
         bt.logging.info(f"\033[1;32m API Server version \033[0m")
         st = int(time.time())
         if not self.validator.local_metadata:
