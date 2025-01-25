@@ -32,33 +32,6 @@ SECRET_KEY = "change-me"
 PROXY_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
 
 
-async def rate_limit_middleware(request: Request, call_next):
-    try:
-        response = await call_next(request)
-        return response
-    except RateLimitExceeded as exc:
-        bt.logging.warning(f"Rate limit exceeded for {request.client.host}")
-        return JSONResponse(
-            status_code=429,
-            content={
-                "detail": "Rate limit exceeded",
-                "status_code": 429,
-                "retry_after": exc.retry_after if hasattr(exc, 'retry_after') else 60
-            },
-            headers={"Retry-After": str(exc.retry_after if hasattr(exc, 'retry_after') else 60)}
-        )
-
-        # bt.logging.warning(f"Rate limit exceeded for {request.client.host}")
-        # return JSONResponse(
-        #     status_code=429,
-        #     content={
-        #         "detail": "Rate limit exceeded",
-        #         "status_code": 429,
-        #         "retry_after": exc.retry_after if hasattr(exc, 'retry_after') else 60
-        #     }
-        # )
-
-
 class ApiServer:
     app: FastAPI
     fast_server: FastAPIThreadedServer
@@ -67,9 +40,9 @@ class ApiServer:
 
     def __init__(self, validator, axon_port: int, forward_fn: ForwardFn, api_json: str):
         self.validator = validator
-        self.forward_fn = forward_fn
-        #self.limiter = limiter
+        self.forward_fn = forward_fn        
         self.allowed_ips = ["127.0.0.1", "10.0.0.1"]
+
         self.app = FastAPI()
         
         async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -79,14 +52,25 @@ class ApiServer:
             return JSONResponse(content=content, status_code=422)
         
         
-        self.app.middleware('http')(rate_limit_middleware)
-        self.app.middleware("http")(partial(filter_allowed_ips, self))
-        self.app.state.limiter = limiter
-                
-        self.app.add_exception_handler(RequestValidationError, validation_exception_handler)
-        self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
-        self.app.middleware('http')(api_key_validator)
+        async def rate_limit_exception_handler(request: Request, exc: RateLimitExceeded):
+            bt.logging.warning(f"Rate limit exceeded for {request.client.host}")
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "detail": "Rate limit exceeded",
+                    "status_code": 429,
+                    "retry_after": exc.retry_after if hasattr(exc, 'retry_after') else 60
+                },
+                headers={"Retry-After": str(exc.retry_after if hasattr(exc, 'retry_after') else 60)}
+            )
 
+        
+        self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
+        self.app.add_exception_handler(RequestValidationError, validation_exception_handler)
+        self.app.add_exception_handler(RateLimitExceeded, rate_limit_exception_handler)        
+        self.app.middleware("http")(partial(filter_allowed_ips, self))
+        self.app.state.limiter = limiter       
+        self.app.middleware('http')(api_key_validator)
       
         self.hot_key = validator.wallet.hotkey.ss58_address
         self.proxy_public_key : bytes = None
@@ -103,29 +87,25 @@ class ApiServer:
         self.router.add_api_route(
             "/ping", 
             self.ping,
-            methods=["GET"],
-            #dependencies=[Depends(self.limiter.limit("600/minute"))]
+            methods=["GET"]            
         )
         self.router.add_api_route(
             "/version", 
             self.version,
-            methods=["GET"],
-            #dependencies=[Depends(limiter.limit("60/minute"))]
+            methods=["GET"]            
         )
 
         if self.network == "localnet":
             self.router.add_api_route(
                 "/rec",
                 self.generate_product_rec_localnet,
-                methods=["POST"],
-                #dependencies=[Depends(limiter.limit("30/minute"))]
+                methods=["POST"]                
             ) 
         elif self.network == "testnet":
              self.router.add_api_route(
                 "/rec",
                 self.generate_product_rec_testnet,
-                methods=["POST"],
-                #dependencies=[Depends(limiter.limit("30/minute"))]
+                methods=["POST"]                
             )
         else:
             raise not NotImplementedError("Mainnet API not implemented")
