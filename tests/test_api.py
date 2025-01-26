@@ -55,13 +55,19 @@ def test_can_reach_validator():
 
 def test_no_auth_error_validator_root():
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/"
-    response = requests.get(url)
+    headers = {
+        "Content-Type": "application/json"
+    }   
+    response = requests.get(url, headers=headers)
     print(response.text)
     assert response.status_code == 400
 
 def test_no_auth_error_validator_ping():
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
-    response = requests.get(url)
+    headers = {
+        "Content-Type": "application/json"
+    }   
+    response = requests.get(url, headers=headers)
     print(response.text)
     assert response.status_code == 400
 
@@ -194,7 +200,11 @@ def make_endpoint_request(url, headers, num_requests, num_threads) -> pd.DataFra
     df = pd.DataFrame(columns=['Request_Number', 'Status', 'Response_Time'])
     start_time = time.time()
     if headers is None:
-        headers = {"Authorization": f"Bearer {BITRECS_API_KEY}"}      
+        headers = {
+            "Authorization": f"Bearer {BITRECS_API_KEY}",
+            "Content-Type": "application/json"               
+        }
+        
 
     with warnings.catch_warnings():
 
@@ -231,7 +241,10 @@ def make_endpoint_request(url, headers, num_requests, num_threads) -> pd.DataFra
 
 def test_rate_limit_hit_root_ok():
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/"
-    headers = {"Authorization": f"Bearer {BITRECS_API_KEY}"}
+    headers = {
+        "Authorization": f"Bearer {BITRECS_API_KEY}",
+        "Content-Type": "application/json"               
+    }
 
     num_requests = 100
     num_threads = 2
@@ -249,7 +262,10 @@ def test_rate_limit_hit_root_ok():
 
 def test_rate_limit_hit_ping_ok():
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
-    headers = {"Authorization": f"Bearer {BITRECS_API_KEY}"}
+    headers = {
+        "Authorization": f"Bearer {BITRECS_API_KEY}",
+        "Content-Type": "application/json"               
+    }
 
     num_requests = 100
     num_threads = 2

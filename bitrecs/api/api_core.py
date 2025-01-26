@@ -82,7 +82,12 @@ async def filter_allowed_ips(self, request: Request, call_next) -> Response:
 
 
 class OnlyJSONMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next) -> Response:     
+    async def dispatch(self, request: Request, call_next) -> Response:
+        if not request.method in ['POST']:
+            response = await call_next(request)
+            return response
+
+
         if 'application/json' not in request.headers.get('Content-Type', ''):
             return JSONResponse(
                 status_code=415,

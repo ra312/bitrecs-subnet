@@ -98,7 +98,7 @@ class ApiServer:
         self.app.middleware("http")(partial(filter_allowed_ips, self))
         self.app.middleware('http')(partial(api_key_validator, self))
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
-        self.app.add_middleware(OnlyJSONMiddleware)
+        #self.app.add_middleware(OnlyJSONMiddleware)
 
         # self.app.add_exception_handler(HTTPException, http_exception_handler)
         # self.app.add_exception_handler(RequestValidationError, validation_exception_handler)
