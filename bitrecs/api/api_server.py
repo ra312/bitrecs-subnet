@@ -99,6 +99,10 @@ class ApiServer:
         self.app.middleware('http')(partial(api_key_validator, self))
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         self.app.add_middleware(OnlyJSONMiddleware)
+
+        self.app.add_exception_handler(HTTPException, http_exception_handler)
+        self.app.add_exception_handler(RequestValidationError, validation_exception_handler)
+        self.app.add_exception_handler(RateLimitExceeded, rate_limit_exception_handler)
       
         self.hot_key = validator.wallet.hotkey.ss58_address
         self.proxy_public_key : bytes = None
@@ -220,7 +224,7 @@ class ApiServer:
     
     async def ping(self, request: Request):
         bt.logging.info(f"\033[1;32m API Server ping \033[0m")
-        st = int(time.time())
+        st = int(time.time())        
         return JSONResponse(status_code=200, content={"detail": "pong", "st": st})
     
     
