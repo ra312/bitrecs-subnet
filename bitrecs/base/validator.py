@@ -136,8 +136,7 @@ class BaseValidatorNeuron(BaseNeuron):
             # external requests
             api_server = ApiServer(
                 axon_port=self.config.axon.port,
-                forward_fn=api_forward,
-                api_json=self.config.api_json,
+                forward_fn=api_forward,                
                 validator=self
             )
             api_server.start()            
