@@ -18,7 +18,7 @@ def get_proxy_public_key(proxy_url: str) -> bytes:
     return raw_bytes
 
 
-def _get_api_key(request: Request) -> Any:
+def _get_api_key_header(request: Request) -> Any:
     auth_header = request.headers.get("Authorization")
     if not auth_header:
         return None
@@ -31,7 +31,7 @@ async def api_key_validator(self, request: Request, call_next) -> Response:
     if request.url.path in ["/favicon.ico"]:
         return await call_next(request)
 
-    api_key = _get_api_key(request)
+    api_key = _get_api_key_header(request)
     if not api_key:
         bt.logging.error(f"ERROR - Request has no Authorization {request.client.host}")
         return JSONResponse(status_code=400, content={"detail": "Authorization is missing"})    
