@@ -1,26 +1,25 @@
-from functools import partial
+
 import os
 import json
 import time
-from fastapi.exceptions import RequestValidationError
 import uvicorn
 import bittensor as bt
 import hmac
 import hashlib
 from typing import Callable
-from fastapi import Depends, FastAPI, HTTPException, Request, APIRouter, Response, Header
+from functools import partial
+from bittensor.core.axon import FastAPIThreadedServer
+from fastapi import FastAPI, HTTPException, Request, APIRouter, Response, Header
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
-from slowapi import _rate_limit_exceeded_handler
+from fastapi.exceptions import RequestValidationError
 from slowapi.errors import RateLimitExceeded
-
-from bittensor.core.axon import FastAPIThreadedServer
-from bitrecs.api.api_core import filter_allowed_ips, limiter
+from bitrecs.utils import constants as CONST
 from bitrecs.commerce.product import ProductFactory
 from bitrecs.protocol import BitrecsRequest
 from bitrecs.api.api_counter import APICounter
+from bitrecs.api.api_core import filter_allowed_ips, limiter
 from bitrecs.api.utils import api_key_validator, get_proxy_public_key
-from bitrecs.utils import constants as CONST
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.exceptions import InvalidSignature
 from dotenv import load_dotenv
@@ -40,8 +39,9 @@ class ApiServer:
 
     def __init__(self, validator, axon_port: int, forward_fn: ForwardFn):
         self.validator = validator
-        self.forward_fn = forward_fn        
+        self.forward_fn = forward_fn
         self.allowed_ips = ["127.0.0.1", "10.0.0.1"]
+        self.bypass_whitelist = False
 
         self.app = FastAPI()
         self.app.state.limiter = limiter
@@ -231,9 +231,7 @@ class ApiServer:
             Main Bitrecs Handler - localnet
 
             Generate n recommendations for a given query and context.
-            Query is sent to random miners to generate a valid response in a reasonable time.
-
-            TODO: rate limiting
+            Query is sent to random miners to generate a valid response in a reasonable time.            
 
         """
 
@@ -282,14 +280,14 @@ class ApiServer:
                 "catalog_size": str(catalog_size),
                 "miner_uid": response.miner_uid,
                 "miner_hotkey": response.miner_hotkey,
-                "reasoning": "Bitrecs AI - localnet"
+                "reasoning": f"Bitrecs AI - {self.network}"
             }
 
             await self.log_counter(True)            
             return JSONResponse(status_code=200, content=response)
         
         except HTTPException as h:
-            bt.logging.error(f"\033[31m ERROR API generate_product_rec_localnet:\033[0m {h}")
+            bt.logging.error(f"\033[31m HTTP ERROR API generate_product_rec_localnet:\033[0m {h}")
             await self.log_counter(False)
             return JSONResponse(status_code=h.status_code,
                                 content={"detail": "error", "status_code": h.status_code})
@@ -311,9 +309,7 @@ class ApiServer:
             Main Bitrecs Handler - testnet
 
             Generate n recommendations for a given query and context.
-            Query is sent to random miners to generate a valid response in a reasonable time.
-
-            TODO: rate limiting
+            Query is sent to random miners to generate a valid response in a reasonable time.            
 
         """
 
@@ -345,10 +341,9 @@ class ApiServer:
                 bt.logging.error(f"API forward_fn response has no results")
                 await self.log_counter(False)
                 return JSONResponse(status_code=500,
-                                    content={"detail": "error", "status_code": 500})
+                                    content={"detail": "error - forward", "status_code": 500})
 
-            final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
-            #bt.logging.trace(f"API generate_product_rec final_recs: {final_recs}")
+            final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]            
             response_text = "Bitrecs Took {:.2f} seconds to process this request".format(total_time)
 
             response = {
@@ -363,14 +358,20 @@ class ApiServer:
                 "catalog_size": str(catalog_size),
                 "miner_uid": response.miner_uid,
                 "miner_hotkey": response.miner_hotkey,
-                "reasoning": "Bitrecs AI - testnet"
+                "reasoning": f"Bitrecs AI - {self.network}"
             }
 
             await self.log_counter(True)            
             return JSONResponse(status_code=200, content=response)
+        
+        except HTTPException as h:
+            bt.logging.error(f"\033[31m HTTP ERROR API generate_product_rec_testnet:\033[0m {h}")
+            await self.log_counter(False)
+            return JSONResponse(status_code=h.status_code,
+                                content={"detail": "error", "status_code": h.status_code})
 
         except Exception as e:
-            bt.logging.error(f"ERROR API generate_product_rec error:  {e}")
+            bt.logging.error(f"\033[31m ERROR API generate_product_rec_testnet:\033[0m {e}")
             await self.log_counter(False)
             return JSONResponse(status_code=500,
                                 content={"detail": "error", "status_code": 500})
