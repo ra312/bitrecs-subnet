@@ -60,7 +60,7 @@ def _get_api_key(request: Request) -> Any:
     return auth_header
 
 
-async def api_key_validator(request, call_next) -> Response:
+async def api_key_validator(self, request, call_next) -> Response:
     if request.url.path in ["/favicon.ico"]:
         return await call_next(request)
 
@@ -78,7 +78,7 @@ async def api_key_validator(request, call_next) -> Response:
     #     bt.logging.error(f"ERROR - INVALID API request key {request.client.host}")        
     #     return JSONResponse(status_code=401, content={"detail": "Invalid API key request"})
     
-    bitrecs_api_key = os.environ("BITRECS_API_KEY")
+    bitrecs_api_key = self.bitrecs_api_key
     if not bitrecs_api_key:
         bt.logging.error(f"ERROR - MISSING BITRECS_API_KEY")
         return JSONResponse(status_code=500, content={"detail": "Server error - invalid API key"})

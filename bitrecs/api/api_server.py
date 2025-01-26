@@ -45,6 +45,10 @@ class ApiServer:
 
         self.app = FastAPI()
         self.app.state.limiter = limiter
+        self.bitrecs_api_key = os.environ.get("BITRECS_API_KEY")
+        if not self.bitrecs_api_key:
+            bt.logging.error(f"\033[1;31m ERROR - MISSING BITRECS_API_KEY \033[0m")
+            raise Exception("Missing BITRECS_API_KEY")
         
         @self.app.exception_handler(Exception)
         async def general_exception_handler(request: Request, exc: Exception):
@@ -79,9 +83,9 @@ class ApiServer:
                 headers={"Retry-After": str(exc.retry_after if hasattr(exc, 'retry_after') else 60)}
             )
         
-        self.app.middleware("http")(partial(filter_allowed_ips, self))
-        self.app.middleware('http')(api_key_validator)
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
+        self.app.middleware('http')((api_key_validator, self))
+        self.app.middleware("http")(partial(filter_allowed_ips, self))
       
         self.hot_key = validator.wallet.hotkey.ss58_address
         self.proxy_public_key : bytes = None
@@ -128,8 +132,7 @@ class ApiServer:
             self.proxy_public_key = get_proxy_public_key(PROXY_URL)
         except Exception as e:
             bt.logging.error(f"\033[1;31mERROR API could not get proxy public key:  {e} \033[0m")
-            bt.logging.warning(f"\033[1;33mWARNING - your validator is in limp mode, please restart\033[0m")            
-
+            bt.logging.warning(f"\033[1;33mWARNING - your validator is in limp mode, please restart\033[0m")
         
         self.api_counter = APICounter(os.path.join(self.app.root_path, "api_counter.json"))
         bt.logging.info(f"\033[1;32m API Counter set {self.api_counter.save_path} \033[0m")
