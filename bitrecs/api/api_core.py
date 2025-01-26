@@ -82,14 +82,28 @@ async def filter_allowed_ips(self, request: Request, call_next) -> Response:
 
 
 class OnlyJSONMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):        
-        if 'application/json' not in request.headers.get('Content-Type', ''):            
-            raise HTTPException(status_code=415, detail="Only JSON requests are accepted")
+    async def dispatch(self, request: Request, call_next) -> Response:     
+        if 'application/json' not in request.headers.get('Content-Type', ''):
+            return JSONResponse(
+                status_code=415,
+                content={
+                    "detail": "Invalid Request",
+                    "status_code": 415                    
+                }                
+            )
+            #raise HTTPException(status_code=415, detail="Only JSON requests are accepted")
         
         try:            
             await request.json()
         except ValueError:            
-            raise HTTPException(status_code=400, detail="Invalid JSON in request body")
+            #raise HTTPException(status_code=400, detail="Invalid JSON in request body")
+            return JSONResponse(
+                status_code=415,
+                content={
+                        "detail": "Invalid Request",
+                        "status_code": 415                    
+                    }                
+            )
         
         response = await call_next(request)
         return response

@@ -100,9 +100,9 @@ class ApiServer:
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         self.app.add_middleware(OnlyJSONMiddleware)
 
-        self.app.add_exception_handler(HTTPException, http_exception_handler)
-        self.app.add_exception_handler(RequestValidationError, validation_exception_handler)
-        self.app.add_exception_handler(RateLimitExceeded, rate_limit_exception_handler)
+        # self.app.add_exception_handler(HTTPException, http_exception_handler)
+        # self.app.add_exception_handler(RequestValidationError, validation_exception_handler)
+        # self.app.add_exception_handler(RateLimitExceeded, rate_limit_exception_handler)
       
         self.hot_key = validator.wallet.hotkey.ss58_address
         self.proxy_public_key : bytes = None
