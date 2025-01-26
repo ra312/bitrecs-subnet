@@ -5,6 +5,8 @@ import httpx
 from typing import Any, Dict, Optional
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse    
+
+from slowapi.errors import RateLimitExceeded
     
 
 def get_proxy_public_key(proxy_url: str) -> bytes:
@@ -48,6 +50,10 @@ async def api_key_validator(self, request: Request, call_next) -> Response:
     try:
         response: Response = await call_next(request)
         return response
+    except RateLimitExceeded as re:        
+        bt.logging.error(f"ERROR api_key_validator 429 - {re}")
+        return JSONResponse(status_code=429, 
+                            content={"detail": "Rate limit exceeded"})
     except Exception as e:
         bt.logging.error(f"ERROR api_key_validator - {e}")
         return JSONResponse(status_code=500, 

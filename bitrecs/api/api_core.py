@@ -7,6 +7,10 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
 
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+from starlette.exceptions import HTTPException
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -75,3 +79,17 @@ async def filter_allowed_ips(self, request: Request, call_next) -> Response:
 #             print("Exception while updating allowed ips", str(e), flush=True)
 #         time.sleep(60)
 
+
+
+class OnlyJSONMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):        
+        if 'application/json' not in request.headers.get('Content-Type', ''):            
+            raise HTTPException(status_code=415, detail="Only JSON requests are accepted")
+        
+        try:            
+            await request.json()
+        except ValueError:            
+            raise HTTPException(status_code=400, detail="Invalid JSON in request body")
+        
+        response = await call_next(request)
+        return response
