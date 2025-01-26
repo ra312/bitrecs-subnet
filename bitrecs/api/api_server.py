@@ -50,7 +50,6 @@ class ApiServer:
             bt.logging.error(f"\033[1;31m ERROR - MISSING BITRECS_API_KEY \033[0m")
             raise Exception("Missing BITRECS_API_KEY")
         
-        #@self.app.exception_handler(Exception)
         async def general_exception_handler(request: Request, exc: Exception):
             bt.logging.error(f"Unhandled exception: {request.url} - {str(exc)}")
             return JSONResponse(
@@ -60,17 +59,12 @@ class ApiServer:
                     "message": "Internal server error - General",
                     "data": None
                 }
-            )
-        
+            )        
         
         self.app.middleware("http")(partial(filter_allowed_ips, self))
         self.app.middleware('http')(partial(api_key_validator, self))
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
-        #self.app.add_middleware(OnlyJSONMiddleware)
-
-        # self.app.add_exception_handler(HTTPException, http_exception_handler)
-        # self.app.add_exception_handler(RequestValidationError, validation_exception_handler)
-        # self.app.add_exception_handler(RateLimitExceeded, rate_limit_exception_handler)
+        #self.app.add_middleware(OnlyJSONMiddleware)    
 
         self.app.add_exception_handler(Exception, general_exception_handler)
       

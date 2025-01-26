@@ -54,20 +54,14 @@ def test_can_reach_validator():
 
 
 def test_no_auth_error_validator_root():
-    url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/"
-    headers = {
-        "Content-Type": "application/json"
-    }   
-    response = requests.get(url, headers=headers)
+    url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/"    
+    response = requests.get(url)
     print(response.text)
     assert response.status_code == 400
 
 def test_no_auth_error_validator_ping():
-    url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
-    headers = {
-        "Content-Type": "application/json"
-    }   
-    response = requests.get(url, headers=headers)
+    url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"   
+    response = requests.get(url)
     print(response.text)
     assert response.status_code == 400
 
@@ -86,8 +80,7 @@ def test_no_auth_error_validator_rec():
 
 def test_wrong_auth_error_validator():    
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
-    headers = {
-        "Content-Type": "application/json",
+    headers = {       
         "Authorization": "Bearer wrong"
     }            
     response = requests.get(url, headers=headers)
@@ -97,8 +90,7 @@ def test_wrong_auth_error_validator():
 
 def test_good_auth_validator():    
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
-    headers = {
-        "Content-Type": "application/json",
+    headers = {        
         "Authorization": f"Bearer {BITRECS_API_KEY}"
     }
     response = requests.get(url, headers=headers)
@@ -112,8 +104,7 @@ def test_good_auth_validator():
 
 def test_good_server_time_validator():    
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
-    headers = {
-        "Content-Type": "application/json",
+    headers = {        
         "Authorization": f"Bearer {BITRECS_API_KEY}"
     }
     response = requests.get(url, headers=headers)
@@ -132,8 +123,7 @@ def test_good_server_time_validator():
 
 def test_version_ok_validator():    
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/version"
-    headers = {
-        "Content-Type": "application/json",
+    headers = {        
         "Authorization": f"Bearer {BITRECS_API_KEY}"
     }
     response = requests.get(url, headers=headers)
@@ -151,8 +141,7 @@ def test_version_ok_validator():
 
 def test_rec_no_sig_is_rejected_ok():
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/rec"
-    headers = {
-        "Content-Type": "application/json",
+    headers = {        
         "Authorization": f"Bearer {BITRECS_API_KEY}",
         "x-timestamp": str(int(time.time()))
     }
@@ -201,10 +190,8 @@ def make_endpoint_request(url, headers, num_requests, num_threads) -> pd.DataFra
     start_time = time.time()
     if headers is None:
         headers = {
-            "Authorization": f"Bearer {BITRECS_API_KEY}",
-            "Content-Type": "application/json"               
-        }
-        
+            "Authorization": f"Bearer {BITRECS_API_KEY}"                          
+        }        
 
     with warnings.catch_warnings():
 
@@ -242,8 +229,7 @@ def make_endpoint_request(url, headers, num_requests, num_threads) -> pd.DataFra
 def test_rate_limit_hit_root_ok():
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/"
     headers = {
-        "Authorization": f"Bearer {BITRECS_API_KEY}",
-        "Content-Type": "application/json"               
+        "Authorization": f"Bearer {BITRECS_API_KEY}"             
     }
 
     num_requests = 100
@@ -263,8 +249,7 @@ def test_rate_limit_hit_root_ok():
 def test_rate_limit_hit_ping_ok():
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
     headers = {
-        "Authorization": f"Bearer {BITRECS_API_KEY}",
-        "Content-Type": "application/json"               
+        "Authorization": f"Bearer {BITRECS_API_KEY}"        
     }
 
     num_requests = 100
