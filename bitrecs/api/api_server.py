@@ -41,7 +41,7 @@ class ApiServer:
     def __init__(self, validator, axon_port: int, forward_fn: ForwardFn, api_json: str):
         self.validator = validator
         self.forward_fn = forward_fn        
-        self.allowed_ips = ["127.0.0.1", "10.0.0.1"]
+        self.allowed_ips = ["127.0.0.1", "10.0.0.15"]
 
         self.app = FastAPI()
         self.app.state.limiter = limiter
