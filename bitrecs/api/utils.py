@@ -69,13 +69,21 @@ async def api_key_validator(request, call_next) -> Response:
         bt.logging.error(f"ERROR - Request has no Authorization {request.client.host}")
         return JSONResponse(status_code=400, content={"detail": "Authorization is missing"})
 
-    api_key_info = load_api_config()
-    if api_key_info is None:
-        bt.logging.error(f"ERROR - MISSING API request key {request.client.host}")
-        return JSONResponse(status_code=401, content={"detail": "Invalid API key config"})
+    # api_key_info = load_api_config()
+    # if api_key_info is None:
+    #     bt.logging.error(f"ERROR - MISSING API request key {request.client.host}")
+    #     return JSONResponse(status_code=401, content={"detail": "Invalid API key config"})
     
-    if api_key not in api_key_info["keys"]:
-        bt.logging.error(f"ERROR - INVALID API request key {request.client.host}")        
+    # if api_key not in api_key_info["keys"]:
+    #     bt.logging.error(f"ERROR - INVALID API request key {request.client.host}")        
+    #     return JSONResponse(status_code=401, content={"detail": "Invalid API key request"})
+    
+    bitrecs_api_key = os.environ("BITRECS_API_KEY")
+    if not bitrecs_api_key:
+        bt.logging.error(f"ERROR - MISSING BITRECS_API_KEY")
+        return JSONResponse(status_code=500, content={"detail": "Server error - invalid API key"})
+    if api_key != bitrecs_api_key:
+        bt.logging.error(f"ERROR - INVALID API request key mismatch {request.client.host}")        
         return JSONResponse(status_code=401, content={"detail": "Invalid API key request"})
     
     #TODO: this gets called even after a RateLimitExeption has been raised

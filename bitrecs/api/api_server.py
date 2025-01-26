@@ -38,7 +38,7 @@ class ApiServer:
     router: APIRouter
     forward_fn: ForwardFn    
 
-    def __init__(self, validator, axon_port: int, forward_fn: ForwardFn, api_json: str):
+    def __init__(self, validator, axon_port: int, forward_fn: ForwardFn):
         self.validator = validator
         self.forward_fn = forward_fn        
         self.allowed_ips = ["127.0.0.1", "10.0.0.1"]
@@ -128,10 +128,9 @@ class ApiServer:
             self.proxy_public_key = get_proxy_public_key(PROXY_URL)
         except Exception as e:
             bt.logging.error(f"\033[1;31mERROR API could not get proxy public key:  {e} \033[0m")
-            bt.logging.warning(f"\033[1;33mWARNING - your validator is in limp mode, please restart\033[0m")
-            
+            bt.logging.warning(f"\033[1;33mWARNING - your validator is in limp mode, please restart\033[0m")            
 
-        self.api_json = api_json #TODO not used
+        
         self.api_counter = APICounter(os.path.join(self.app.root_path, "api_counter.json"))
         bt.logging.info(f"\033[1;32m API Counter set {self.api_counter.save_path} \033[0m")
         
