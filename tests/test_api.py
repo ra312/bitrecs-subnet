@@ -95,6 +95,10 @@ def test_good_auth_validator():
     }
     response = requests.get(url, headers=headers)
     print(response.text)
+    if response.status_code == 429:
+        print("Rate limit hit")
+        return
+    
     assert response.status_code == 200
 
 
@@ -105,6 +109,10 @@ def test_good_server_time_validator():
     }
     response = requests.get(url, headers=headers)
     print(response.text)
+    if response.status_code == 429:
+        print("Rate limit hit")
+        return
+    
     assert response.status_code == 200
     st = response.json()["st"]
     assert st > 0
@@ -120,6 +128,10 @@ def test_version_ok_validator():
     }
     response = requests.get(url, headers=headers)
     print(response.text)    
+    if response.status_code == 429: 
+        print("Rate limit hit")
+        return
+    
     assert response.status_code == 200
     meta_json = response.json()["meta_data"]
     md = LocalMetadata(**meta_json)

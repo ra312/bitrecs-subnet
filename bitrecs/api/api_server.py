@@ -18,7 +18,7 @@ from bitrecs.utils import constants as CONST
 from bitrecs.commerce.product import ProductFactory
 from bitrecs.protocol import BitrecsRequest
 from bitrecs.api.api_counter import APICounter
-from bitrecs.api.api_core import filter_allowed_ips, limiter
+from bitrecs.api.api_core import OnlyJSONMiddleware, filter_allowed_ips, limiter
 from bitrecs.api.utils import api_key_validator, get_proxy_public_key
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.exceptions import InvalidSignature
@@ -86,6 +86,7 @@ class ApiServer:
         self.app.middleware("http")(partial(filter_allowed_ips, self))
         self.app.middleware('http')(partial(api_key_validator, self))
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
+        self.app.add_middleware(OnlyJSONMiddleware)
       
         self.hot_key = validator.wallet.hotkey.ss58_address
         self.proxy_public_key : bytes = None
