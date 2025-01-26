@@ -60,7 +60,7 @@ def _get_api_key(request: Request) -> Any:
     return auth_header
 
 
-async def api_key_validator(self, request, call_next) -> Response:
+async def api_key_validator(self, request: Request, call_next) -> Response:
     if request.url.path in ["/favicon.ico"]:
         return await call_next(request)
 

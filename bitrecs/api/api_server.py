@@ -84,7 +84,7 @@ class ApiServer:
             )
         
         self.app.middleware("http")(partial(filter_allowed_ips, self))
-        self.app.middleware('http')((api_key_validator, self))
+        self.app.middleware('http')(partial(api_key_validator, self))
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
       
         self.hot_key = validator.wallet.hotkey.ss58_address
