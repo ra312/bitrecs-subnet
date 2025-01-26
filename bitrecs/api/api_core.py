@@ -19,8 +19,8 @@ limiter = Limiter(key_func=get_remote_address)
 async def filter_allowed_ips(self, request: Request, call_next) -> Response:
     try:
         if self.bypass_whitelist:
-                response = await call_next(request)
-                return response
+            response = await call_next(request)
+            return response
     
         forwarded_for = request.headers.get("x-forwarded-for")
         if not forwarded_for:
