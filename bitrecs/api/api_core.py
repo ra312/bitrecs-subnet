@@ -7,11 +7,8 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
 
-def get_forwarded_for(request: Request):
-    return request.headers.get("x-forwarded-for")
 
 limiter = Limiter(key_func=get_remote_address)
-#limiter = Limiter(key_func=get_forwarded_for)
 
 
 @limiter.limit("60/minute")
@@ -24,11 +21,7 @@ async def filter_allowed_ips(self, request: Request, call_next) -> Response:
         
         bt.logging.trace(f"Resolved to: {forwarded_for}")
 
-        if (
-            (forwarded_for not in self.allowed_ips)
-            and (request.client.host != "127.0.0.1")
-            and self.allowed_ips
-        ):
+        if self.allowed_ips and forwarded_for not in self.allowed_ips:
             bt.logging.error(f"Blocked IP: {forwarded_for}")
             return Response(
                 content="You do not have permission to access this resource",
@@ -53,28 +46,28 @@ async def filter_allowed_ips(self, request: Request, call_next) -> Response:
 
 
 
-def define_allowed_ips(self, url, netuid, min_stake):
-    while True:
-        try:
-            state = {}
-            all_allowed_ips = []
-            subtensor = bt.subtensor(url)
-            metagraph = subtensor.metagraph(netuid)
-            for uid in range(len(metagraph.total_stake)):
-                if metagraph.total_stake[uid] > min_stake:
-                    all_allowed_ips.append(metagraph.axons[uid].ip)
-                    state[uid] = {
-                        "stake": metagraph.total_stake[uid].item(),
-                        "ip": metagraph.axons[uid].ip,
-                    }
-            self.allowed_ips = all_allowed_ips
-            # sort by stake
-            state = dict(
-                sorted(state.items(), key=lambda item: item[1]["stake"], reverse=True)
-            )
-            print("Updated allowed ips", flush=True)
-            print(state)
-        except Exception as e:
-            print("Exception while updating allowed ips", str(e), flush=True)
-        time.sleep(60)
+# def define_allowed_ips(self, url, netuid, min_stake):
+#     while True:
+#         try:
+#             state = {}
+#             all_allowed_ips = []
+#             subtensor = bt.subtensor(url)
+#             metagraph = subtensor.metagraph(netuid)
+#             for uid in range(len(metagraph.total_stake)):
+#                 if metagraph.total_stake[uid] > min_stake:
+#                     all_allowed_ips.append(metagraph.axons[uid].ip)
+#                     state[uid] = {
+#                         "stake": metagraph.total_stake[uid].item(),
+#                         "ip": metagraph.axons[uid].ip,
+#                     }
+#             self.allowed_ips = all_allowed_ips
+#             # sort by stake
+#             state = dict(
+#                 sorted(state.items(), key=lambda item: item[1]["stake"], reverse=True)
+#             )
+#             print("Updated allowed ips", flush=True)
+#             print(state)
+#         except Exception as e:
+#             print("Exception while updating allowed ips", str(e), flush=True)
+#         time.sleep(60)
 
