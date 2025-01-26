@@ -81,6 +81,7 @@ def test_no_auth_error_validator_rec():
 def test_wrong_auth_error_validator():    
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
     headers = {
+        "Content-Type": "application/json",
         "Authorization": "Bearer wrong"
     }            
     response = requests.get(url, headers=headers)
@@ -91,6 +92,7 @@ def test_wrong_auth_error_validator():
 def test_good_auth_validator():    
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
     headers = {
+        "Content-Type": "application/json",
         "Authorization": f"Bearer {BITRECS_API_KEY}"
     }
     response = requests.get(url, headers=headers)
@@ -105,6 +107,7 @@ def test_good_auth_validator():
 def test_good_server_time_validator():    
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
     headers = {
+        "Content-Type": "application/json",
         "Authorization": f"Bearer {BITRECS_API_KEY}"
     }
     response = requests.get(url, headers=headers)
@@ -124,6 +127,7 @@ def test_good_server_time_validator():
 def test_version_ok_validator():    
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/version"
     headers = {
+        "Content-Type": "application/json",
         "Authorization": f"Bearer {BITRECS_API_KEY}"
     }
     response = requests.get(url, headers=headers)
@@ -142,6 +146,7 @@ def test_version_ok_validator():
 def test_rec_no_sig_is_rejected_ok():
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/rec"
     headers = {
+        "Content-Type": "application/json",
         "Authorization": f"Bearer {BITRECS_API_KEY}",
         "x-timestamp": str(int(time.time()))
     }
@@ -156,6 +161,7 @@ def test_rec_no_sig_is_rejected_ok():
 def test_rec_wrong_sig_rejected_ok():
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/rec"
     headers = {
+        "Content-Type": "application/json",
         "Authorization": f"Bearer {BITRECS_API_KEY}",
         "x-signature": "wrong",
         "x-timestamp": str(int(time.time()))

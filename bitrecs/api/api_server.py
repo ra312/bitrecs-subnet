@@ -62,6 +62,18 @@ class ApiServer:
                 }
             )
         
+        @self.app.exception_handler(HTTPException)
+        async def http_exception_handler(request: Request, exc: HTTPException):
+            bt.logging.error(f"Unhandled HTTPException: {request.url} - {str(exc)}")
+            return JSONResponse(
+                status_code=exc.status_code,
+                content={
+                    "status_code": exc.status_code,
+                    "message": exc.detail,
+                    "data": None
+                }
+            )
+        
         @self.app.exception_handler(RequestValidationError)
         async def validation_exception_handler(request: Request, exc: RequestValidationError):
             exc_str = f'{exc}'.replace('\n', ' ').replace('   ', ' ')
