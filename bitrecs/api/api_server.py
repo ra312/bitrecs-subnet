@@ -62,38 +62,38 @@ class ApiServer:
                 }
             )
         
-        @self.app.exception_handler(HTTPException)
-        async def http_exception_handler(request: Request, exc: HTTPException):
-            bt.logging.error(f"Unhandled HTTPException: {request.url} - {str(exc)}")
-            return JSONResponse(
-                status_code=exc.status_code,
-                content={
-                    "status_code": exc.status_code,
-                    "message": exc.detail,
-                    "data": None
-                }
-            )
+        # @self.app.exception_handler(HTTPException)
+        # async def http_exception_handler(request: Request, exc: HTTPException):
+        #     bt.logging.error(f"Unhandled HTTPException: {request.url} - {str(exc)}")
+        #     return JSONResponse(
+        #         status_code=exc.status_code,
+        #         content={
+        #             "status_code": exc.status_code,
+        #             "message": exc.detail,
+        #             "data": None
+        #         }
+        #     )
         
-        @self.app.exception_handler(RequestValidationError)
-        async def validation_exception_handler(request: Request, exc: RequestValidationError):
-            exc_str = f'{exc}'.replace('\n', ' ').replace('   ', ' ')
-            bt.logging.error(f"{request}: {exc_str}")
-            content = {'status_code': 10422, 'message': exc_str, 'data': None}
-            return JSONResponse(content=content, status_code=422)
+        # @self.app.exception_handler(RequestValidationError)
+        # async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        #     exc_str = f'{exc}'.replace('\n', ' ').replace('   ', ' ')
+        #     bt.logging.error(f"{request}: {exc_str}")
+        #     content = {'status_code': 10422, 'message': exc_str, 'data': None}
+        #     return JSONResponse(content=content, status_code=422)
         
         
-        @self.app.exception_handler(RateLimitExceeded)
-        async def rate_limit_exception_handler(request: Request, exc: RateLimitExceeded):
-            bt.logging.warning(f"Rate limit exceeded for {request.client.host}")
-            return JSONResponse(
-                status_code=429,
-                content={
-                    "detail": "Rate limit exceeded",
-                    "status_code": 429,
-                    "retry_after": exc.retry_after if hasattr(exc, 'retry_after') else 60
-                },
-                headers={"Retry-After": str(exc.retry_after if hasattr(exc, 'retry_after') else 60)}
-            )
+        # @self.app.exception_handler(RateLimitExceeded)
+        # async def rate_limit_exception_handler(request: Request, exc: RateLimitExceeded):
+        #     bt.logging.warning(f"Rate limit exceeded for {request.client.host}")
+        #     return JSONResponse(
+        #         status_code=429,
+        #         content={
+        #             "detail": "Rate limit exceeded",
+        #             "status_code": 429,
+        #             "retry_after": exc.retry_after if hasattr(exc, 'retry_after') else 60
+        #         },
+        #         headers={"Retry-After": str(exc.retry_after if hasattr(exc, 'retry_after') else 60)}
+        #     )
         
         self.app.middleware("http")(partial(filter_allowed_ips, self))
         self.app.middleware('http')(partial(api_key_validator, self))
