@@ -41,7 +41,7 @@ class ApiServer:
         self.validator = validator
         self.forward_fn = forward_fn
         self.allowed_ips = ["127.0.0.1", "10.0.0.1"]
-        self.bypass_whitelist = False
+        self.bypass_whitelist = True
 
         self.app = FastAPI()
         self.app.state.limiter = limiter
