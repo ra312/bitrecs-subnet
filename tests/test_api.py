@@ -303,3 +303,37 @@ def test_rate_limit_hit_version_ok():
     assert ok_requests == num_requests - failed_requests
     assert failed_requests > total_requests * 0.3
 
+
+
+def test_rate_limit_hit_rec_ok():
+
+    def do_rec():
+        url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/rec"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {BITRECS_API_KEY}",
+            "x-signature": "wrong",
+            "x-timestamp": str(int(time.time()))
+        }
+        br = get_bitrecs_dummy_request(5)
+        data = br.model_dump()
+        response = requests.post(url, headers=headers, json=data)
+        return response
+    
+    num_requests = 100
+    codes = []
+    for i in range(num_requests):
+        response = do_rec()
+        print(response.text)
+        print(response.status_code)
+        codes.append(response.status_code)
+        assert response.status_code > 400
+        #time.sleep(0.1)
+    
+    rejected = codes.count(401)    
+    rate_limited = codes.count(429)
+    rate_limited_threshold = num_requests * 0.3
+
+    assert len(codes) == num_requests
+    print(f"Rejected: {rejected}, Rate Limited: {rate_limited}")
+    assert rate_limited > rate_limited_threshold
