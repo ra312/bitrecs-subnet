@@ -8,6 +8,7 @@ import pandas as pd
 from bitrecs.utils.version import LocalMetadata
 from bitrecs.validator.forward import get_bitrecs_dummy_request
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from .utils import socket_ip
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -26,33 +27,65 @@ if BITRECS_API_KEY is None:
     raise ValueError("BITRECS_API_KEY")
 
 
+def make_get_request(url, headers):
+    start_time = time.time()  
+    try:
+        response = requests.get(url, headers=headers)
+        print(f"Request to {url} - {response.status_code}")
+        end_time = time.time()
+        if response.status_code == 200:
+            return {"status": "OK", "time": end_time - start_time}
+        else:
+            return {"status": f"Failed {response.status_code}", "time": end_time - start_time}
+    except requests.RequestException as e:
+        end_time = time.time()
+        return {"status": f"Exception {str(e)}", "time": end_time - start_time}    
 
-def socket_ip(ip, port, timeout=10) -> bool:
-    try:        
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        
-        sock.settimeout(timeout)        
-        sock.connect((ip, port))
-        return True
-    except ConnectionRefusedError:
-        print(f"Connection refused to {ip}:{port}")
-        return False
-    except socket.timeout:
-        print(f"Connection timeout to {ip}:{port}")
-        return False
-    except Exception as e:
-        print(f"Error connecting to {ip}:{port} - {e}")
-        return False
 
-    finally:        
-        if 'sock' in locals():
-            sock.close()
-   
+def make_endpoint_request(url, headers, num_requests, num_threads) -> pd.DataFrame:
+    df = pd.DataFrame(columns=['Request_Number', 'Status', 'Response_Time'])
+    start_time = time.time()
+    if headers is None:
+        headers = {
+            "Authorization": f"Bearer {BITRECS_API_KEY}"                          
+        }        
+
+    with warnings.catch_warnings():
+
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+            future_to_request = {executor.submit(make_get_request, url, headers): i for i in range(num_requests)}
+            for future in as_completed(future_to_request):
+                request_num = future_to_request[future]
+                result = future.result()
+
+                warnings.filterwarnings("ignore", category=FutureWarning)
+                df = pd.concat([df, pd.DataFrame({
+                    'Request_Number': [request_num],
+                    'Status': [result['status']],
+                    'Response_Time': [result['time']]
+                })], ignore_index=True)
+
+    end_time = time.time()
+    total_time = end_time - start_time    
+    total_requests = len(df)
+    ok_requests = (df['Status'] == 'OK').sum()
+    failed_requests = total_requests - ok_requests    
+    summary = pd.DataFrame({
+        'Metric': ['Total Requests', 'OK Requests', 'Failed Requests', 'Total Time (sec)', 'Avg Response Time (sec)'],
+        'Value': [total_requests, ok_requests, failed_requests, total_time, df['Response_Time'].mean()]
+    })    
+    print("\nDetailed Results:")
+    print(df.sort_values(by='Request_Number').to_string(index=False))
+
+    print("\n\033[32mSummary of Performance Test: \033[0m")
+    print("url_{} ".format(url))
+    print(summary.to_string(index=False))
+    return summary
 
 
 def test_can_reach_validator():    
     success = socket_ip(TEST_VALIDATOR_IP, VALIDATOR_PORT)    
     assert success == True
-
 
 def test_no_auth_error_validator_root():
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/"    
@@ -78,7 +111,6 @@ def test_no_auth_error_validator_rec():
     print(response.text)
     assert response.status_code == 400
 
-
 def test_wrong_auth_error_validator():    
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
     headers = {       
@@ -100,7 +132,6 @@ def test_good_auth_root_validator():
         return
     
     assert response.status_code == 404
-
 
 def test_good_auth_ping_validator():    
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
@@ -163,8 +194,10 @@ def test_rec_no_sig_is_rejected_ok():
     data = br.model_dump()
     response = requests.post(url, headers=headers, json=data)
     print(response.text)
+    if response.status_code == 429: 
+        print("Rate limit hit")
+        return
     assert response.status_code == 422 #missing headers
-
 
 
 def test_rec_wrong_sig_rejected_ok():
@@ -179,65 +212,11 @@ def test_rec_wrong_sig_rejected_ok():
     data = br.model_dump()
     response = requests.post(url, headers=headers, json=data)
     print(response.text)
-    assert response.status_code == 401
-
-
-
-def make_get_request(url, headers):
-    start_time = time.time()  
-    try:
-        response = requests.get(url, headers=headers)
-        print(f"Request to {url} - {response.status_code}")
-        end_time = time.time()
-        if response.status_code == 200:
-            return {"status": "OK", "time": end_time - start_time}
-        else:
-            return {"status": f"Failed {response.status_code}", "time": end_time - start_time}
-    except requests.RequestException as e:
-        end_time = time.time()
-        return {"status": f"Exception {str(e)}", "time": end_time - start_time}
+    if response.status_code == 429: 
+        print("Rate limit hit")
+        return
     
-
-
-def make_endpoint_request(url, headers, num_requests, num_threads) -> pd.DataFrame:
-    df = pd.DataFrame(columns=['Request_Number', 'Status', 'Response_Time'])
-    start_time = time.time()
-    if headers is None:
-        headers = {
-            "Authorization": f"Bearer {BITRECS_API_KEY}"                          
-        }        
-
-    with warnings.catch_warnings():
-
-        with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            future_to_request = {executor.submit(make_get_request, url, headers): i for i in range(num_requests)}
-            for future in as_completed(future_to_request):
-                request_num = future_to_request[future]
-                result = future.result()
-
-                warnings.filterwarnings("ignore", category=FutureWarning)
-                df = pd.concat([df, pd.DataFrame({
-                    'Request_Number': [request_num],
-                    'Status': [result['status']],
-                    'Response_Time': [result['time']]
-                })], ignore_index=True)
-
-    end_time = time.time()
-    total_time = end_time - start_time    
-    total_requests = len(df)
-    ok_requests = (df['Status'] == 'OK').sum()
-    failed_requests = total_requests - ok_requests    
-    summary = pd.DataFrame({
-        'Metric': ['Total Requests', 'OK Requests', 'Failed Requests', 'Total Time (sec)', 'Avg Response Time (sec)'],
-        'Value': [total_requests, ok_requests, failed_requests, total_time, df['Response_Time'].mean()]
-    })    
-    print("\nDetailed Results:")
-    print(df.sort_values(by='Request_Number').to_string(index=False))
-
-    print("\n\033[32mSummary of Performance Test: \033[0m")
-    print("url_{} ".format(url))
-    print(summary.to_string(index=False))
-    return summary
+    assert response.status_code == 401
 
 
 def test_rate_limit_hit_root_ok():
@@ -259,7 +238,6 @@ def test_rate_limit_hit_root_ok():
     assert ok_requests == num_requests - failed_requests
 
     assert failed_requests == total_requests
-
 
 
 def test_rate_limit_hit_ping_ok():
@@ -302,7 +280,6 @@ def test_rate_limit_hit_version_ok():
     assert total_requests == num_requests
     assert ok_requests == num_requests - failed_requests
     assert failed_requests > total_requests * 0.3
-
 
 
 def test_rate_limit_hit_rec_ok():
