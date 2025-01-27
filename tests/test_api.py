@@ -26,6 +26,7 @@ if BITRECS_API_KEY is None:
     raise ValueError("BITRECS_API_KEY")
 
 
+
 def socket_ip(ip, port, timeout=10) -> bool:
     try:        
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        
@@ -87,8 +88,21 @@ def test_wrong_auth_error_validator():
     print(response.text)
     assert response.status_code == 401
 
+def test_good_auth_root_validator():    
+    url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/"
+    headers = {        
+        "Authorization": f"Bearer {BITRECS_API_KEY}"
+    }
+    response = requests.get(url, headers=headers)
+    print(response.text)
+    if response.status_code == 429:
+        print("Rate limit hit")
+        return
+    
+    assert response.status_code == 404
 
-def test_good_auth_validator():    
+
+def test_good_auth_ping_validator():    
     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
     headers = {        
         "Authorization": f"Bearer {BITRECS_API_KEY}"
@@ -220,7 +234,7 @@ def make_endpoint_request(url, headers, num_requests, num_threads) -> pd.DataFra
     print("\nDetailed Results:")
     print(df.sort_values(by='Request_Number').to_string(index=False))
 
-    print("\nSummary of Performance Test:")
+    print("\n\033[32mSummary of Performance Test: \033[0m")
     print("url_{} ".format(url))
     print(summary.to_string(index=False))
     return summary
@@ -235,14 +249,16 @@ def test_rate_limit_hit_root_ok():
     num_requests = 100
     num_threads = 2
 
+    print(f"\033[33m{num_requests} requests using {num_threads} threads to {url} \033[0m")
     results = make_endpoint_request(url, headers, num_requests, num_threads)
     print(results.head())
     total_requests = results['Value'][0]
     ok_requests = results['Value'][1]
     failed_requests = results['Value'][2]
-
     assert total_requests == num_requests
     assert ok_requests == num_requests - failed_requests
+
+    assert failed_requests == total_requests
 
 
 
@@ -255,6 +271,7 @@ def test_rate_limit_hit_ping_ok():
     num_requests = 100
     num_threads = 2
 
+    print(f"\033[33m{num_requests} requests using {num_threads} threads to {url} \033[0m")
     results = make_endpoint_request(url, headers, num_requests, num_threads)
     print(results.head())
     total_requests = results['Value'][0]
@@ -263,5 +280,26 @@ def test_rate_limit_hit_ping_ok():
 
     assert total_requests == num_requests
     assert ok_requests == num_requests - failed_requests
+    assert failed_requests > total_requests * 0.3
 
    
+def test_rate_limit_hit_version_ok():
+    url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/version"
+    headers = {
+        "Authorization": f"Bearer {BITRECS_API_KEY}"        
+    }
+
+    num_requests = 100
+    num_threads = 2
+
+    print(f"\033[33m{num_requests} requests using {num_threads} threads to {url} \033[0m")
+    results = make_endpoint_request(url, headers, num_requests, num_threads)
+    print(results.head())
+    total_requests = results['Value'][0]
+    ok_requests = results['Value'][1]
+    failed_requests = results['Value'][2]
+
+    assert total_requests == num_requests
+    assert ok_requests == num_requests - failed_requests
+    assert failed_requests > total_requests * 0.3
+
