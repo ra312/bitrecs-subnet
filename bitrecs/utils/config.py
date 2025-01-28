@@ -109,26 +109,26 @@ def add_args(cls, parser):
         default=False,
     )
 
-    parser.add_argument(
-        "--wandb.off",
-        action="store_true",
-        help="Turn off wandb.",
-        default=False,
-    )
+    # parser.add_argument(
+    #     "--wandb.off",
+    #     action="store_true",
+    #     help="Turn off wandb.",
+    #     default=False,
+    # )
 
-    parser.add_argument(
-        "--wandb.offline",
-        action="store_true",
-        help="Runs wandb in offline mode.",
-        default=False,
-    )
+    # parser.add_argument(
+    #     "--wandb.offline",
+    #     action="store_true",
+    #     help="Runs wandb in offline mode.",
+    #     default=False,
+    # )
 
-    parser.add_argument(
-        "--wandb.notes",
-        type=str,
-        help="Notes to add to the wandb run.",
-        default="",
-    )
+    # parser.add_argument(
+    #     "--wandb.notes",
+    #     type=str,
+    #     help="Notes to add to the wandb run.",
+    #     default="",
+    # )
 
 
 
