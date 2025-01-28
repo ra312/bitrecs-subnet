@@ -69,20 +69,6 @@ def best_uid(metagraph: bt.metagraph) -> int:
     return max(range(metagraph.n), key=lambda uid: metagraph.I[uid].item())
 
 
-def get_axons(
-    self,
-    *hotkeys,
-    not_check_self: bool = False,
-    include_hotkeys: bool = False,
-):
-    result = [
-        self.metagraph.axons[uid]
-        for uid in range(self.metagraph.n.item())
-        if (not_check_self or uid != self.uid)
-        and (include_hotkeys or self.metagraph.axons[uid].hotkey in hotkeys)
-    ]
-    return result
-
 
 def ping_uid(self, uid, timeout=5) -> bool:
     """

@@ -32,6 +32,7 @@ from bitrecs.utils import constants as CONST
 
 BASE_BOOST = 1/256
 BASE_REWARD = 0.80
+MAX_BOOST = 0.20
 ALPHA_TIME_DECAY = 0.05
 
 ACTION_WEIGHTS = {
@@ -49,8 +50,9 @@ def does_sku_exist(sku: str, store_catalog: List[Product]) -> bool:
         return False
     if len(store_catalog) == 0:
         return False
+    match = sku.lower().strip()
     for product in store_catalog:
-        if product["sku"].lower().strip() == sku.lower().strip():
+        if product["sku"].lower().strip() == match:
             return True
     return False
    
@@ -128,12 +130,11 @@ def calculate_miner_boost(hotkey: str, actions: List[UserAction]) -> float:
         if total_boost == 0:
             return 0.0
         
-        #TODO review this 
-        MAX_BOOST = 0.20
+        #TODO review this       
         if total_boost > BASE_BOOST:
             total_boost = MAX_BOOST / (1 + math.exp(-total_boost + BASE_BOOST))
         
-        return min(max(total_boost, 0.0), MAX_BOOST)    
+        return min(max(total_boost, 0.0), MAX_BOOST)
     except Exception as e:
         bt.logging.error(f"Error in calculate_miner_boost: {e}")
         traceback.print_exc()
@@ -206,7 +207,7 @@ def reward(
         headers = response.to_headers()
         if "bt_header_dendrite_process_time" in headers:
             dendrite_time = headers["bt_header_dendrite_process_time"] #0.000132  1.2            
-            bt.logging.trace(f"REWARD dendrite_time: {dendrite_time}")
+            bt.logging.trace(f"\033[1;32mREWARD dendrite_time: {dendrite_time} \033[0m")
             score = score - ALPHA_TIME_DECAY * float(dendrite_time)
         else:
             bt.logging.error(f"Error in reward: dendrite_time not found in headers")

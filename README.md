@@ -12,7 +12,7 @@
 </div>
 
 ## Introduction
-Bitrecs is a novel recommendation engine</a> built on the Bittensor network. Our implementation provides a framework for serving realtime e-commerce recommendations using LLMs. Miners are encouraged to experiment with their own implementations to improve latency and quality.
+Bitrecs is a novel recommendation engine</a> built on the Bittensor network. This implementation provides a framework for serving realtime e-commerce recommendations using LLMs. Miners are encouraged to experiment with their own implementations to improve latency and quality.
 
 ## Goal
 **Maximize sales for online retailers (merchants)**
@@ -36,21 +36,21 @@ We are addressing a more narrow but vital area of e-commerce - [onsite product r
 
 Tap the intelligence of Bittensor to generate realtime product recommendations for online merchants. 
 
-Our first generation solution uses prompting and ICL via a Mixture of Experts to coerce recs from the latest LLMs. With a rapidly declining cost per token, we believe LLM's are well suited for this task as they excel at cold-start, zero/few shot learning
+The first generation solution uses prompting and ICL via a Mixture of Experts to coerce recs from the latest LLMs. With a rapidly declining cost per token, we believe LLM's are well suited for this task as they excel at cold-start, zero/few shot learning
 
 <img src="docs/bitrecs_moe.png" alt="basic query" style="border: solid 3px #059669;"/>
 
-V1 uses a simple prompt template but we expect it to evolve rapidly as miners are onboarded. 
+V1 uses a simple prompt template but should evolve rapidly as miners are onboarded. 
 Additionally, many LLM's have encoded valuable information about shopping cohorts, seasonality, brand affinities, customer journeys etc which we try to unlock using prompting.  
 
-The solution has been designed to offer merchants a free and simple plugin that works out of the box, while hiding all the complexity and abstractions of Bittensor away from them so they can continue to focus on selling and running an online business. Subnet miners can focus on competing and evolving the prompting science to produce increasingly valuable and timely product recommendations.
+The solution has been designed to offer merchants a free and simple plugin that works out of the box, while hiding all the complexity and abstractions of Bittensor away from them so they can continue to focus on selling and running an online business. Subnet miners can focus on competing and evolving the prompting to produce increasingly valuable and timely product recommendations.
 
 Validators provide the gateway to the miners, which send and collect requests through the network, scoring them and selecting a top candidate to return to the client. 
 
 ## Product
 The subnet operates through an incentive mechanism where miners produce arrays of product SKUs from a given input SKUs, a catalog of store inventory and prompting. The protocol enables:
 
-- Easy integration for e-commerce shop owners through our plugins
+- Simple integration for e-commerce merchants through our plugins
 - Base miner class with support for several popular LLM model providers
 - Validator API proxy for marshalling requests between e-commerce sites and the bittensor network
 
@@ -75,7 +75,9 @@ As we evolve this network we get closer to **1-to-1 marketing** which is viewed 
 
 Smaller retailers need access to this technology to remain competitive, and our solution is built to work with existing onsite catalogs (we never recommend 3rd party products or divert traffic to other sites - this is critical to winning merchants trust)
 
-Merchants put enormous time and $ into their online stores, constantly updating and polishing them to make them convert higher.  What better place to showcase Bittensor technology then directly on these sites, where the valuable intelligence of the network gets consumed in a real-world scenario? Customers are happy to get better overall recommendations, merchants win with higher sales and conversions and Bittensor benefits from having a subnet that can generate measurable value for thousands of independent merchants.
+Merchants put enormous time and $ into their online stores, constantly updating and polishing them to make them convert higher. These are fantastic websites to showcase Bittensor technology as they generally are very well designed, work across many devices, are fast and are often being updated with new products/services.
+
+We hope to achieve a state where customers happy to get better overall recommendations, merchants win with higher sales and conversions and miners/validators are rewarded for best effort on every request.
 
 ## Privacy
 

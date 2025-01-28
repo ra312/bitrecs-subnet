@@ -26,7 +26,7 @@ import bittensor as bt
 import time
 import traceback
 import anyio.to_thread
-
+import wandb
 from datetime import datetime, timedelta
 from typing import List, Union, Optional
 from traceback import print_exception
@@ -108,10 +108,7 @@ class BaseValidatorNeuron(BaseNeuron):
         add_validator_args(cls, parser)
 
     def __init__(self, config=None):
-        super().__init__(config=config)      
-
-        if not os.environ.get("BITRECS_PROXY_URL"):
-            raise Exception("Please set the BITRECS_PROXY_URL environment variable.")
+        super().__init__(config=config)
 
         # Save a copy of the hotkeys to local memory.
         self.hotkeys = copy.deepcopy(self.metagraph.hotkeys)      
@@ -139,13 +136,13 @@ class BaseValidatorNeuron(BaseNeuron):
             # external requests
             api_server = ApiServer(
                 axon_port=self.config.axon.port,
-                forward_fn=api_forward,
-                api_json=self.config.api_json,
+                forward_fn=api_forward,                
+                validator=self
             )
             api_server.start()            
             bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: {api_server.fast_server.config.host} on Axon: {api_server.fast_server.config.port} \033[0m")
         else:            
-            bt.logging.info(f"\033[1;31m No API Endpoint \033[0m")
+            bt.logging.error(f"\033[1;31m No API Endpoint \033[0m")
 
         # Instantiate runners
         self.should_exit: bool = False
@@ -153,18 +150,37 @@ class BaseValidatorNeuron(BaseNeuron):
         self.thread: Union[threading.Thread, None] = None
         self.lock = asyncio.Lock()
         self.active_miners: List[int] = []
+        self.network = os.environ.get("NETWORK").strip().lower() #localnet / testnet / mainnet
+        if not self.network:
+            raise Exception("NETWORK environment variable not set")
+
+        if not os.environ.get("BITRECS_PROXY_URL"):
+            raise Exception("Please set the BITRECS_PROXY_URL environment variable.")
         self.user_actions: List[UserAction] = []
         self.loop.run_until_complete(self.action_sync())
         if len(self.user_actions) == 0:
-            bt.logging.error("No user actions found - check bitrecs api")
-
-        # Initialize the wandb client
-        if 1==2:
-            self.wandb = WandbHelper(
-                project_name=self.config.wandb.project_name,
-                entity=self.config.wandb.entity,
-            )       
-
+            bt.logging.error("No user actions found - check bitrecs api")            
+        
+        if self.config.wandb.enabled == True: 
+            wandb_project = f"bitrecs_{self.network}"
+            wandb_entity = self.config.wandb.entity
+            if len(wandb_project) == 0 or len(wandb_entity) == 0:
+                bt.logging.error("Wandb project name not set")
+                raise Exception("Wandb project name not set")
+            else:
+                wandb_config = {
+                    "network": self.network,
+                    "neuron_type": self.neuron_type,
+                    "sample_size": self.config.neuron.sample_size,
+                    "num_concurrent_forwards": 1,
+                    "vpermit_tao_limit": self.config.neuron.vpermit_tao_limit,
+                    "run_name": f"validator_{wandb.util.generate_id()}"
+                }
+                self.wandb = WandbHelper(
+                    project_name=wandb_project,
+                    entity=wandb_entity,
+                    config=wandb_config
+                )
 
 
     def serve_axon(self):
@@ -226,7 +242,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 ip = self.metagraph.axons[uid].ip              
                 if ping_uid(self, uid, 3):
                     bt.logging.trace(f"\033[1;32m ping: {ip}:OK \033[0m")
-                    selected_miners.append(int(uid))
+                    selected_miners.append(uid)
             except Exception as e:
                 bt.logging.error(f"ping failed with exception: {e}")
                 continue
@@ -303,8 +319,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         chosen_uids : list[int] = self.active_miners or []
                         if len(chosen_uids) == 0:
                             available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-                            chosen_uids : list[int] = available_uids.tolist()
-                            chosen_uids.append(1) #add local miner for now #TODO remove
+                            chosen_uids : list[int] = available_uids.tolist()                            
                             chosen_uids = list(set(chosen_uids))
                         if len(chosen_uids) == 0:
                             bt.logging.error("No active miners, skipping - check your connectivity")
@@ -533,7 +548,8 @@ class BaseValidatorNeuron(BaseNeuron):
 
             # Log weights to wandb before chain update
             weights_dict = {str(uid): float(weight) for uid, weight in zip(uint_uids, uint_weights)}
-            self.wandb.log_weights(self.step, weights_dict)
+            if self.config.wandb.enabled:
+                self.wandb.log_weights(self.step, weights_dict)
 
         except Exception as e:
             bt.logging.error(f"convert_weights_and_uids_for_emit function error: {e}")
@@ -552,10 +568,12 @@ class BaseValidatorNeuron(BaseNeuron):
             )
             if result is True:
                 bt.logging.info(f"set_weights on chain successfully! msg: {msg}")
-                self.wandb.log_metrics({"weight_update_success": 1})
+                if self.wandb:
+                    self.wandb.log_metrics({"weight_update_success": 1})
             else:
                 bt.logging.error(f"set_weights on chain failed {msg}")
-                self.wandb.log_metrics({"weight_update_success": 0})
+                if self.wandb:
+                    self.wandb.log_metrics({"weight_update_success": 0})
         except Exception as e:
             bt.logging.error(f"set_weights failed with exception: {e}")
 
@@ -641,28 +659,20 @@ class BaseValidatorNeuron(BaseNeuron):
         )
         bt.logging.debug(f"Updated moving avg scores: {self.scores}")
 
-    def save_state(self):
-        """Saves the state of the validator to a file."""
-        # logger.info("Saving validator state start.")
-        #
-        # # Save the state of the validator to file.
-        # np.savez(self.config.neuron.full_path + "/state.npz",
-        #          step=self.step,
-        #          scores=self.scores,
-        #          hotkeys=self.hotkeys)
-        # logger.info("Saving validator state end.")
+    def save_state(self):                
+        np.savez(self.config.neuron.full_path + "/state.npz",
+                 step=self.step,
+                 scores=self.scores,
+                 hotkeys=self.hotkeys)        
+        bt.logging.info("Saving validator state.")
         write_timestamp(time.time())
 
 
-    def load_state(self):
-        """Loads the state of the validator from a file."""
-        # logger.info("Loading validator state.")
-        #
-        # # Load the state of the validator from file.
-        # state = np.load(self.config.neuron.full_path + "/state.npz")
-        # self.step = state["step"]
-        # self.scores = state["scores"]
-        # self.hotkeys = state["hotkeys"]
+    def load_state(self):        
+        state = np.load(self.config.neuron.full_path + "/state.npz")
+        self.step = state["step"]
+        self.scores = state["scores"]
+        self.hotkeys = state["hotkeys"]
            
         ts = read_timestamp()
         if not ts:

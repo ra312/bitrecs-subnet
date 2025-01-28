@@ -110,25 +110,25 @@ def add_args(cls, parser):
     )
 
     parser.add_argument(
-        "--wandb.off",
+        "--wandb.enabled",
         action="store_true",
-        help="Turn off wandb.",
+        help="Turn on/off wandb.",
         default=False,
     )
 
-    parser.add_argument(
-        "--wandb.offline",
-        action="store_true",
-        help="Runs wandb in offline mode.",
-        default=False,
-    )
+    # parser.add_argument(
+    #     "--wandb.offline",
+    #     action="store_true",
+    #     help="Runs wandb in offline mode.",
+    #     default=False,
+    # )
 
-    parser.add_argument(
-        "--wandb.notes",
-        type=str,
-        help="Notes to add to the wandb run.",
-        default="",
-    )
+    # parser.add_argument(
+    #     "--wandb.notes",
+    #     type=str,
+    #     help="Notes to add to the wandb run.",
+    #     default="",
+    # )
 
 
 
@@ -155,21 +155,7 @@ def add_miner_args(cls, parser):
         action="store_true",
         help="If set, miners will accept queries from non registered entities. (Dangerous!)",
         default=False,
-    )
-
-    parser.add_argument(
-        "--wandb.project_name",
-        type=str,
-        default="template-miners-testnet",
-        help="Wandb project to log to.",
-    )
-
-    parser.add_argument(
-        "--wandb.entity",
-        type=str,
-        default="bitrecs",
-        help="Wandb entity to log to.",
-    )
+    )  
 
     parser.add_argument(
         "--llm.provider",
@@ -184,7 +170,6 @@ def add_miner_args(cls, parser):
         default=None,
         help="Which LLM model to use",
     )
-
 
 
 
@@ -254,7 +239,7 @@ def add_validator_args(cls, parser):
         "--wandb.project_name",
         type=str,
         help="The name of the project where you are sending the new run.",
-        default="template-validator-testnet",
+        default="",
     )
 
     parser.add_argument(
