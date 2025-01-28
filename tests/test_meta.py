@@ -48,6 +48,8 @@ def test_version_returns_ok():
     assert isinstance(v, str)   
     assert len(v) > 0
     print(f"Version: {v}")
+    assert v == this_version
+    assert v == "0.7.0"
 
 
 def test_version_spec_returns_ok():
@@ -55,3 +57,4 @@ def test_version_spec_returns_ok():
     assert isinstance(s, str)   
     assert len(s) > 0
     print(f"Spec: {s}")
+    
