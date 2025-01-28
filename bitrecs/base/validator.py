@@ -156,15 +156,17 @@ class BaseValidatorNeuron(BaseNeuron):
         self.user_actions: List[UserAction] = []
         self.loop.run_until_complete(self.action_sync())
         if len(self.user_actions) == 0:
-            bt.logging.error("No user actions found - check bitrecs api")
-
-        # Initialize the wandb client
-        if 1==2:
+            bt.logging.error("No user actions found - check bitrecs api")            
+    
+        if self.config.wandb.project_name and self.config.wandb.entity:
+            self.use_wandb = True
             self.wandb = WandbHelper(
                 project_name=self.config.wandb.project_name,
                 entity=self.config.wandb.entity,
-            )       
-
+                config={"neuron_type": self.config.neuron.name}
+            )
+        else:
+            self.use_wandb = False
 
 
     def serve_axon(self):
