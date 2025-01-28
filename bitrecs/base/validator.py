@@ -162,7 +162,7 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.error("No user actions found - check bitrecs api")            
         
         if self.config.wandb.enabled == True: 
-            wandb_project = self.config.wandb.project_name
+            wandb_project = "bitrecs_{}".self.network
             wandb_entity = self.config.wandb.entity          
             if len(wandb_project) == 0 or len(wandb_entity) == 0:
                 bt.logging.error("Wandb project name not set")
