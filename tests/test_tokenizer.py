@@ -106,8 +106,7 @@ def test_get_token_count_random1k_prompt():
 
     tc2 = PromptFactory.get_token_count(prompt, encoding_name="cl100k_base")
     print(f"token count cl100k_base: {tc2}")
-
-    #assert wc == 59
+    
     assert wc > 20_00
     assert tc > 50_000
     assert tc2 > 50_000
@@ -145,9 +144,47 @@ def test_get_token_count_random5k_prompt():
 
     tc2 = PromptFactory.get_token_count(prompt, encoding_name="cl100k_base")
     print(f"token count cl100k_base: {tc2}")
-
-    #assert wc == 59
+    
     assert wc > 100_00
     assert tc > 200_000
     assert tc2 > 200_000
+
+
+
+def test_get_token_count_random20k_prompt():
+    raw_products = product_20k()
+    products = ProductFactory.dedupe(raw_products)
+    print(f"after de-dupe: {len(products)} records")
+
+    rp = safe_random.choice(products)
+    user_prompt = rp.sku
+    num_recs = safe_random.choice([1, 5, 9, 10, 11, 16, 20])    
+    debug_prompts = False
+
+    match = [p for p in products if p.sku == user_prompt][0]
+    print(match)
+
+    context = json.dumps([asdict(products) for products in products])
+    factory = PromptFactory(sku=user_prompt,
+                            context=context,
+                            num_recs=num_recs,
+                            load_catalog=False,
+                            debug=debug_prompts)
+
+
+    prompt = factory.generate_prompt()
+    #print(prompt)
+
+    wc = PromptFactory.get_word_count(prompt)
+    print(f"word count: {wc}")
+
+    tc = PromptFactory.get_token_count(prompt)
+    print(f"token count o200k_base: {tc}")
+
+    tc2 = PromptFactory.get_token_count(prompt, encoding_name="cl100k_base")
+    print(f"token count cl100k_base: {tc2}")
+    
+    assert wc > 300_00
+    assert tc > 790_000
+    assert tc2 > 800_000
 

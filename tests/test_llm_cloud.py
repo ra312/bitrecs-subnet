@@ -391,15 +391,6 @@ def test_call_multiple_open_router_1k_amazon_random():
     #print(prompt)
     print(f"prompt length: {len(prompt)}")
 
-    """
-       16) assert each recommendation is unique ('sku' is the key).
-       17) assert len(recommendations) == {}. If not, start over until assert is true.
-       18) Return JSON.
-       19) 
-    """
-
-    #prompt += "\n19) Never return the query in the results."
-
     print("********** LOOPING PROVIDERS ")
     
     providers = [p for p in map if p["provider"] == LLM.OPEN_ROUTER]
