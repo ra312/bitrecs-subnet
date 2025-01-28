@@ -177,8 +177,8 @@ class BaseValidatorNeuron(BaseNeuron):
                     "run_name": f"validator_{wandb.util.generate_id()}"
                 }
                 self.wandb = WandbHelper(
-                    project_name=self.config.wandb.project_name,
-                    entity=self.config.wandb.entity,
+                    project_name=wandb_project,
+                    entity=wandb_entity,
                     config=wandb_config
                 )
 
