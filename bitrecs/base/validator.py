@@ -659,28 +659,20 @@ class BaseValidatorNeuron(BaseNeuron):
         )
         bt.logging.debug(f"Updated moving avg scores: {self.scores}")
 
-    def save_state(self):
-        """Saves the state of the validator to a file."""
-        # logger.info("Saving validator state start.")
-        #
-        # # Save the state of the validator to file.
-        # np.savez(self.config.neuron.full_path + "/state.npz",
-        #          step=self.step,
-        #          scores=self.scores,
-        #          hotkeys=self.hotkeys)
-        # logger.info("Saving validator state end.")
+    def save_state(self):                
+        np.savez(self.config.neuron.full_path + "/state.npz",
+                 step=self.step,
+                 scores=self.scores,
+                 hotkeys=self.hotkeys)        
+        bt.logging.info("Saving validator state.")
         write_timestamp(time.time())
 
 
-    def load_state(self):
-        """Loads the state of the validator from a file."""
-        # logger.info("Loading validator state.")
-        #
-        # # Load the state of the validator from file.
-        # state = np.load(self.config.neuron.full_path + "/state.npz")
-        # self.step = state["step"]
-        # self.scores = state["scores"]
-        # self.hotkeys = state["hotkeys"]
+    def load_state(self):        
+        state = np.load(self.config.neuron.full_path + "/state.npz")
+        self.step = state["step"]
+        self.scores = state["scores"]
+        self.hotkeys = state["hotkeys"]
            
         ts = read_timestamp()
         if not ts:
