@@ -35,10 +35,7 @@ from bitrecs.utils.uids import best_uid
 from bitrecs.utils.gpu import GPUInfo
 from bitrecs.utils.version import LocalMetadata
 from bitrecs.utils import constants as CONST
-
 from dotenv import load_dotenv
-
-from bitrecs.utils.wandb import WandbHelper
 load_dotenv()
 
 
@@ -152,19 +149,8 @@ class Miner(BaseMinerNeuron):
         self.total_request_in_interval = 0
         
         if(self.config.logging.trace):
-            bt.logging.trace(f"TRACE ENABLED Miner {self.uid} - {self.llm_provider} - {self.model}")            
-        
-        
-        if self.config.wandb.project_name and self.config.wandb.entity:
-            self.use_wandb = True
-            self.wandb = WandbHelper(
-                project_name=self.config.wandb.project_name,
-                entity=self.config.wandb.entity,
-                config={"neuron_type": self.config.neuron.name}
-            )
-        else:
-            self.use_wandb = False
-
+            bt.logging.trace(f"TRACE ENABLED Miner {self.uid} - {self.llm_provider} - {self.model}")
+    
 
     async def forward(
         self, synapse: BitrecsRequest

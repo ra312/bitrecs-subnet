@@ -1,11 +1,12 @@
 import wandb
+import bittensor as bt
 from typing import Dict, Any, Optional
 
 class WandbHelper:
     def __init__(
         self,
-        project_name: str = "template-validator-testnet",
-        entity: str = "bitrecs",
+        project_name: str,
+        entity: str,
         config: Optional[Dict[str, Any]] = None,
         tags: Optional[list] = None
     ):
@@ -23,28 +24,40 @@ class WandbHelper:
         
         if config:
             self.default_config.update(config)
-            
-        self.run = wandb.init(
-            project=project_name,
-            entity=entity,
-            config=self.default_config,
-            tags=tags,
-            reinit=True
-        )
+
+        try:
+            self.run = wandb.init(
+                project=project_name,
+                entity=entity,
+                config=self.default_config,
+                tags=tags,
+                reinit=True
+            )
+        except Exception as e:
+            bt.logging.error(f"Error initializing wandb: {e}")
+            self.run = None
         
     def log_weights(self, step: int, weights: Dict[str, float], prefix: str = "weights"):
         """
         Log weight updates to wandb
         """
-        metrics = {f"{prefix}/{k}": v for k, v in weights.items()}
-        metrics["step"] = step
-        wandb.log(metrics)
+        try:
+
+            metrics = {f"{prefix}/{k}": v for k, v in weights.items()}
+            metrics["step"] = step
+            wandb.log(metrics)
+        except Exception as e:
+            bt.logging.error(f"Error logging weights to wandb: {e}")
+
     
     def log_metrics(self, metrics: Dict[str, float]):
         """
         Log arbitrary metrics to wandb
         """
-        wandb.log(metrics)
+        try:
+            wandb.log(metrics)
+        except Exception as e:
+            bt.logging.error(f"Error logging metrics to wandb: {e}")
     
     def finish(self):
         """

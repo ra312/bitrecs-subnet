@@ -26,7 +26,7 @@ import bittensor as bt
 import time
 import traceback
 import anyio.to_thread
-
+import wandb
 from datetime import datetime, timedelta
 from typing import List, Union, Optional
 from traceback import print_exception
@@ -150,6 +150,9 @@ class BaseValidatorNeuron(BaseNeuron):
         self.thread: Union[threading.Thread, None] = None
         self.lock = asyncio.Lock()
         self.active_miners: List[int] = []
+        self.network = os.environ.get("NETWORK").strip().lower() #localnet / testnet / mainnet
+        if not self.network:
+            raise Exception("NETWORK environment variable not set")
 
         if not os.environ.get("BITRECS_PROXY_URL"):
             raise Exception("Please set the BITRECS_PROXY_URL environment variable.")
@@ -157,16 +160,27 @@ class BaseValidatorNeuron(BaseNeuron):
         self.loop.run_until_complete(self.action_sync())
         if len(self.user_actions) == 0:
             bt.logging.error("No user actions found - check bitrecs api")            
-    
-        if self.config.wandb.project_name and self.config.wandb.entity:
-            self.use_wandb = True
-            self.wandb = WandbHelper(
-                project_name=self.config.wandb.project_name,
-                entity=self.config.wandb.entity,
-                config={"neuron_type": self.config.neuron.name}
-            )
-        else:
-            self.use_wandb = False
+        
+        if self.config.wandb.enabled == True: 
+            wandb_project = self.config.wandb.project_name
+            wandb_entity = self.config.wandb.entity          
+            if len(wandb_project) == 0 or len(wandb_entity) == 0:
+                bt.logging.error("Wandb project name not set")
+                raise Exception("Wandb project name not set")
+            else:
+                wandb_config = {
+                    "network": self.network,
+                    "neuron_type": self.neuron_type,
+                    "sample_size": self.config.neuron.sample_size,
+                    "num_concurrent_forwards": 1,
+                    "vpermit_tao_limit": self.config.neuron.vpermit_tao_limit,
+                    "run_name": f"validator_{wandb.util.generate_id()}"
+                }
+                self.wandb = WandbHelper(
+                    project_name=self.config.wandb.project_name,
+                    entity=self.config.wandb.entity,
+                    config=wandb_config
+                )
 
 
     def serve_axon(self):
@@ -534,7 +548,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
             # Log weights to wandb before chain update
             weights_dict = {str(uid): float(weight) for uid, weight in zip(uint_uids, uint_weights)}
-            if self.wandb:
+            if self.config.wandb.enabled:
                 self.wandb.log_weights(self.step, weights_dict)
 
         except Exception as e:
