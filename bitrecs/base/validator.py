@@ -219,13 +219,15 @@ class BaseValidatorNeuron(BaseNeuron):
             Checks the miners in the metagraph for connectivity and updates the active miners list.
         """
         bt.logging.trace(f"\033[1;32m Validator miner_sync ran at {int(time.time())}. \033[0m")
+        bt.logging.trace(f"vpermit_tao_limit limit: {self.config.neuron.vpermit_tao_limit} ")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
-        available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-        bt.logging.trace(f"available_uids: {available_uids}")
+        excluded = [self.uid]
+        available_uids = get_random_uids(self, k=self.config.neuron.sample_size, excluded=excluded)
+        bt.logging.trace(f"get_random_uids: {available_uids}")
         chosen_uids : list[int] = available_uids.tolist()
         bt.logging.trace(f"chosen_uids: {chosen_uids}")
         if len(chosen_uids) == 0:
-            bt.logging.error("No neurons in metagraph - check your connectivity")
+            bt.logging.error("\033[1;31mNo neurons in metagraph - check your connectivity \033[0m")
             return
         
         chosen_uids = list(set(chosen_uids))
@@ -236,9 +238,9 @@ class BaseValidatorNeuron(BaseNeuron):
                 continue
             if not self.metagraph.axons[uid].is_serving:                
                 continue            
-            if self.metagraph.S[uid] == 0:
-                bt.logging.trace(f"uid: {uid} stake 0T, skipping")
-                continue
+            # if self.metagraph.S[uid] == 0:
+            #     bt.logging.trace(f"uid: {uid} stake 0T, skipping")
+            #     continue
             if self.metagraph.S[uid] > self.config.neuron.vpermit_tao_limit:
                 bt.logging.trace(f"uid: {uid} stake > {self.config.neuron.vpermit_tao_limit}T, skipping")
                 continue
@@ -253,7 +255,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 continue
         if len(selected_miners) == 0:
             self.active_miners = []
-            bt.logging.error("No active miners selected in round - check your connectivity")
+            bt.logging.error("\033[31mNo active miners selected in round - check your connectivity \033[0m")
             return
         
         self.active_miners = list(set(selected_miners))
@@ -322,13 +324,13 @@ class BaseValidatorNeuron(BaseNeuron):
                             synapse_with_event.event.set()
                             continue
                         
-                        chosen_uids : list[int] = self.active_miners or []
+                        chosen_uids : list[int] = self.active_miners
+                        # if len(chosen_uids) == 0:
+                        #     available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
+                        #     chosen_uids : list[int] = available_uids.tolist()                            
+                        #     chosen_uids = list(set(chosen_uids))
                         if len(chosen_uids) == 0:
-                            available_uids = get_random_uids(self, k=self.config.neuron.sample_size)
-                            chosen_uids : list[int] = available_uids.tolist()                            
-                            chosen_uids = list(set(chosen_uids))
-                        if len(chosen_uids) == 0:
-                            bt.logging.error("No active miners, skipping - check your connectivity")
+                            bt.logging.error("\033[31m API Request- No active miners, skipping - check your connectivity \033[0m")
                             synapse_with_event.event.set()
                             continue
                         bt.logging.trace(f"chosen_uids: {chosen_uids}")
