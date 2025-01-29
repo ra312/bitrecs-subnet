@@ -133,9 +133,10 @@ class BaseValidatorNeuron(BaseNeuron):
         # Create asyncio event loop to manage async tasks.
         self.loop = asyncio.get_event_loop()
         api_port = int(os.environ.get("VALIDATOR_API_PORT"))
-        assert api_port == 7779
+        if api_port != 7779:
+            raise Exception("API Port must be set to 7779")
+        
         self.api_port = api_port
-
         if self.config.api.enabled:
             # external requests
             api_server = ApiServer(
