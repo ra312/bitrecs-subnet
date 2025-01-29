@@ -222,7 +222,7 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.trace(f"vpermit_tao_limit limit: {self.config.neuron.vpermit_tao_limit} ")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
         excluded = [self.uid]
-        available_uids = get_random_uids(self, k=self.config.neuron.sample_size, excluded=excluded)
+        available_uids = get_random_uids(self, k=self.config.neuron.sample_size, exclude=excluded)
         bt.logging.trace(f"get_random_uids: {available_uids}")
         chosen_uids : list[int] = available_uids.tolist()
         bt.logging.trace(f"chosen_uids: {chosen_uids}")
