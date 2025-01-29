@@ -225,16 +225,17 @@ class BaseValidatorNeuron(BaseNeuron):
         chosen_uids : list[int] = available_uids.tolist()
         bt.logging.trace(f"chosen_uids: {chosen_uids}")
         if len(chosen_uids) == 0:
-            bt.logging.error("No active miners, skipping - check your connectivity")
+            bt.logging.error("No neurons in metagraph - check your connectivity")
             return
         
         chosen_uids = list(set(chosen_uids))
         selected_miners = []
         for uid in chosen_uids:
+            bt.logging.trace(f"Checking uid: {uid} with stake {self.metagraph.S[uid]} and trust {self.metagraph.T[uid]}")
             if uid == self.uid:
                 continue
             if not self.metagraph.axons[uid].is_serving:                
-                continue
+                continue            
             if self.metagraph.S[uid] == 0:
                 bt.logging.trace(f"uid: {uid} stake 0T, skipping")
                 continue
@@ -251,7 +252,8 @@ class BaseValidatorNeuron(BaseNeuron):
                 bt.logging.error(f"ping failed with exception: {e}")
                 continue
         if len(selected_miners) == 0:
-            bt.logging.error("No active miners, skipping - check your connectivity")
+            self.active_miners = []
+            bt.logging.error("No active miners selected in round - check your connectivity")
             return
         
         self.active_miners = list(set(selected_miners))
