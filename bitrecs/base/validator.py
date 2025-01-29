@@ -128,18 +128,21 @@ class BaseValidatorNeuron(BaseNeuron):
             self.serve_axon()
         else:
             bt.logging.warning("axon off, not serving ip to chain.")
+            raise Exception("Axon off, not serving ip to chain.")
 
         # Create asyncio event loop to manage async tasks.
         self.loop = asyncio.get_event_loop()
+        api_port = int(os.environ.get("VALIDATOR_API_PORT"))
+        assert api_port == 7777
 
         if self.config.api.enabled:
             # external requests
             api_server = ApiServer(
-                axon_port=self.config.axon.port,
-                forward_fn=api_forward,                
+                axon_port=api_port,
+                forward_fn=api_forward,
                 validator=self
             )
-            api_server.start()            
+            api_server.start()
             bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: {api_server.fast_server.config.host} on Axon: {api_server.fast_server.config.port} \033[0m")
         else:            
             bt.logging.error(f"\033[1;31m No API Endpoint \033[0m")
@@ -247,7 +250,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
             try:
                 ip = self.metagraph.axons[uid].ip              
-                if ping_uid(self, uid, 3):
+                if ping_uid(self, uid, 5):
                     bt.logging.trace(f"\033[1;32m ping: {ip}:OK \033[0m")
                     selected_miners.append(uid)
             except Exception as e:

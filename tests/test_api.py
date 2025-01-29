@@ -18,7 +18,7 @@ os.environ["NEST_ASYNCIO"] = "0"
 TEST_VALIDATOR_IP = os.getenv("TEST_VALIDATOR_IP")
 if not TEST_VALIDATOR_IP:
     TEST_VALIDATOR_IP = "127.0.0.1"
-VALIDATOR_PORT = 8091
+VALIDATOR_PORT = 7777
 VALIDATOR_IS_SSL = False
 print(f"Running tests on validator IP: {TEST_VALIDATOR_IP} with port: {VALIDATOR_PORT}")
 

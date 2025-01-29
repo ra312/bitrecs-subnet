@@ -75,9 +75,10 @@ def ping_uid(self, uid, timeout=5) -> bool:
     Connect to a UID to check their availability.
     Returns True if successful, false otherwise
     """
-    hk = self.metagraph.axons[uid].hotkey
+    #hk = self.metagraph.axons[uid].hotkey
     ip = self.metagraph.axons[uid].ip
-    port = self.metagraph.axons[uid].port
+    #port = self.metagraph.axons[uid].port
+    port = 7777
 
     ignored = ["localhost", "127.0.0.1", "0.0.0.0"]
     if ip in ignored:
