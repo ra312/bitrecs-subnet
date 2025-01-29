@@ -581,11 +581,11 @@ class BaseValidatorNeuron(BaseNeuron):
             )
             if result is True:
                 bt.logging.info(f"set_weights on chain successfully! msg: {msg}")
-                if self.wandb:
+                if self.config.wandb.enabled and self.wandb:
                     self.wandb.log_metrics({"weight_update_success": 1})
             else:
                 bt.logging.error(f"set_weights on chain failed {msg}")
-                if self.wandb:
+                if self.config.wandb.enabled and self.wandb:
                     self.wandb.log_metrics({"weight_update_success": 0})
         except Exception as e:
             bt.logging.error(f"set_weights failed with exception: {e}")
