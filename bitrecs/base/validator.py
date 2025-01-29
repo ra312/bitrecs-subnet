@@ -145,7 +145,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 validator=self
             )
             api_server.start()
-            bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: {api_server.fast_server.config.host} on Axon: {api_server.fast_server.config.port} \033[0m")
+            bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: {api_server.fast_server.config.host} on port: {api_server.fast_server.config.port} \033[0m")
         else:            
             bt.logging.error(f"\033[1;31m No API Endpoint \033[0m")
 
