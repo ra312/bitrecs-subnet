@@ -41,7 +41,7 @@ from bitrecs.base.utils.weight_utils import (
 from bitrecs.utils.config import add_validator_args
 from bitrecs.api.api_server import ApiServer
 from bitrecs.protocol import BitrecsRequest
-from bitrecs.utils.uids import get_random_miner_uids, ping_uid
+from bitrecs.utils.uids import get_random_miner_uids, ping_miner_uid, get_random_miner_uids2
 from bitrecs.utils.version import LocalMetadata
 from bitrecs.validator.reward import get_rewards
 from bitrecs.utils.logging import (
@@ -223,17 +223,20 @@ class BaseValidatorNeuron(BaseNeuron):
         """
             Checks the miners in the metagraph for connectivity and updates the active miners list.
         """
-        bt.logging.trace(f"\033[1;32m Validator miner_sync ran at {int(time.time())}. \033[0m")
-        bt.logging.trace(f"vpermit_tao_limit limit: {self.config.neuron.vpermit_tao_limit} ")
-        bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
-        excluded = [self.uid]
-        available_uids = get_random_miner_uids(self, k=self.config.neuron.sample_size, exclude=excluded)
-
+        bt.logging.trace(f"\033[1;32m Validator miner_sync running {int(time.time())}.\033[0m")
+        bt.logging.trace(f"neuron.sample_size: {self.config.neuron.sample_size}")
+        bt.logging.trace(f"vpermit_tao_limit: {self.config.neuron.vpermit_tao_limit}")
+        bt.logging.trace(f"block {self.subtensor.block} on step {self.step}")
+        
+        #excluded = [self.uid]
+        #available_uids = get_random_miner_uids(self, k=self.config.neuron.sample_size, exclude=excluded)
+        available_uids = get_random_miner_uids2(self.metagraph, k=self.config.neuron.sample_size)       
         bt.logging.trace(f"get_random_uids: {available_uids}")
+        
         chosen_uids : list[int] = available_uids.tolist()
         bt.logging.trace(f"chosen_uids: {chosen_uids}")
         if len(chosen_uids) == 0:
-            bt.logging.error("\033[1;31mNo neurons in metagraph - check your connectivity \033[0m")
+            bt.logging.error("\033[1;31mNo random qualified miners found - check your connectivity \033[0m")
             return
         
         chosen_uids = list(set(chosen_uids))
@@ -252,12 +255,14 @@ class BaseValidatorNeuron(BaseNeuron):
                 continue
 
             try:
-                ip = self.metagraph.axons[uid].ip              
-                if ping_uid(self, uid, self.api_port, 5):
+                ip = self.metagraph.axons[uid].ip
+                if ping_miner_uid(self, uid, 8091, 5):
                     bt.logging.trace(f"\033[1;32m ping: {ip}:OK \033[0m")
                     selected_miners.append(uid)
+                else:
+                    bt.logging.trace(f"\033[1;33m ping: {ip}:FALSE \033[0m")
             except Exception as e:
-                bt.logging.error(f"ping failed with exception: {e}")
+                bt.logging.trace(f"\033[1;33 {e} \033[0m")                
                 continue
         if len(selected_miners) == 0:
             self.active_miners = []
@@ -265,7 +270,7 @@ class BaseValidatorNeuron(BaseNeuron):
             return
         
         self.active_miners = list(set(selected_miners))
-        bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
+        bt.logging.info(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
 
 
     @execute_periodically(timedelta(seconds=120))
