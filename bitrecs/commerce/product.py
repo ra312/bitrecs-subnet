@@ -1,13 +1,15 @@
-import json
 import os
 import re
+import json
 import bittensor as bt
+import json_repair
 import pandas as pd
+from abc import abstractmethod
+from enum import Enum
 from typing import Counter
 from pydantic import BaseModel
-from abc import abstractmethod
 from dataclasses import dataclass
-from enum import Enum
+
 
 
 class CatalogProvider(Enum):
@@ -53,7 +55,10 @@ class ProductFactory:
 
             #Final renaming of columns
             df = df.rename(columns={'SKU': 'sku', 'Name': 'name', 'Regular price': 'price', 'In stock?': 'InStock', 'Stock': 'OnHand'})            
-            df.fillna(' ', inplace=True)
+            float_cols = df.select_dtypes(include=['float64']).columns
+            df[float_cols] = df[float_cols].astype(object)
+            df.fillna('', inplace=True)
+
             df = df.head(max_rows)
             df = df.to_dict(orient='records')
             return df
@@ -105,6 +110,9 @@ class ProductFactory:
             # Clean and preprocess data
             df['name'] = df['name'].fillna('').str.replace(r'<[^<>]*>', '', regex=True)
             df['sku'] = df['sku'].astype(str).str.lstrip("'").replace('nan', '')  # Remove leading ' and invalid 'nan' values
+            
+            float_cols = df.select_dtypes(include=['float64']).columns
+            df[float_cols] = df[float_cols].astype(object)
             df.fillna('', inplace=True)
 
             # Fill empty names with the parent name grouped by 'handle'
@@ -162,7 +170,7 @@ class ProductFactory:
                 return json.dumps(thing, indent=2)
             case _:
                raise ValueError(f"Invalid provider: {provider}")
-            
+ 
 
     @staticmethod
     def try_parse_context(context: str) -> list[Product]:
@@ -177,6 +185,39 @@ class ProductFactory:
             bt.logging.error(f"try_parse_context Exception: {e}")
             return []
         
+        
+    @staticmethod
+    def try_parse_context_strict(context: str) -> list[Product]:
+        """
+        Default converter expects a json array of products with sku/name/price fields
+
+        """ 
+        result: list[Product] = []
+        for p in json.loads(context):
+            try:
+                if 'sku' not in p:                    
+                    continue
+                if 'name' not in p:                    
+                    continue
+                if 'price' not in p:                    
+                    continue
+                
+                good_json_string = json_repair.repair_json(str(p))
+                product = json.loads(good_json_string)
+
+                sku = product["sku"]
+                name = product["name"]
+                name = re.sub(r"[^A-Za-z0-9 ]", "", name)
+                price = product["price"]
+
+                thing = Product(sku=sku, name=name, price=price)
+                result.append(thing)
+            except Exception as e:
+                bt.logging.error(f"try_parse_context3 Exception: {e}")
+                continue
+        return result
+
+
    
     @staticmethod
     def get_dupe_count(products: list[Product]) -> int:
@@ -216,6 +257,13 @@ class ProductFactory:
             if product.sku not in unique_products:
                 unique_products[product.sku] = product
         return list(unique_products.values())
+    
+               
+    @staticmethod
+    def check_all_have_sku(product_list: list) -> bool:
+        product_dicts = [json.loads(product.replace("'", '"')) for product in product_list]
+        all_have_sku = all('sku' in product for product in product_dicts)
+        return all_have_sku
         
         
     @staticmethod

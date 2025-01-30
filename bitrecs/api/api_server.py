@@ -305,14 +305,21 @@ class ApiServer:
                 bt.logging.error(f"API invalid catalog size")
                 await self.log_counter(False)
                 return JSONResponse(status_code=400,
-                                    content={"detail": "error - invalid catalog", "status_code": 400})
+                                    content={"detail": "error - invalid catalog - size", "status_code": 400})
             
+            all_skus_check = ProductFactory.check_all_have_sku(store_catalog)
+            if not all_skus_check:
+                bt.logging.error(f"API invalid catalog - missing sku field in records")
+                await self.log_counter(False)
+                return JSONResponse(status_code=400,
+                                    content={"detail": "error - invalid catalog - missing sku", "status_code": 400})
+
             dupes = ProductFactory.get_dupe_count_list(store_catalog)
             if dupes == -1:
                 bt.logging.error(f"API invalid catalog")
                 await self.log_counter(False)
                 return JSONResponse(status_code=400,
-                                    content={"detail": "error - invalid catalog", "status_code": 400})
+                                    content={"detail": "error - invalid catalog - format", "status_code": 400})
             
             if dupes > catalog_size * CONST.CATALOG_DUPE_THRESHOLD:
                 bt.logging.error(f"API Too many duplicates in catalog: {dupes}")
@@ -323,6 +330,8 @@ class ApiServer:
             st = time.perf_counter()
             response = await self.forward_fn(request)
             subnet_time = time.perf_counter() - st
+            response_text = "Bitrecs Subnet {} Took {:.2f} seconds to process this request".format(self.network, subnet_time)
+            bt.logging.trace(response_text)
 
             if len(response.results) == 0:
                 bt.logging.error(f"API forward_fn response has no results")
@@ -330,9 +339,7 @@ class ApiServer:
                 return JSONResponse(status_code=500,
                                     content={"detail": "error - forward", "status_code": 500})
 
-            final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]            
-            response_text = "Bitrecs Subnet Took {:.2f} seconds to process this request".format(subnet_time)
-
+            final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
             response = {
                 "user": response.user, 
                 "original_query": response.query,
@@ -393,6 +400,6 @@ class ApiServer:
             self.api_counter.update(is_success=success)
             self.api_counter.save()
         except Exception as e:
-            bt.logging.error(f"ERROR API could not update counter log:  {e}")
-            pass            
-   
+            bt.logging.error(f"ERROR API could not update counter log:  {e}")              
+    
+

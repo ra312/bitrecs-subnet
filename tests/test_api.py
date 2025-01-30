@@ -319,7 +319,7 @@ def test_rate_limit_hit_rec_ok():
             "x-timestamp": str(int(time.time()))
         }
         br = get_bitrecs_dummy_request(5)
-        data = br.model_dump()
+        data = br.model_dump(mode="json")
         response = requests.post(url, headers=headers, json=data)
         return response
     
