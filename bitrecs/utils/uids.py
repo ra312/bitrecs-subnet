@@ -94,7 +94,7 @@ def get_random_miner_uids2(self,
 
     # Check if candidate_uids contain enough for querying, if not grab all avaliable uids
     if 0 < len(avail_uids) < k:
-        bt.logger.warning(
+        bt.logging.warning(
             f"Requested {k} uids but only {len(avail_uids)} were available. To disable this warning reduce the sample size (--neuron.sample_size)"
         )
         return np.array(avail_uids).astype(int).tolist()
