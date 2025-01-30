@@ -307,12 +307,12 @@ class ApiServer:
                 return JSONResponse(status_code=400,
                                     content={"detail": "error - invalid catalog - size", "status_code": 400})
             
-            all_skus_check = ProductFactory.check_all_have_sku(store_catalog)
-            if not all_skus_check:
-                bt.logging.error(f"API invalid catalog - missing sku field in records")
-                await self.log_counter(False)
-                return JSONResponse(status_code=400,
-                                    content={"detail": "error - invalid catalog - missing sku", "status_code": 400})
+            # all_skus_check = ProductFactory.check_all_have_sku(store_catalog)
+            # if not all_skus_check:
+            #     bt.logging.error(f"API invalid catalog - missing sku field in records")
+            #     await self.log_counter(False)
+            #     return JSONResponse(status_code=400,
+            #                         content={"detail": "error - invalid catalog - missing sku", "status_code": 400})
 
             dupes = ProductFactory.get_dupe_count_list(store_catalog)
             if dupes == -1:
