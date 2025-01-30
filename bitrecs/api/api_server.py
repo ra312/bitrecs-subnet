@@ -111,6 +111,7 @@ class ApiServer:
         except Exception as e:
             bt.logging.error(f"\033[1;31mERROR API could not get proxy public key:  {e} \033[0m")
             bt.logging.warning(f"\033[1;33mWARNING - your validator is in limp mode, please restart\033[0m")
+            raise Exception("Could not get proxy public key")
         
         self.api_counter = APICounter(os.path.join(self.app.root_path, "api_counter.json"))
         bt.logging.info(f"\033[1;32m API Counter set {self.api_counter.save_path} \033[0m")
