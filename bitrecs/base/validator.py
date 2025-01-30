@@ -241,16 +241,16 @@ class BaseValidatorNeuron(BaseNeuron):
         
         chosen_uids = list(set(chosen_uids))
         selected_miners = []
-        for uid in chosen_uids:
-            bt.logging.trace(f"Checking uid: {uid} with stake {self.metagraph.S[uid]} and trust {self.metagraph.T[uid]}")
-            if uid == self.uid:
+        for uid in chosen_uids:            
+            bt.logging.trace(f"Checking uid: {uid} with stake {self.metagraph.S[uid].tao} and trust {self.metagraph.T[uid]}")
+            if uid == self.uid:                
                 continue
             if not self.metagraph.axons[uid].is_serving:                
-                continue            
+                continue
             if self.metagraph.S[uid] == 0:
                 bt.logging.trace(f"uid: {uid} stake 0T, skipping")
                 continue
-            if self.metagraph.S[uid] > self.config.neuron.vpermit_tao_limit:
+            if self.metagraph.S[uid].tao > self.config.neuron.vpermit_tao_limit:
                 bt.logging.trace(f"uid: {uid} stake > {self.config.neuron.vpermit_tao_limit}T, skipping")
                 continue
 
