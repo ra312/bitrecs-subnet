@@ -189,6 +189,25 @@ class ProductFactory:
             bt.logging.error(f"WARNING - get_dupe_count failed: {a}")
             return 0
         
+        
+    @staticmethod
+    def get_dupe_count_list(products: list) -> int:        
+        try:
+            if not products or len(products) == 0:
+                return 0
+            
+            sku_counts = Counter(
+                product.sku if isinstance(product, Product) else product.get('sku')
+                for product in products
+            )
+            return sum(count - 1 for count in sku_counts.values() if count > 1)
+        except AttributeError as a:
+            bt.logging.error(f"WARNING - get_dupe_count_list failed: {a}")
+            return -1
+        except Exception as e:
+            bt.logging.error(f"ERROR - get_dupe_count_list encountered an unexpected error: {e}")
+            return -1
+        
     
     @staticmethod
     def dedupe(products: list[Product]) -> list[Product]:

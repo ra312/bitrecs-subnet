@@ -359,7 +359,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             timeout=CONST.MAX_DENDRITE_TIMEOUT
                         )
                         et = time.perf_counter()
-                        bt.logging.trace(f"Miners responded with {len(responses)} responses in {et-st:0.4f} seconds")
+                        bt.logging.trace(f"Miners responded with {len(responses)} responses in \033[1;32m{et-st:0.4f}\033[0m seconds")
 
                         # Adjust the scores based on responses from miners.
                         rewards = get_rewards(num_recs=number_of_recs_desired,
@@ -382,8 +382,8 @@ class BaseValidatorNeuron(BaseNeuron):
                         elected.context = "" #save bandwidth
 
                         bt.logging.info("SCORING DONE")
-                        bt.logging.info(f"\033[1;32m WINNING MINER: {elected.miner_uid} \033[0m")
-                        bt.logging.info(f"\033[1;32m WINNING MODEL: {elected.models_used} \033[0m")
+                        bt.logging.info(f"\033[1;32mWINNING MINER: {elected.miner_uid} \033[0m")
+                        bt.logging.info(f"\033[1;32mWINNING MODEL: {elected.models_used} \033[0m")
                         bt.logging.info(f"WINNING RESULT: {elected}")
                         
                         if len(elected.results) == 0:

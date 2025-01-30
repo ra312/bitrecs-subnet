@@ -293,7 +293,9 @@ class ApiServer:
         """
 
         try:
-          
+
+            st_a = int(time.time())
+
             await self.verify_request2(request, x_signature, x_timestamp)
 
             store_catalog = ProductFactory.try_parse_context(request.context)
@@ -303,9 +305,15 @@ class ApiServer:
                 bt.logging.error(f"API invalid catalog size")
                 await self.log_counter(False)
                 return JSONResponse(status_code=400,
-                                    content={"detail": "error - invalid catalog", "status_code": 400})            
+                                    content={"detail": "error - invalid catalog", "status_code": 400})
             
-            dupes = ProductFactory.get_dupe_count(store_catalog)
+            dupes = ProductFactory.get_dupe_count_list(store_catalog)
+            if dupes == -1:
+                bt.logging.error(f"API invalid catalog")
+                await self.log_counter(False)
+                return JSONResponse(status_code=400,
+                                    content={"detail": "error - invalid catalog", "status_code": 400})
+            
             if dupes > catalog_size * CONST.CATALOG_DUPE_THRESHOLD:
                 bt.logging.error(f"API Too many duplicates in catalog: {dupes}")
                 await self.log_counter(False)
@@ -314,7 +322,7 @@ class ApiServer:
 
             st = time.perf_counter()
             response = await self.forward_fn(request)
-            total_time = time.perf_counter() - st
+            subnet_time = time.perf_counter() - st
 
             if len(response.results) == 0:
                 bt.logging.error(f"API forward_fn response has no results")
@@ -323,7 +331,7 @@ class ApiServer:
                                     content={"detail": "error - forward", "status_code": 500})
 
             final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]            
-            response_text = "Bitrecs Took {:.2f} seconds to process this request".format(total_time)
+            response_text = "Bitrecs Subnet Took {:.2f} seconds to process this request".format(subnet_time)
 
             response = {
                 "user": response.user, 
@@ -340,7 +348,12 @@ class ApiServer:
                 "reasoning": f"Bitrecs AI - {self.network}"
             }
 
-            await self.log_counter(True)            
+            await self.log_counter(True)
+
+            et_a = int(time.time())
+            total_duration = et_a - st_a
+            bt.logging.info("\033[1;32m Bitrecs Subnet - Processed request in {:.2f} seconds \033[0m".format(total_duration))
+
             return JSONResponse(status_code=200, content=response)
         
         except HTTPException as h:
