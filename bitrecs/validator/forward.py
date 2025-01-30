@@ -22,7 +22,7 @@ import random
 from datetime import datetime, timezone
 from bitrecs.protocol import BitrecsRequest
 from bitrecs.validator.reward import get_rewards
-from bitrecs.utils.uids import get_random_uids
+from bitrecs.utils.uids import get_random_miner_uids
 
 
 def get_bitrecs_dummy_request(num_results) -> BitrecsRequest:
@@ -73,7 +73,7 @@ async def forward(self, pr: BitrecsRequest = None):
         next_request = get_bitrecs_dummy_request(num_results)
 
     num_recs = next_request.num_results
-    miner_uids = get_random_uids(self,  k=self.config.neuron.sample_size)    
+    miner_uids = get_random_miner_uids(self,  k=self.config.neuron.sample_size)    
 
     bt.logging.info(f"** UID uids: {miner_uids}")
     start_time = time.time()

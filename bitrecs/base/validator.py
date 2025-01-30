@@ -41,7 +41,7 @@ from bitrecs.base.utils.weight_utils import (
 from bitrecs.utils.config import add_validator_args
 from bitrecs.api.api_server import ApiServer
 from bitrecs.protocol import BitrecsRequest
-from bitrecs.utils.uids import get_random_uids, ping_uid
+from bitrecs.utils.uids import get_random_miner_uids, ping_uid
 from bitrecs.utils.version import LocalMetadata
 from bitrecs.validator.reward import get_rewards
 from bitrecs.utils.logging import (
@@ -227,7 +227,8 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.trace(f"vpermit_tao_limit limit: {self.config.neuron.vpermit_tao_limit} ")
         bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
         excluded = [self.uid]
-        available_uids = get_random_uids(self, k=self.config.neuron.sample_size, exclude=excluded)
+        available_uids = get_random_miner_uids(self, k=self.config.neuron.sample_size, exclude=excluded)
+
         bt.logging.trace(f"get_random_uids: {available_uids}")
         chosen_uids : list[int] = available_uids.tolist()
         bt.logging.trace(f"chosen_uids: {chosen_uids}")
@@ -243,9 +244,9 @@ class BaseValidatorNeuron(BaseNeuron):
                 continue
             if not self.metagraph.axons[uid].is_serving:                
                 continue            
-            # if self.metagraph.S[uid] == 0:
-            #     bt.logging.trace(f"uid: {uid} stake 0T, skipping")
-            #     continue
+            if self.metagraph.S[uid] == 0:
+                bt.logging.trace(f"uid: {uid} stake 0T, skipping")
+                continue
             if self.metagraph.S[uid] > self.config.neuron.vpermit_tao_limit:
                 bt.logging.trace(f"uid: {uid} stake > {self.config.neuron.vpermit_tao_limit}T, skipping")
                 continue
