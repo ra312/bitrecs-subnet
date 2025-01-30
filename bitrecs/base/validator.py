@@ -230,7 +230,7 @@ class BaseValidatorNeuron(BaseNeuron):
         
         #excluded = [self.uid]
         #available_uids = get_random_miner_uids(self, k=self.config.neuron.sample_size, exclude=excluded)
-        available_uids = get_random_miner_uids2(self.metagraph, k=self.config.neuron.sample_size)       
+        available_uids = get_random_miner_uids2(self, k=self.config.neuron.sample_size)
         bt.logging.trace(f"get_random_uids: {available_uids}")
         
         chosen_uids = available_uids

@@ -69,24 +69,24 @@ def get_random_miner_uids(self, k: int, exclude: List[int] = None) -> np.ndarray
 
     
 
-def get_random_miner_uids2(metagraph: bt.metagraph, 
+def get_random_miner_uids2(self,
     k: int, 
     excluded_coldkeys: set = None, 
     excluded_ips: set = None) -> list[int]:    
     """Fetch random miners that meet criteria."""
 
     avail_uids = []   
-    for uid in range(metagraph.n.item()):
-        if not metagraph.axons[uid].is_serving:
+    for uid in range(self.metagraph.n.item()):
+        if not self.metagraph.axons[uid].is_serving:
             continue
-        if metagraph.validator_permit[uid] and metagraph.S[uid] > 1000:
-            continue
-        if metagraph.S[uid] == 0:
-            continue
-        if excluded_coldkeys and metagraph.axons[uid].coldkey in excluded_coldkeys:
-            continue
-        if excluded_ips and metagraph.axons[uid].ip in excluded_ips:
-            continue
+        # if self.metagraph.validator_permit[uid] and self.metagraph.S[uid] > 1000:
+        #     continue
+        # if self.metagraph.S[uid] == 0:
+        #     continue
+        # if excluded_coldkeys and self.metagraph.axons[uid].coldkey in excluded_coldkeys:
+        #     continue
+        # if excluded_ips and self.metagraph.axons[uid].ip in excluded_ips:
+        #     continue
     
         avail_uids.append(uid)
 
