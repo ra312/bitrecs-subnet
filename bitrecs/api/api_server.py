@@ -1,4 +1,3 @@
-
 import os
 import json
 import time
@@ -9,16 +8,14 @@ import hashlib
 from typing import Callable
 from functools import partial
 from bittensor.core.axon import FastAPIThreadedServer
-from fastapi import FastAPI, HTTPException, Request, APIRouter, Response, Header
+from fastapi import FastAPI, HTTPException, Request, APIRouter, Header
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.exceptions import RequestValidationError
-from slowapi.errors import RateLimitExceeded
 from bitrecs.utils import constants as CONST
 from bitrecs.commerce.product import ProductFactory
 from bitrecs.protocol import BitrecsRequest
 from bitrecs.api.api_counter import APICounter
-from bitrecs.api.api_core import OnlyJSONMiddleware, filter_allowed_ips, limiter
+from bitrecs.api.api_core import filter_allowed_ips, limiter
 from bitrecs.api.utils import api_key_validator, get_proxy_public_key
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.exceptions import InvalidSignature
@@ -37,7 +34,7 @@ class ApiServer:
     router: APIRouter
     forward_fn: ForwardFn    
 
-    def __init__(self, validator, axon_port: int, forward_fn: ForwardFn):
+    def __init__(self, validator, api_port: int, forward_fn: ForwardFn):
         self.validator = validator
         self.forward_fn = forward_fn
         self.allowed_ips = ["127.0.0.1", "10.0.0.1"]
@@ -75,7 +72,7 @@ class ApiServer:
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
             self.app,
             host="0.0.0.0",
-            port=axon_port,
+            port=api_port,
             log_level="trace" if bt.logging.__trace_on__ else "critical",         
         ))
 
@@ -236,9 +233,9 @@ class ApiServer:
                 return JSONResponse(status_code=400,
                                     content={"detail": "error - dupe threshold reached", "status_code": 400})
 
-            st = time.time()
+            st = time.perf_counter()
             response = await self.forward_fn(request)
-            total_time = time.time() - st
+            total_time = time.perf_counter() - st
 
             if len(response.results) == 0:
                 bt.logging.error(f"API forward_fn response has no results")
@@ -314,9 +311,9 @@ class ApiServer:
                 return JSONResponse(status_code=400,
                                     content={"detail": "error - dupe threshold reached", "status_code": 400})
 
-            st = time.time()
+            st = time.perf_counter()
             response = await self.forward_fn(request)
-            total_time = time.time() - st
+            total_time = time.perf_counter() - st
 
             if len(response.results) == 0:
                 bt.logging.error(f"API forward_fn response has no results")

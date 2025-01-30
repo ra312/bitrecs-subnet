@@ -1,21 +1,23 @@
-
-import time
 import bittensor as bt
 from fastapi import Request, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
-
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from starlette.exceptions import HTTPException
 
-limiter = Limiter(key_func=get_remote_address)
+def get_client_ip(request: Request) -> str:
+    if "x-forwarded-for" in request.headers:
+        # X-Forwarded-For can contain multiple IPs, take the first one
+        #return request.headers["x-forwarded-for"].split(",")[0].strip()
+        return request.headers.get("x-forwarded-for")
+    return get_remote_address(request)
+
+limiter = Limiter(key_func=get_client_ip)
 
 
-@limiter.limit("60/minute")
+@limiter.limit("120/minute")
 async def filter_allowed_ips(self, request: Request, call_next) -> Response:
     try:
         if self.bypass_whitelist:
@@ -81,34 +83,34 @@ async def filter_allowed_ips(self, request: Request, call_next) -> Response:
 
 
 
-class OnlyJSONMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next) -> Response:
-        if not request.method in ['POST']:
-            response = await call_next(request)
-            return response
+# class OnlyJSONMiddleware(BaseHTTPMiddleware):
+#     async def dispatch(self, request: Request, call_next) -> Response:
+#         if not request.method in ['POST']:
+#             response = await call_next(request)
+#             return response
 
 
-        if 'application/json' not in request.headers.get('Content-Type', ''):
-            return JSONResponse(
-                status_code=415,
-                content={
-                    "detail": "Invalid Request",
-                    "status_code": 415                    
-                }                
-            )
-            #raise HTTPException(status_code=415, detail="Only JSON requests are accepted")
+#         if 'application/json' not in request.headers.get('Content-Type', ''):
+#             return JSONResponse(
+#                 status_code=415,
+#                 content={
+#                     "detail": "Invalid Request",
+#                     "status_code": 415                    
+#                 }                
+#             )
+#             #raise HTTPException(status_code=415, detail="Only JSON requests are accepted")
         
-        try:            
-            await request.json()
-        except ValueError:            
-            #raise HTTPException(status_code=400, detail="Invalid JSON in request body")
-            return JSONResponse(
-                status_code=415,
-                content={
-                        "detail": "Invalid Request",
-                        "status_code": 415                    
-                    }                
-            )
+#         try:            
+#             await request.json()
+#         except ValueError:            
+#             #raise HTTPException(status_code=400, detail="Invalid JSON in request body")
+#             return JSONResponse(
+#                 status_code=415,
+#                 content={
+#                         "detail": "Invalid Request",
+#                         "status_code": 415                    
+#                     }                
+#             )
         
-        response = await call_next(request)
-        return response
+#         response = await call_next(request)
+#         return response
