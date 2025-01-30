@@ -233,7 +233,7 @@ class BaseValidatorNeuron(BaseNeuron):
         available_uids = get_random_miner_uids2(self.metagraph, k=self.config.neuron.sample_size)       
         bt.logging.trace(f"get_random_uids: {available_uids}")
         
-        chosen_uids : list[int] = available_uids.tolist()
+        chosen_uids = available_uids
         bt.logging.trace(f"chosen_uids: {chosen_uids}")
         if len(chosen_uids) == 0:
             bt.logging.error("\033[1;31mNo random qualified miners found - check your connectivity \033[0m")
