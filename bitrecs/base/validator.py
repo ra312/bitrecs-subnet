@@ -350,6 +350,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         api_request = synapse_with_event.input_synapse
                         number_of_recs_desired = api_request.num_results
                         
+                        st = time.perf_counter()
                         # Send request to the miner population syncronous
                         responses = self.dendrite.query(
                             chosen_axons,
@@ -357,7 +358,8 @@ class BaseValidatorNeuron(BaseNeuron):
                             deserialize=False,
                             timeout=CONST.MAX_DENDRITE_TIMEOUT
                         )
-                        bt.logging.trace(f"Miners responded with {len(responses)} responses")
+                        et = time.perf_counter()
+                        bt.logging.trace(f"Miners responded with {len(responses)} responses in {et-st:0.4f} seconds")
 
                         # Adjust the scores based on responses from miners.
                         rewards = get_rewards(num_recs=number_of_recs_desired,
@@ -367,7 +369,13 @@ class BaseValidatorNeuron(BaseNeuron):
                         if not len(chosen_uids) == len(responses) == len(rewards):
                             bt.logging.error("MISMATCH in lengths of chosen_uids, responses and rewards")
                             synapse_with_event.event.set()
-                            continue                     
+                            continue
+                        
+                        #TODO: do not send back bad skus or empty results
+                        if np.all(rewards == 0):
+                            bt.logging.error("\033[1;33mZERO rewards - no valid candidates in responses \033[0m")
+                            synapse_with_event.event.set()
+                            continue
                             
                         selected_rec = rewards.argmax()
                         elected = responses[selected_rec]
@@ -567,7 +575,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
             # Log weights to wandb before chain update
             weights_dict = {str(uid): float(weight) for uid, weight in zip(uint_uids, uint_weights)}
-            if self.config.wandb.enabled:
+            if self.config.wandb.enabled and self.wandb:
                 self.wandb.log_weights(self.step, weights_dict)
 
         except Exception as e:
