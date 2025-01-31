@@ -13,6 +13,7 @@ from dataclasses import dataclass
 
 
 class CatalogProvider(Enum):
+    BITRECS = 0
     SHOPIFY = 1
     AMAZON = 2
     WOOCOMMERCE = 3
@@ -189,7 +190,7 @@ class ProductFactory:
     @staticmethod
     def try_parse_context_strict(context: str) -> list[Product]:
         """
-        Default converter expects a json array of products with sku/name/price fields
+        Strict converter expects a json array of products with sku/name/price fields
 
         """ 
         result: list[Product] = []
@@ -221,14 +222,15 @@ class ProductFactory:
    
     @staticmethod
     def get_dupe_count(products: list[Product]) -> int:
-        try:
-            if not products or len(products) == 0:
-                return 0
-            sku_counts = Counter(product.sku for product in products)
-            return sum(count - 1 for count in sku_counts.values() if count > 1)
-        except AttributeError as a:
-            bt.logging.error(f"WARNING - get_dupe_count failed: {a}")
-            return 0
+        # try:
+        #     if not products or len(products) == 0:
+        #         return 0
+        #     sku_counts = Counter(product.sku for product in products)
+        #     return sum(count - 1 for count in sku_counts.values() if count > 1)
+        # except AttributeError as a:
+        #     bt.logging.error(f"WARNING - get_dupe_count failed: {a}")
+        #     return 0
+        return ProductFactory.get_dupe_count_list(products)
         
         
     @staticmethod
@@ -261,10 +263,25 @@ class ProductFactory:
                
     @staticmethod
     def check_all_have_sku(product_list: list) -> bool:
-        product_dicts = [json.loads(product.replace("'", '"')) for product in product_list]
-        all_have_sku = all('sku' in product for product in product_dicts)
-        return all_have_sku
-        
+        try:
+            product_dicts = []
+            for product in product_list:
+                try:
+                    product_dict = json.loads(product.replace("'", '"'))
+                    if isinstance(product_dict, dict):
+                        product_dicts.append(product_dict)
+                    else:
+                        bt.logging.error(f"Product is not a dictionary: {product}")
+                except json.JSONDecodeError as e:
+                    bt.logging.error(f"JSON parsing error: {e} for product: {product}")
+                    continue
+
+            all_have_sku = all('sku' in product for product in product_dicts)
+            return all_have_sku
+        except Exception as e:
+            bt.logging.error(f"Unexpected error in check_all_have_sku: {e}")
+            return False
+
         
     @staticmethod
     def convert(context: str, provider: CatalogProvider) -> list[Product]:
@@ -379,6 +396,32 @@ class ShopifyConverter(BaseConverter):
                 bt.logging.error(f"ShopifyConverter.convert Exception: {e}")
                 continue
         return result    
+
+
+class BitrecsConverter(BaseConverter):
+    
+    def convert(self, context: str) -> list[Product]:
+        """
+        converts from generic json format
+
+        """
+        result : list[Product] = []
+        for p in json.loads(context):
+            try:
+                sku = p.get("sku")
+                name = p.get("name")
+                price = p.get("price", "0.00")
+                if not sku or not name:
+                    continue
+                if price is None or price == 'None':
+                    price = "0.00"
+                price = str(price)
+                name = self.clean(name)
+                result.append(Product(sku=sku, name=name, price=price))
+            except Exception as e:
+                bt.logging.error(f"GenericConverter.convert Exception: {e}")
+                continue
+        return result
      
     
 

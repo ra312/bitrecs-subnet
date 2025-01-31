@@ -355,7 +355,7 @@ def test_products_must_all_have_sku_no_upper_allowed():
 
     sku_check = ProductFactory.check_all_have_sku(products)
     print(f"sku check: {sku_check}")
-    assert sku_check == False
+    assert sku_check == False   
     
 
 def test_products_missing_sku_error():
