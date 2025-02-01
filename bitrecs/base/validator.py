@@ -41,7 +41,7 @@ from bitrecs.base.utils.weight_utils import (
 from bitrecs.utils.config import add_validator_args
 from bitrecs.api.api_server import ApiServer
 from bitrecs.protocol import BitrecsRequest
-from bitrecs.utils.uids import get_random_uids, ping_uid
+from bitrecs.utils.uids import get_random_miner_uids, ping_miner_uid, get_random_miner_uids2
 from bitrecs.utils.version import LocalMetadata
 from bitrecs.validator.reward import get_rewards
 from bitrecs.utils.logging import (
@@ -128,19 +128,24 @@ class BaseValidatorNeuron(BaseNeuron):
             self.serve_axon()
         else:
             bt.logging.warning("axon off, not serving ip to chain.")
+            raise Exception("Axon off, not serving ip to chain.")
 
         # Create asyncio event loop to manage async tasks.
         self.loop = asyncio.get_event_loop()
-
+        api_port = int(os.environ.get("VALIDATOR_API_PORT"))
+        if api_port != 7779:
+            raise Exception("API Port must be set to 7779")
+        
+        self.api_port = api_port
         if self.config.api.enabled:
             # external requests
             api_server = ApiServer(
-                axon_port=self.config.axon.port,
-                forward_fn=api_forward,                
+                api_port=self.api_port,
+                forward_fn=api_forward,
                 validator=self
             )
-            api_server.start()            
-            bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: {api_server.fast_server.config.host} on Axon: {api_server.fast_server.config.port} \033[0m")
+            api_server.start()
+            bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: {api_server.fast_server.config.host} on port: {api_server.fast_server.config.port} \033[0m")
         else:            
             bt.logging.error(f"\033[1;31m No API Endpoint \033[0m")
 
@@ -218,40 +223,46 @@ class BaseValidatorNeuron(BaseNeuron):
         """
             Checks the miners in the metagraph for connectivity and updates the active miners list.
         """
-        bt.logging.trace(f"\033[1;32m Validator miner_sync ran at {int(time.time())}. \033[0m")
-        bt.logging.trace(f"vpermit_tao_limit limit: {self.config.neuron.vpermit_tao_limit} ")
-        bt.logging.trace(f"last block {self.subtensor.block} on step {self.step} ")
-        excluded = [self.uid]
-        available_uids = get_random_uids(self, k=self.config.neuron.sample_size, exclude=excluded)
+        bt.logging.trace(f"\033[1;32m Validator miner_sync running {int(time.time())}.\033[0m")
+        bt.logging.trace(f"neuron.sample_size: {self.config.neuron.sample_size}")
+        bt.logging.trace(f"vpermit_tao_limit: {self.config.neuron.vpermit_tao_limit}")
+        bt.logging.trace(f"block {self.subtensor.block} on step {self.step}")
+        
+        #excluded = [self.uid]
+        #available_uids = get_random_miner_uids(self, k=self.config.neuron.sample_size, exclude=excluded)
+        available_uids = get_random_miner_uids2(self, k=self.config.neuron.sample_size)
         bt.logging.trace(f"get_random_uids: {available_uids}")
-        chosen_uids : list[int] = available_uids.tolist()
+        
+        chosen_uids = available_uids
         bt.logging.trace(f"chosen_uids: {chosen_uids}")
         if len(chosen_uids) == 0:
-            bt.logging.error("\033[1;31mNo neurons in metagraph - check your connectivity \033[0m")
+            bt.logging.error("\033[1;31mNo random qualified miners found - check your connectivity \033[0m")
             return
         
         chosen_uids = list(set(chosen_uids))
         selected_miners = []
-        for uid in chosen_uids:
-            bt.logging.trace(f"Checking uid: {uid} with stake {self.metagraph.S[uid]} and trust {self.metagraph.T[uid]}")
-            if uid == self.uid:
+        for uid in chosen_uids:            
+            bt.logging.trace(f"Checking uid: {uid} with stake {self.metagraph.S[uid].tao} and trust {self.metagraph.T[uid]}")
+            if uid == self.uid:                
                 continue
             if not self.metagraph.axons[uid].is_serving:                
-                continue            
-            # if self.metagraph.S[uid] == 0:
-            #     bt.logging.trace(f"uid: {uid} stake 0T, skipping")
-            #     continue
-            if self.metagraph.S[uid] > self.config.neuron.vpermit_tao_limit:
+                continue
+            if self.metagraph.S[uid] == 0:
+                bt.logging.trace(f"uid: {uid} stake 0T, skipping")
+                continue
+            if self.metagraph.S[uid].tao > self.config.neuron.vpermit_tao_limit:
                 bt.logging.trace(f"uid: {uid} stake > {self.config.neuron.vpermit_tao_limit}T, skipping")
                 continue
 
             try:
-                ip = self.metagraph.axons[uid].ip              
-                if ping_uid(self, uid, 3):
+                ip = self.metagraph.axons[uid].ip
+                if ping_miner_uid(self, uid, 8091, 5):
                     bt.logging.trace(f"\033[1;32m ping: {ip}:OK \033[0m")
                     selected_miners.append(uid)
+                else:
+                    bt.logging.trace(f"\033[1;33m ping: {ip}:FALSE \033[0m")
             except Exception as e:
-                bt.logging.error(f"ping failed with exception: {e}")
+                bt.logging.trace(f"\033[1;33 {e} \033[0m")                
                 continue
         if len(selected_miners) == 0:
             self.active_miners = []
@@ -259,7 +270,7 @@ class BaseValidatorNeuron(BaseNeuron):
             return
         
         self.active_miners = list(set(selected_miners))
-        bt.logging.trace(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
+        bt.logging.info(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
 
 
     @execute_periodically(timedelta(seconds=120))
@@ -339,6 +350,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         api_request = synapse_with_event.input_synapse
                         number_of_recs_desired = api_request.num_results
                         
+                        st = time.perf_counter()
                         # Send request to the miner population syncronous
                         responses = self.dendrite.query(
                             chosen_axons,
@@ -346,7 +358,8 @@ class BaseValidatorNeuron(BaseNeuron):
                             deserialize=False,
                             timeout=CONST.MAX_DENDRITE_TIMEOUT
                         )
-                        bt.logging.trace(f"Miners responded with {len(responses)} responses")
+                        et = time.perf_counter()
+                        bt.logging.trace(f"Miners responded with {len(responses)} responses in \033[1;32m{et-st:0.4f}\033[0m seconds")
 
                         # Adjust the scores based on responses from miners.
                         rewards = get_rewards(num_recs=number_of_recs_desired,
@@ -356,15 +369,21 @@ class BaseValidatorNeuron(BaseNeuron):
                         if not len(chosen_uids) == len(responses) == len(rewards):
                             bt.logging.error("MISMATCH in lengths of chosen_uids, responses and rewards")
                             synapse_with_event.event.set()
-                            continue                     
+                            continue
+                        
+                        #TODO: do not send back bad skus or empty results
+                        if np.all(rewards == 0):
+                            bt.logging.error("\033[1;33mZERO rewards - no valid candidates in responses \033[0m")
+                            synapse_with_event.event.set()
+                            continue
                             
                         selected_rec = rewards.argmax()
                         elected = responses[selected_rec]
                         elected.context = "" #save bandwidth
 
                         bt.logging.info("SCORING DONE")
-                        bt.logging.info(f"\033[1;32m WINNING MINER: {elected.miner_uid} \033[0m")
-                        bt.logging.info(f"\033[1;32m WINNING MODEL: {elected.models_used} \033[0m")
+                        bt.logging.info(f"\033[1;32mWINNING MINER: {elected.miner_uid} \033[0m")
+                        bt.logging.info(f"\033[1;32mWINNING MODEL: {elected.models_used} \033[0m")
                         bt.logging.info(f"WINNING RESULT: {elected}")
                         
                         if len(elected.results) == 0:
@@ -556,7 +575,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
             # Log weights to wandb before chain update
             weights_dict = {str(uid): float(weight) for uid, weight in zip(uint_uids, uint_weights)}
-            if self.config.wandb.enabled:
+            if self.config.wandb.enabled and self.wandb:
                 self.wandb.log_weights(self.step, weights_dict)
 
         except Exception as e:
@@ -576,11 +595,11 @@ class BaseValidatorNeuron(BaseNeuron):
             )
             if result is True:
                 bt.logging.info(f"set_weights on chain successfully! msg: {msg}")
-                if self.wandb:
+                if self.config.wandb.enabled and self.wandb:
                     self.wandb.log_metrics({"weight_update_success": 1})
             else:
                 bt.logging.error(f"set_weights on chain failed {msg}")
-                if self.wandb:
+                if self.config.wandb.enabled and self.wandb:
                     self.wandb.log_metrics({"weight_update_success": 0})
         except Exception as e:
             bt.logging.error(f"set_weights failed with exception: {e}")

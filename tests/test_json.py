@@ -1,13 +1,14 @@
 import json
 import json_repair
 import jsonschema
-from bitrecs.commerce.product import CatalogProvider, ProductFactory
+from bitrecs.commerce.product import CatalogProvider, Product, ProductFactory
+
 
 
 def test_basic_parsing():
-    single_rec = "{'sku': '24-UG01', 'name': 'Quest Lumaflex&trade; Band', 'price': '19'}"
-    single_rec2 = "{'sku': '24-UG02', 'name': 'Pursuit Lumaflex&trade; Tone Band', 'price': '16.04'}"
-    single_rec3 = "{'sku': '24-MG05', 'name': 'Cruise Dual Analog Watch', 'price': '55.90'}" 
+    single_rec = '{"sku": "24-UG01", "name": "Quest Lumaflex&trade; Band", "price": "19"}'
+    single_rec2 = '{"sku": "24-UG02", "name": "Pursuit Lumaflex&trade; Tone Band", "price": "16.04"}'
+    single_rec3 = '{"sku": "24-MG05", "name": "Cruise Dual Analog Watch", "price": "55.90"}'
     multi_rec = [single_rec, single_rec2, single_rec3]
     final_recs = [json.loads(idx.replace("'", '"')) for idx in multi_rec]
     print(final_recs)    
@@ -15,12 +16,12 @@ def test_basic_parsing():
 
 
 def test_basic_parsing2():
-    results =  ["{'sku': '24-WG088', 'name': 'Sprite Foam Roller'}",
-                 "{'sku': '24-WG084', 'name': 'Sprite Foam Yoga Brick'}",
-                   "{'sku': '24-UG01', 'name': 'Quest Lumaflex&trade; Band'}", 
-                   '{\'sku\': \'24-UG05\', \'name\': "Go-Get\'r Pushup Grips"}', 
-                   "{'sku': '24-UG02', 'name': 'Pursuit Lumaflex&trade; Tone Band'}", 
-                   "{'sku': '24-UG07', 'name': 'Dual Handle Cardio Ball'}"]
+    results =  ['{"sku": "24-WG088", "name": "Sprite Foam Roller"}',
+                '{"sku": "24-WG084", "name": "Sprite Foam Yoga Brick"}',
+                '{"sku": "24-UG01", "name": "Quest Lumaflex&trade; Band"}',
+                '{"sku": "24-UG05", "name": "Go-Get\'r Pushup Grips"}',
+                '{"sku": "24-UG02", "name": "Pursuit Lumaflex&trade; Tone Band"}',
+                '{"sku": "24-UG07", "name": "Dual Handle Cardio Ball"}']
 
     final = []
     for idx in results:        
@@ -34,26 +35,26 @@ def test_basic_parsing2():
 
 
 def test_schema_validation():
-    broken_json =  ["{'sku': '24-WG088', 'name': 'Sprite Foam Roller'}",
-                 "{'sku': '24-WG084', 'name': 'Sprite Foam Yoga Brick'}",
-                   "{'sku': '24-UG01', 'name': 'Quest Lumaflex&trade; Band'}", 
-                   '{\'sku\': \'24-UG05\', \'name\': "Go-Get\'r Pushup Grips"}', 
-                   "{'sku': '24-UG02', 'name': 'Pursuit Lumaflex&trade; Tone Band'}", 
-                   "{'sku': '24-UG07', 'name': 'Dual Handle Cardio Ball'}"]
+    broken_json =  ['{"sku": "24-WG088", "name": "Sprite Foam Roller"}',
+                    '{"sku": "24-WG084", "name": "Sprite Foam Yoga Brick"}',
+                    '{"sku": "24-UG01", "name": "Quest Lumaflex&trade; Band"}',
+                    '{"sku": "24-UG05", "name": "Go-Get\'r Pushup Grips"}',
+                    '{"sku": "24-UG02", "name": "Pursuit Lumaflex&trade; Tone Band"}',
+                    '{"sku": "24-UG07", "name": "Dual Handle Cardio Ball"}']
     
-    partial_json =  ["{'sku': '24-WG088', 'name': 'Sprite Foam Roller'}",
-                 "{'sku': '24-WG084', 'name': 'Sprite Foam Yoga Brick', 'price': 5.00}",
-                   "{'sku': '24-UG01', 'name': 'Quest Lumaflex&trade; Band'}", 
-                   '{\'sku\': \'24-UG05\', \'name\': "Go-Get\'r Pushup Grips"}', 
-                   "{'sku': '24-UG02', 'name': 'Pursuit Lumaflex&trade; Tone Band'}", 
-                   "{'sku': '24-UG07', 'name': 'Dual Handle Cardio Ball', 'price': '19'}"]
+    partial_json =  ['{"sku": "24-WG088", "name": "Sprite Foam Roller"}',
+                     '{"sku": "24-WG084", "name": "Sprite Foam Yoga Brick", "price": 5.00}',
+                     '{"sku": "24-UG01", "name": "Quest Lumaflex&trade; Band"}',
+                     '{"sku": "24-UG05", "name": "Go-Get\'r Pushup Grips"}',
+                     '{"sku": "24-UG02", "name": "Pursuit Lumaflex&trade; Tone Band"}',
+                     '{"sku": "24-UG07", "name": "Dual Handle Cardio Ball", "price": "19"}']
     
-    good_json =  ["{'sku': '24-UG03', 'name': 'Harmony Lumaflex&trade; Strength Band Kit', 'price': '22'}", 
-                "{'sku': '24-WG088', 'name': 'Sprite Foam Roller', 'price': '19'}",
-                  "{'sku': '24-MB04', 'name': 'Strive Shoulder Pack', 'price': '32'}", 
-                  "{'sku': '24-UG01', 'name': 'Quest Lumaflex&trade; Band', 'price': '19'}", 
-                  '{\'sku\': \'24-UG05\', \'name\': "Go-Get\'r Pushup Grips", \'price\': \'19\'}', 
-                  "{'sku': '24-WG084', 'name': 'Sprite Foam Yoga Brick', 'price': '5'}"]
+    good_json =  ['{"sku": "24-UG03", "name": "Harmony Lumaflex&trade; Strength Band Kit", "price": "22"}', 
+                  '{"sku": "24-WG088", "name": "Sprite Foam Roller", "price": "19"}',
+                  '{"sku": "24-MB04", "name": "Strive Shoulder Pack", "price": "32.0"}', 
+                  '{"sku": "24-UG01", "name": "Quest Lumaflex&trade; Band", "price": "19.11"}', 
+                  '{"sku": "24-UG05", "name": "Go-Get\'r Pushup Grips", "price": "19.00"}', 
+                  '{"sku": "24-WG084", "name": "Sprite Foam Yoga Brick", "price": "5"}']
     
     schema = {
         "type": "object",
@@ -270,5 +271,100 @@ def test_convert_1k_shopify_to_bitrecs():
 
     if 1==2:
         for p in products:
-            print(f"{p.sku} - {p.name} - {p.price}")  
+            print(f"{p.sku} - {p.name} - {p.price}")
 
+
+def test_product_factory_parse_all():
+    products =  ['{"sku": "24-UG03", "name": "Harmony Lumaflex&trade; Strength Band Kit", "price": "22"}',
+                 '{"sku": "24-WG088", "name": "Sprite Foam Roller", "price": "19"}',
+                 '{"sku": "24-MB04", "name": "Strive Shoulder Pack", "price": "32"}',
+                 '{"sku": "24-UG01", "name": "Quest Lumaflex&trade; Band", "price": "19"}',
+                 '{"sku": "24-WG084", "name": "Sprite Foam Yoga Brick", "price": "5"}']
+    context = json.dumps(products)
+    result = ProductFactory.try_parse_context(context)
+    assert len(result) == 5
+
+
+def test_product_factory_parse_all_dataclass():
+    products =  ['{"sku": "24-UG03", "name": "Harmony Lumaflex&trade; Strength Band Kit", "price": "22"}',
+                 '{"sku": "24-WG088", "name": "Sprite Foam Roller", "price": "19"}',
+                 '{"sku": "24-MB04", "name": "Strive Shoulder Pack", "price": "32"}',
+                 '{"sku": "24-UG01", "name": "Quest Lumaflex&trade; Band", "price": "19"}',
+                 '{"skuere": "24-WG084", "name": "Sprite Foam Yoga Brick", "price": "5"}']
+    context = json.dumps(products)
+    print(f"context: {context}")  
+
+    #regular json loads
+    result : list[Product] = ProductFactory.try_parse_context(context)    
+    assert len(result) == 5   
+
+    #strict schmea  json loads
+    result : list[Product] = ProductFactory.try_parse_context_strict(context)
+    assert len(result) == 4 #sku not present in last record
+
+
+def test_product_factory_parse_all_dataclass_from_dict():
+    products =  [{"sku": "24-UG03", "name": "Harmony Lumaflex&trade; Strength Band Kit", "price": "22"},
+                 {"sku": "24-WG088", "name": "Sprite Foam Roller", "price": "19"},
+                 {"sku": "24-MB04", "name": "Strive Shoulder Pack", "price": "32"},
+                 {"sku": "24-UG01", "name": "Quest Lumaflex&trade; Band", "price": "19"},
+                 {"skuere": "24-WG084", "name": "Sprite Foam Yoga Brick", "price": "5"}]
+    context = json.dumps(products)
+    print(f"context: {context}")
+
+    #regular json loads
+    result : list[Product] = ProductFactory.try_parse_context(context)    
+    assert len(result) == 5 
+
+    #strict schmea  json loads
+    result : list[Product] = ProductFactory.try_parse_context_strict(context)
+    assert len(result) == 4 #sku not present in last record
+
+
+
+def test_products_must_all_have_sku():
+    products =  ['{"sku": "24-UG03", "name": "Harmony Lumaflex&trade; Strength Band Kit", "price": "22"}',
+                 '{"sku": "24-WG088", "name": "Sprite Foam Roller", "price": "19"}',
+                 '{"sku": "24-MB04", "name": "Strive Shoulder Pack", "price": "32"}',
+                 '{"sku": "24-UG01", "name": "Quest Lumaflex&trade; Band", "price": "19"}',
+                 '{"sku": "24-WG084", "name": "Sprite Foam Yoga Brick", "price": "5"}']
+
+    sku_check = ProductFactory.check_all_have_sku(products)
+    print(f"sku check: {sku_check}")
+    assert sku_check == True
+
+
+def test_products_must_all_have_sku_case_sensitive():
+    products =  ['{"SkU": "24-UG03", "name": "Harmony Lumaflex&trade; Strength Band Kit", "price": "22"}',
+                 '{"sku": "24-WG088", "name": "Sprite Foam Roller", "price": "19"}',
+                 '{"sku": "24-MB04", "name": "Strive Shoulder Pack", "price": "32"}',
+                 '{"sku": "24-UG01", "name": "Quest Lumaflex&trade; Band", "price": "19"}',
+                 '{"sku": "24-WG084", "name": "Sprite Foam Yoga Brick", "price": "5"}']
+
+    sku_check = ProductFactory.check_all_have_sku(products)
+    print(f"sku check: {sku_check}")
+    assert sku_check == False
+    
+    
+def test_products_must_all_have_sku_no_upper_allowed():
+    products =  ['{"SKU": "24-UG03", "name": "Harmony Lumaflex&trade; Strength Band Kit", "price": "22"}',
+                 '{"sku": "24-WG088", "name": "Sprite Foam Roller", "price": "19"}',
+                 '{"sku": "24-MB04", "name": "Strive Shoulder Pack", "price": "32"}',
+                 '{"sku": "24-UG01", "name": "Quest Lumaflex&trade; Band", "price": "19"}',
+                 '{"sku": "24-WG084", "name": "Sprite Foam Yoga Brick", "price": "5"}']
+
+    sku_check = ProductFactory.check_all_have_sku(products)
+    print(f"sku check: {sku_check}")
+    assert sku_check == False   
+    
+
+def test_products_missing_sku_error():
+    products =  ['{"sku": "24-UG03", "name": "Harmony Lumaflex&trade; Strength Band Kit", "price": "22"}',
+                 '{"name": "Sprite Foam Roller", "price": "19"}',
+                 '{"sku": "24-MB04", "name": "Strive Shoulder Pack", "price": "32"}',
+                 '{"sku": "24-UG01", "name": "Quest Lumaflex&trade; Band", "price": "19"}',
+                 '{"sku": "24-WG084", "name": "Sprite Foam Yoga Brick", "price": "5"}']
+
+    sku_check = ProductFactory.check_all_have_sku(products)
+    print(f"sku check: {sku_check}")
+    assert sku_check == False

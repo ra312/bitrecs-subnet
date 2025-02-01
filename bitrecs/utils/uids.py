@@ -4,6 +4,7 @@ import bittensor as bt
 import numpy as np
 import random
 from typing import List
+from bittensor.core.metagraph import NonTorchMetagraph
 
 
 def check_uid_availability(
@@ -28,7 +29,7 @@ def check_uid_availability(
     return True
 
 
-def get_random_uids(self, k: int, exclude: List[int] = None) -> np.ndarray:
+def get_random_miner_uids(self, k: int, exclude: List[int] = None) -> np.ndarray:
     """Returns k available random uids from the metagraph.
     Args:
         k (int): Number of uids to return.
@@ -53,6 +54,9 @@ def get_random_uids(self, k: int, exclude: List[int] = None) -> np.ndarray:
                 candidate_uids.append(uid)
     # If k is larger than the number of available uids, set k to the number of available uids.
     k = min(k, len(avail_uids))
+
+    bt.logging.trace(f"\033[32m get_random_uids - pre candidate_uids: {candidate_uids} from k {k} \033[0m")
+
     # Check if candidate_uids contain enough for querying, if not grab all avaliable uids
     available_uids = candidate_uids
     if len(candidate_uids) < k:
@@ -63,21 +67,56 @@ def get_random_uids(self, k: int, exclude: List[int] = None) -> np.ndarray:
     uids = np.array(random.sample(available_uids, k))
     return uids
 
+    
+
+def get_random_miner_uids2(self,
+    k: int, 
+    excluded_coldkeys: set = None, 
+    excluded_ips: set = None) -> list[int]:    
+    """Fetch random miners that meet criteria."""
+
+    avail_uids = []   
+    for uid in range(self.metagraph.n.item()):
+        if not self.metagraph.axons[uid].is_serving:
+            continue
+        # if self.metagraph.validator_permit[uid] and self.metagraph.S[uid] > 1000:
+        #     continue
+        # if self.metagraph.S[uid] == 0:
+        #     continue
+        # if excluded_coldkeys and self.metagraph.axons[uid].coldkey in excluded_coldkeys:
+        #     continue
+        # if excluded_ips and self.metagraph.axons[uid].ip in excluded_ips:
+        #     continue
+    
+        avail_uids.append(uid)
+
+    bt.logging.trace(f"\033[32m get_random_miner_uids2 - pre candidate_uids: {avail_uids} from k {k} \033[0m")
+
+    # Check if candidate_uids contain enough for querying, if not grab all avaliable uids
+    if 0 < len(avail_uids) < k:
+        bt.logging.warning(
+            f"Requested {k} uids but only {len(avail_uids)} were available. To disable this warning reduce the sample size (--neuron.sample_size)"
+        )
+        return np.array(avail_uids).astype(int).tolist()
+    elif len(avail_uids) >= k:
+        return np.array(random.sample(avail_uids, k)).astype(int).tolist()
+    else:
+        return []
+
+
 
 def best_uid(metagraph: bt.metagraph) -> int:
     """Returns the best performing UID in the metagraph."""
-    return max(range(metagraph.n), key=lambda uid: metagraph.I[uid].item())
+    return max(range(metagraph.n), key=lambda uid: metagraph.I[uid].item()) 
 
 
-
-def ping_uid(self, uid, timeout=5) -> bool:
+def ping_miner_uid(self, uid, port=8091, timeout=5) -> bool:
     """
-    Connect to a UID to check their availability.
+    Connect to a miner UID to check their availability.
     Returns True if successful, false otherwise
-    """
-    hk = self.metagraph.axons[uid].hotkey
-    ip = self.metagraph.axons[uid].ip
-    port = self.metagraph.axons[uid].port
+    """  
+    ip = self.metagraph.axons[uid].ip    
+    #port = self.metagraph.axons[uid].port
 
     ignored = ["localhost", "127.0.0.1", "0.0.0.0"]
     if ip in ignored:
@@ -86,8 +125,8 @@ def ping_uid(self, uid, timeout=5) -> bool:
 
     try:        
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)        
-        sock.settimeout(timeout)        
-        sock.connect((ip, port))        
+        sock.settimeout(timeout)
+        sock.connect((ip, port))
         return True
     except ConnectionRefusedError:        
         bt.logging.error(f"Port {port} on IP {ip} is not connected.")
@@ -99,8 +138,7 @@ def ping_uid(self, uid, timeout=5) -> bool:
         bt.logging.error(f"An error occurred: {e}")
         return False
 
-    finally:
-        # Close the socket regardless of whether an exception was raised
+    finally:        
         if 'sock' in locals():
             sock.close()
    

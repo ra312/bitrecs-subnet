@@ -1,16 +1,19 @@
-import json
 import os
 import re
+import json
 import bittensor as bt
+import json_repair
 import pandas as pd
+from abc import abstractmethod
+from enum import Enum
 from typing import Counter
 from pydantic import BaseModel
-from abc import abstractmethod
 from dataclasses import dataclass
-from enum import Enum
+
 
 
 class CatalogProvider(Enum):
+    BITRECS = 0
     SHOPIFY = 1
     AMAZON = 2
     WOOCOMMERCE = 3
@@ -53,7 +56,10 @@ class ProductFactory:
 
             #Final renaming of columns
             df = df.rename(columns={'SKU': 'sku', 'Name': 'name', 'Regular price': 'price', 'In stock?': 'InStock', 'Stock': 'OnHand'})            
-            df.fillna(' ', inplace=True)
+            float_cols = df.select_dtypes(include=['float64']).columns
+            df[float_cols] = df[float_cols].astype(object)
+            df.fillna('', inplace=True)
+
             df = df.head(max_rows)
             df = df.to_dict(orient='records')
             return df
@@ -105,6 +111,9 @@ class ProductFactory:
             # Clean and preprocess data
             df['name'] = df['name'].fillna('').str.replace(r'<[^<>]*>', '', regex=True)
             df['sku'] = df['sku'].astype(str).str.lstrip("'").replace('nan', '')  # Remove leading ' and invalid 'nan' values
+            
+            float_cols = df.select_dtypes(include=['float64']).columns
+            df[float_cols] = df[float_cols].astype(object)
             df.fillna('', inplace=True)
 
             # Fill empty names with the parent name grouped by 'handle'
@@ -162,7 +171,7 @@ class ProductFactory:
                 return json.dumps(thing, indent=2)
             case _:
                raise ValueError(f"Invalid provider: {provider}")
-            
+ 
 
     @staticmethod
     def try_parse_context(context: str) -> list[Product]:
@@ -177,17 +186,70 @@ class ProductFactory:
             bt.logging.error(f"try_parse_context Exception: {e}")
             return []
         
+        
+    @staticmethod
+    def try_parse_context_strict(context: str) -> list[Product]:
+        """
+        Strict converter expects a json array of products with sku/name/price fields
+
+        """ 
+        result: list[Product] = []
+        for p in json.loads(context):
+            try:
+                if 'sku' not in p:                    
+                    continue
+                if 'name' not in p:                    
+                    continue
+                if 'price' not in p:                    
+                    continue
+                
+                good_json_string = json_repair.repair_json(str(p))
+                product = json.loads(good_json_string)
+
+                sku = product["sku"]
+                name = product["name"]
+                name = re.sub(r"[^A-Za-z0-9 ]", "", name)
+                price = product["price"]
+
+                thing = Product(sku=sku, name=name, price=price)
+                result.append(thing)
+            except Exception as e:
+                bt.logging.error(f"try_parse_context3 Exception: {e}")
+                continue
+        return result
+
+
    
     @staticmethod
     def get_dupe_count(products: list[Product]) -> int:
+        # try:
+        #     if not products or len(products) == 0:
+        #         return 0
+        #     sku_counts = Counter(product.sku for product in products)
+        #     return sum(count - 1 for count in sku_counts.values() if count > 1)
+        # except AttributeError as a:
+        #     bt.logging.error(f"WARNING - get_dupe_count failed: {a}")
+        #     return 0
+        return ProductFactory.get_dupe_count_list(products)
+        
+        
+    @staticmethod
+    def get_dupe_count_list(products: list) -> int:        
         try:
             if not products or len(products) == 0:
                 return 0
-            sku_counts = Counter(product.sku for product in products)
+            
+            sku_counts = Counter(
+                product.sku if isinstance(product, Product) else product.get('sku')
+                for product in products
+            )
             return sum(count - 1 for count in sku_counts.values() if count > 1)
         except AttributeError as a:
-            bt.logging.error(f"WARNING - get_dupe_count failed: {a}")
-            return 0
+            bt.logging.error(f"WARNING - get_dupe_count_list failed: {a}")
+            return -1
+        except Exception as e:
+            bt.logging.error(f"ERROR - get_dupe_count_list encountered an unexpected error: {e}")
+            return -1
         
     
     @staticmethod
@@ -197,7 +259,29 @@ class ProductFactory:
             if product.sku not in unique_products:
                 unique_products[product.sku] = product
         return list(unique_products.values())
-        
+    
+               
+    @staticmethod
+    def check_all_have_sku(product_list: list) -> bool:
+        try:
+            product_dicts = []
+            for product in product_list:
+                try:
+                    product_dict = json.loads(product.replace("'", '"'))
+                    if isinstance(product_dict, dict):
+                        product_dicts.append(product_dict)
+                    else:
+                        bt.logging.error(f"Product is not a dictionary: {product}")
+                except json.JSONDecodeError as e:
+                    bt.logging.error(f"JSON parsing error: {e} for product: {product}")
+                    continue
+
+            all_have_sku = all('sku' in product for product in product_dicts)
+            return all_have_sku
+        except Exception as e:
+            bt.logging.error(f"Unexpected error in check_all_have_sku: {e}")
+            return False
+
         
     @staticmethod
     def convert(context: str, provider: CatalogProvider) -> list[Product]:
@@ -312,6 +396,32 @@ class ShopifyConverter(BaseConverter):
                 bt.logging.error(f"ShopifyConverter.convert Exception: {e}")
                 continue
         return result    
+
+
+class BitrecsConverter(BaseConverter):
+    
+    def convert(self, context: str) -> list[Product]:
+        """
+        converts from generic json format
+
+        """
+        result : list[Product] = []
+        for p in json.loads(context):
+            try:
+                sku = p.get("sku")
+                name = p.get("name")
+                price = p.get("price", "0.00")
+                if not sku or not name:
+                    continue
+                if price is None or price == 'None':
+                    price = "0.00"
+                price = str(price)
+                name = self.clean(name)
+                result.append(Product(sku=sku, name=name, price=price))
+            except Exception as e:
+                bt.logging.error(f"GenericConverter.convert Exception: {e}")
+                continue
+        return result
      
     
 

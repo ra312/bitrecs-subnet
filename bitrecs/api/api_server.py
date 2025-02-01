@@ -1,4 +1,3 @@
-
 import os
 import json
 import time
@@ -9,16 +8,14 @@ import hashlib
 from typing import Callable
 from functools import partial
 from bittensor.core.axon import FastAPIThreadedServer
-from fastapi import FastAPI, HTTPException, Request, APIRouter, Response, Header
+from fastapi import FastAPI, HTTPException, Request, APIRouter, Header
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.exceptions import RequestValidationError
-from slowapi.errors import RateLimitExceeded
 from bitrecs.utils import constants as CONST
 from bitrecs.commerce.product import ProductFactory
 from bitrecs.protocol import BitrecsRequest
 from bitrecs.api.api_counter import APICounter
-from bitrecs.api.api_core import OnlyJSONMiddleware, filter_allowed_ips, limiter
+from bitrecs.api.api_core import filter_allowed_ips, limiter
 from bitrecs.api.utils import api_key_validator, get_proxy_public_key
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.exceptions import InvalidSignature
@@ -37,7 +34,7 @@ class ApiServer:
     router: APIRouter
     forward_fn: ForwardFn    
 
-    def __init__(self, validator, axon_port: int, forward_fn: ForwardFn):
+    def __init__(self, validator, api_port: int, forward_fn: ForwardFn):
         self.validator = validator
         self.forward_fn = forward_fn
         self.allowed_ips = ["127.0.0.1", "10.0.0.1"]
@@ -75,7 +72,7 @@ class ApiServer:
         self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
             self.app,
             host="0.0.0.0",
-            port=axon_port,
+            port=api_port,
             log_level="trace" if bt.logging.__trace_on__ else "critical",         
         ))
 
@@ -114,6 +111,7 @@ class ApiServer:
         except Exception as e:
             bt.logging.error(f"\033[1;31mERROR API could not get proxy public key:  {e} \033[0m")
             bt.logging.warning(f"\033[1;33mWARNING - your validator is in limp mode, please restart\033[0m")
+            raise Exception("Could not get proxy public key")
         
         self.api_counter = APICounter(os.path.join(self.app.root_path, "api_counter.json"))
         bt.logging.info(f"\033[1;32m API Counter set {self.api_counter.save_path} \033[0m")
@@ -236,9 +234,9 @@ class ApiServer:
                 return JSONResponse(status_code=400,
                                     content={"detail": "error - dupe threshold reached", "status_code": 400})
 
-            st = time.time()
+            st = time.perf_counter()
             response = await self.forward_fn(request)
-            total_time = time.time() - st
+            total_time = time.perf_counter() - st
 
             if len(response.results) == 0:
                 bt.logging.error(f"API forward_fn response has no results")
@@ -295,28 +293,46 @@ class ApiServer:
         """
 
         try:
-          
+
+            st_a = int(time.time())
+
             await self.verify_request2(request, x_signature, x_timestamp)
 
             store_catalog = ProductFactory.try_parse_context(request.context)
+            #store_catalog = ProductFactory.try_parse_context_strict(request.context)
             catalog_size = len(store_catalog)
             bt.logging.trace(f"REQUEST CATALOG SIZE: {catalog_size}")
             if catalog_size < CONST.MIN_CATALOG_SIZE or catalog_size > CONST.MAX_CATALOG_SIZE:
                 bt.logging.error(f"API invalid catalog size")
                 await self.log_counter(False)
                 return JSONResponse(status_code=400,
-                                    content={"detail": "error - invalid catalog", "status_code": 400})            
+                                    content={"detail": "error - invalid catalog - size", "status_code": 400})
             
-            dupes = ProductFactory.get_dupe_count(store_catalog)
+            # all_skus_check = ProductFactory.check_all_have_sku(store_catalog)
+            # if not all_skus_check:
+            #     bt.logging.error(f"API invalid catalog - missing sku field in records")
+            #     await self.log_counter(False)
+            #     return JSONResponse(status_code=400,
+            #                         content={"detail": "error - invalid catalog - missing sku", "status_code": 400})
+
+            dupes = ProductFactory.get_dupe_count_list(store_catalog)
+            if dupes == -1:
+                bt.logging.error(f"API invalid catalog")
+                await self.log_counter(False)
+                return JSONResponse(status_code=400,
+                                    content={"detail": "error - invalid catalog - format", "status_code": 400})
+            
             if dupes > catalog_size * CONST.CATALOG_DUPE_THRESHOLD:
                 bt.logging.error(f"API Too many duplicates in catalog: {dupes}")
                 await self.log_counter(False)
                 return JSONResponse(status_code=400,
                                     content={"detail": "error - dupe threshold reached", "status_code": 400})
 
-            st = time.time()
+            st = time.perf_counter()
             response = await self.forward_fn(request)
-            total_time = time.time() - st
+            subnet_time = time.perf_counter() - st
+            response_text = "Bitrecs Subnet {} Took {:.2f} seconds to process this request".format(self.network, subnet_time)
+            bt.logging.trace(response_text)
 
             if len(response.results) == 0:
                 bt.logging.error(f"API forward_fn response has no results")
@@ -324,9 +340,7 @@ class ApiServer:
                 return JSONResponse(status_code=500,
                                     content={"detail": "error - forward", "status_code": 500})
 
-            final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]            
-            response_text = "Bitrecs Took {:.2f} seconds to process this request".format(total_time)
-
+            final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]
             response = {
                 "user": response.user, 
                 "original_query": response.query,
@@ -342,7 +356,12 @@ class ApiServer:
                 "reasoning": f"Bitrecs AI - {self.network}"
             }
 
-            await self.log_counter(True)            
+            await self.log_counter(True)
+
+            et_a = int(time.time())
+            total_duration = et_a - st_a
+            bt.logging.info("\033[1;32m Bitrecs Subnet - Processed request in {:.2f} seconds \033[0m".format(total_duration))
+
             return JSONResponse(status_code=200, content=response)
         
         except HTTPException as h:
@@ -382,6 +401,6 @@ class ApiServer:
             self.api_counter.update(is_success=success)
             self.api_counter.save()
         except Exception as e:
-            bt.logging.error(f"ERROR API could not update counter log:  {e}")
-            pass            
-   
+            bt.logging.error(f"ERROR API could not update counter log:  {e}")              
+    
+
