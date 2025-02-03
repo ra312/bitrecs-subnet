@@ -1,10 +1,8 @@
 
-from datetime import datetime
 import os
-from pathlib import Path
 import socket
 import uuid
-import bittensor
+from pathlib import Path
 
 ROOT_DIR = Path(__file__).parent.parent
 
