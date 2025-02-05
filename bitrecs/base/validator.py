@@ -245,7 +245,7 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.trace(f"Checking uid: {uid} with stake {self.metagraph.S[uid].tao} and trust {self.metagraph.T[uid]}")
             if uid == self.uid:                
                 continue
-            if not self.metagraph.axons[uid].is_serving:                
+            if not self.metagraph.axons[uid].is_serving:
                 continue
             # if self.metagraph.S[uid] == 0:
             #     bt.logging.trace(f"uid: {uid} stake 0T, skipping")
@@ -384,7 +384,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.info("SCORING DONE")
                         bt.logging.info(f"\033[1;32mWINNING MINER: {elected.miner_uid} \033[0m")
                         bt.logging.info(f"\033[1;32mWINNING MODEL: {elected.models_used} \033[0m")
-                        bt.logging.info(f"WINNING RESULT: {elected}")
+                        bt.logging.info(f"\033[1;32mWINNING RESULT: {elected} \033[0m")
                         
                         if len(elected.results) == 0:
                             bt.logging.error("FATAL - Elected response has no results")
