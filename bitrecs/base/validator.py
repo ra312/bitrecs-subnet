@@ -247,9 +247,9 @@ class BaseValidatorNeuron(BaseNeuron):
                 continue
             if not self.metagraph.axons[uid].is_serving:                
                 continue
-            if self.metagraph.S[uid] == 0:
-                bt.logging.trace(f"uid: {uid} stake 0T, skipping")
-                continue
+            # if self.metagraph.S[uid] == 0:
+            #     bt.logging.trace(f"uid: {uid} stake 0T, skipping")
+            #     continue
             if self.metagraph.S[uid].tao > self.config.neuron.vpermit_tao_limit:
                 bt.logging.trace(f"uid: {uid} stake > {self.config.neuron.vpermit_tao_limit}T, skipping")
                 continue
