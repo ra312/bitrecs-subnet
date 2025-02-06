@@ -408,15 +408,18 @@ class BaseValidatorNeuron(BaseNeuron):
                     else:
                         if not api_exclusive: #Regular validator loop  
                             bt.logging.info("Processing synthetic concurrent forward")
-                            self.loop.run_until_complete(self.concurrent_forward())
+                            #self.loop.run_until_complete(self.concurrent_forward())
+                            asyncio.create_task(self.concurrent_forward())
 
                     if self.should_exit:
                         return
 
                     try:
                         self.sync()
-                        self.loop.run_until_complete(self.miner_sync())
-                        self.loop.run_until_complete(self.action_sync())                        
+                        asyncio.create_task(self.miner_sync())
+                        #self.loop.run_until_complete(self.miner_sync())
+                        asyncio.create_task(self.action_sync())
+                        #self.loop.run_until_complete(self.action_sync())
                     except Exception as e:
                         bt.logging.error(traceback.format_exc())
                         bt.logging.error(f"Failed to sync with exception: {e}")
