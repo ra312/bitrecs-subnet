@@ -162,7 +162,8 @@ class BaseValidatorNeuron(BaseNeuron):
         if not os.environ.get("BITRECS_PROXY_URL"):
             raise Exception("Please set the BITRECS_PROXY_URL environment variable.")
         self.user_actions: List[UserAction] = []
-        self.loop.run_until_complete(self.action_sync())
+        ##self.loop.run_until_complete(self.action_sync())        
+        #self.action_sync()
         if len(self.user_actions) == 0:
             bt.logging.error("No user actions found - check bitrecs api")            
         
