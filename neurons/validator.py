@@ -109,7 +109,7 @@ class Validator(BaseValidatorNeuron):
         chosen_uids = list(set(chosen_uids))
         selected_miners = []
         for uid in chosen_uids:            
-            bt.logging.trace(f"Checking uid: {uid} with stake {self.metagraph.S[uid].tao} and trust {self.metagraph.T[uid]}")
+            bt.logging.trace(f"Checking uid: {uid} with stake {self.metagraph.S[uid]} and trust {self.metagraph.T[uid]}")
             if uid == self.uid:                
                 continue
             if not self.metagraph.axons[uid].is_serving:
@@ -117,7 +117,7 @@ class Validator(BaseValidatorNeuron):
             # if self.metagraph.S[uid] == 0:
             #     bt.logging.trace(f"uid: {uid} stake 0T, skipping")
             #     continue
-            if self.metagraph.S[uid].tao > self.config.neuron.vpermit_tao_limit:
+            if self.metagraph.S[uid] > self.config.neuron.vpermit_tao_limit:
                 bt.logging.trace(f"uid: {uid} stake > {self.config.neuron.vpermit_tao_limit}T, skipping")
                 continue
 
@@ -158,11 +158,11 @@ class Validator(BaseValidatorNeuron):
 
     
 
-async def main():     
-    await GPUInfo.log_gpu_info()
+async def main():
     bt.logging.info(f"\033[32m Starting Bitrecs Validator\033[0m ... {int(time.time())}")
+    await GPUInfo.log_gpu_info()
     with Validator() as validator:
-        start_time = time.time()        
+        start_time = time.time()
         while True:
             await validator.version_sync()
             await validator.miner_sync()
