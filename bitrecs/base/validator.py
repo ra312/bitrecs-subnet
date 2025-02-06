@@ -165,8 +165,8 @@ class BaseValidatorNeuron(BaseNeuron):
         ##self.loop.run_until_complete(self.action_sync())
         #asyncio.get_event_loop().run_until_complete(self.action_sync())
         asyncio.create_task(self.action_sync())
-        if len(self.user_actions) == 0:
-            bt.logging.error("No user actions found - check bitrecs api")            
+        # if len(self.user_actions) == 0:
+        #     bt.logging.error("No user actions found - check bitrecs api")            
         
         if self.config.wandb.enabled == True:
             wandb_project = f"bitrecs_{self.network}"
@@ -419,11 +419,11 @@ class BaseValidatorNeuron(BaseNeuron):
                     try:
                         self.sync()
                         #asyncio.create_task(self.miner_sync())
-                        #self.loop.run_until_complete(self.miner_sync())
+                        self.loop.run_until_complete(self.miner_sync())
                         #asyncio.create_task(self.action_sync())
-                        #self.loop.run_until_complete(self.action_sync())
-                        asyncio.get_event_loop().run_until_complete(self.miner_sync())
-                        asyncio.get_event_loop().run_until_complete(self.action_sync())
+                        self.loop.run_until_complete(self.action_sync())
+                        #asyncio.get_event_loop().run_until_complete(self.miner_sync())
+                        #asyncio.get_event_loop().run_until_complete(self.action_sync())
                     except Exception as e:
                         bt.logging.error(traceback.format_exc())
                         bt.logging.error(f"Failed to sync with exception: {e}")
