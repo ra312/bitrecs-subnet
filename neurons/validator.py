@@ -16,6 +16,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import os
 import time
 import bittensor as bt
 import asyncio
@@ -48,6 +49,8 @@ class Validator(BaseValidatorNeuron):
         bt.logging.info("load_state()")
         self.load_state()
         self.total_request_in_interval = 0
+        if not os.environ.get("BITRECS_PROXY_URL"):
+            raise Exception("Please set the BITRECS_PROXY_URL environment variable.")
 
 
     async def forward(self, pr : BitrecsRequest = None):
@@ -93,9 +96,8 @@ class Validator(BaseValidatorNeuron):
         bt.logging.trace(f"\033[1;32m Validator miner_sync running {int(time.time())}.\033[0m")
         bt.logging.trace(f"neuron.sample_size: {self.config.neuron.sample_size}")
         bt.logging.trace(f"vpermit_tao_limit: {self.config.neuron.vpermit_tao_limit}")
-        bt.logging.trace(f"block {self.subtensor.block} on step {self.step}")
+        bt.logging.trace(f"block {self.subtensor.block} on step {self.step}")        
         
-        #excluded = [self.uid]
         #available_uids = get_random_miner_uids(self, k=self.config.neuron.sample_size, exclude=excluded)
         available_uids = get_random_miner_uids2(self, k=self.config.neuron.sample_size)
         bt.logging.trace(f"get_random_uids: {available_uids}")
@@ -117,8 +119,12 @@ class Validator(BaseValidatorNeuron):
             # if self.metagraph.S[uid] == 0:
             #     bt.logging.trace(f"uid: {uid} stake 0T, skipping")
             #     continue
-            if self.metagraph.S[uid] > self.config.neuron.vpermit_tao_limit:
-                bt.logging.trace(f"uid: {uid} stake > {self.config.neuron.vpermit_tao_limit}T, skipping")
+                        
+            b : bt.Balance = self.metagraph.S[uid]
+            this_stake = b.tao            
+            stake_limit = float(self.config.neuron.vpermit_tao_limit)
+            if this_stake > stake_limit:
+                bt.logging.trace(f"uid: {uid} has stake {this_stake} > {stake_limit}, skipping")
                 continue
 
             try:
