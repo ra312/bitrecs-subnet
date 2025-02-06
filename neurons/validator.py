@@ -120,7 +120,7 @@ class Validator(BaseValidatorNeuron):
             #     bt.logging.trace(f"uid: {uid} stake 0T, skipping")
             #     continue
                         
-            b : bt.Balance = self.metagraph.S[uid].item()
+            b : bt.Balance = self.metagraph.S[uid].tao()
             this_stake = b
             stake_limit = float(self.config.neuron.vpermit_tao_limit)
             if this_stake > stake_limit:
