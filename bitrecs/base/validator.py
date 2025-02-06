@@ -417,11 +417,12 @@ class BaseValidatorNeuron(BaseNeuron):
                         return
 
                     try:
-                        self.sync()
-                        #asyncio.create_task(self.miner_sync())
-                        self.loop.run_until_complete(self.miner_sync())
-                        #asyncio.create_task(self.action_sync())
-                        self.loop.run_until_complete(self.action_sync())
+                        self.sync()                        
+                        #self.loop.run_until_complete(self.miner_sync())                        
+                        #self.loop.run_until_complete(self.action_sync())
+                        
+                        self.loop.create_task(self.miner_sync())
+                        self.loop.create_task(self.action_sync())
                         #asyncio.get_event_loop().run_until_complete(self.miner_sync())
                         #asyncio.get_event_loop().run_until_complete(self.action_sync())
                     except Exception as e:
