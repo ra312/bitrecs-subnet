@@ -164,7 +164,7 @@ class BaseValidatorNeuron(BaseNeuron):
         self.user_actions: List[UserAction] = []
         ##self.loop.run_until_complete(self.action_sync())
         #asyncio.get_event_loop().run_until_complete(self.action_sync())
-        asyncio.create_task(self.action_sync())
+        #asyncio.create_task(self.action_sync())
         # if len(self.user_actions) == 0:
         #     bt.logging.error("No user actions found - check bitrecs api")            
         
@@ -220,74 +220,74 @@ class BaseValidatorNeuron(BaseNeuron):
         await asyncio.gather(*coroutines)    
     
       
-    @execute_periodically(timedelta(seconds=CONST.MINER_BATTERY_INTERVAL))
-    async def miner_sync(self):
-        """
-            Checks the miners in the metagraph for connectivity and updates the active miners list.
-        """
-        bt.logging.trace(f"\033[1;32m Validator miner_sync running {int(time.time())}.\033[0m")
-        bt.logging.trace(f"neuron.sample_size: {self.config.neuron.sample_size}")
-        bt.logging.trace(f"vpermit_tao_limit: {self.config.neuron.vpermit_tao_limit}")
-        bt.logging.trace(f"block {self.subtensor.block} on step {self.step}")
+    # @execute_periodically(timedelta(seconds=CONST.MINER_BATTERY_INTERVAL))
+    # async def miner_sync(self):
+    #     """
+    #         Checks the miners in the metagraph for connectivity and updates the active miners list.
+    #     """
+    #     bt.logging.trace(f"\033[1;32m Validator miner_sync running {int(time.time())}.\033[0m")
+    #     bt.logging.trace(f"neuron.sample_size: {self.config.neuron.sample_size}")
+    #     bt.logging.trace(f"vpermit_tao_limit: {self.config.neuron.vpermit_tao_limit}")
+    #     bt.logging.trace(f"block {self.subtensor.block} on step {self.step}")
         
-        #excluded = [self.uid]
-        #available_uids = get_random_miner_uids(self, k=self.config.neuron.sample_size, exclude=excluded)
-        available_uids = get_random_miner_uids2(self, k=self.config.neuron.sample_size)
-        bt.logging.trace(f"get_random_uids: {available_uids}")
+    #     #excluded = [self.uid]
+    #     #available_uids = get_random_miner_uids(self, k=self.config.neuron.sample_size, exclude=excluded)
+    #     available_uids = get_random_miner_uids2(self, k=self.config.neuron.sample_size)
+    #     bt.logging.trace(f"get_random_uids: {available_uids}")
         
-        chosen_uids = available_uids
-        bt.logging.trace(f"chosen_uids: {chosen_uids}")
-        if len(chosen_uids) == 0:
-            bt.logging.error("\033[1;31mNo random qualified miners found - check your connectivity \033[0m")
-            return
+    #     chosen_uids = available_uids
+    #     bt.logging.trace(f"chosen_uids: {chosen_uids}")
+    #     if len(chosen_uids) == 0:
+    #         bt.logging.error("\033[1;31mNo random qualified miners found - check your connectivity \033[0m")
+    #         return
         
-        chosen_uids = list(set(chosen_uids))
-        selected_miners = []
-        for uid in chosen_uids:            
-            bt.logging.trace(f"Checking uid: {uid} with stake {self.metagraph.S[uid].tao} and trust {self.metagraph.T[uid]}")
-            if uid == self.uid:                
-                continue
-            if not self.metagraph.axons[uid].is_serving:
-                continue
-            # if self.metagraph.S[uid] == 0:
-            #     bt.logging.trace(f"uid: {uid} stake 0T, skipping")
-            #     continue
-            if self.metagraph.S[uid].tao > self.config.neuron.vpermit_tao_limit:
-                bt.logging.trace(f"uid: {uid} stake > {self.config.neuron.vpermit_tao_limit}T, skipping")
-                continue
+    #     chosen_uids = list(set(chosen_uids))
+    #     selected_miners = []
+    #     for uid in chosen_uids:            
+    #         bt.logging.trace(f"Checking uid: {uid} with stake {self.metagraph.S[uid].tao} and trust {self.metagraph.T[uid]}")
+    #         if uid == self.uid:                
+    #             continue
+    #         if not self.metagraph.axons[uid].is_serving:
+    #             continue
+    #         # if self.metagraph.S[uid] == 0:
+    #         #     bt.logging.trace(f"uid: {uid} stake 0T, skipping")
+    #         #     continue
+    #         if self.metagraph.S[uid].tao > self.config.neuron.vpermit_tao_limit:
+    #             bt.logging.trace(f"uid: {uid} stake > {self.config.neuron.vpermit_tao_limit}T, skipping")
+    #             continue
 
-            try:
-                ip = self.metagraph.axons[uid].ip
-                if ping_miner_uid(self, uid, 8091, 5):
-                    bt.logging.trace(f"\033[1;32m ping: {ip}:OK \033[0m")
-                    selected_miners.append(uid)
-                else:
-                    bt.logging.trace(f"\033[1;33m ping: {ip}:FALSE \033[0m")
-            except Exception as e:
-                bt.logging.trace(f"\033[1;33 {e} \033[0m")                
-                continue
-        if len(selected_miners) == 0:
-            self.active_miners = []
-            bt.logging.error("\033[31mNo active miners selected in round - check your connectivity \033[0m")
-            return
+    #         try:
+    #             ip = self.metagraph.axons[uid].ip
+    #             if ping_miner_uid(self, uid, 8091, 5):
+    #                 bt.logging.trace(f"\033[1;32m ping: {ip}:OK \033[0m")
+    #                 selected_miners.append(uid)
+    #             else:
+    #                 bt.logging.trace(f"\033[1;33m ping: {ip}:FALSE \033[0m")
+    #         except Exception as e:
+    #             bt.logging.trace(f"\033[1;33 {e} \033[0m")                
+    #             continue
+    #     if len(selected_miners) == 0:
+    #         self.active_miners = []
+    #         bt.logging.error("\033[31mNo active miners selected in round - check your connectivity \033[0m")
+    #         return
         
-        self.active_miners = list(set(selected_miners))
-        bt.logging.info(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
+    #     self.active_miners = list(set(selected_miners))
+    #     bt.logging.info(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
 
 
-    @execute_periodically(timedelta(seconds=CONST.ACTION_SYNC_INTERVAL))
-    async def action_sync(self):
-        """
-        Periodically fetch user actions 
-        """
-        sd, ed = UserAction.get_default_range(days_ago=7)
-        bt.logging.trace(f"Gathering user actions for range: {sd} to {ed}")
-        try:
-            self.user_actions = UserAction.get_actions_range(start_date=sd, end_date=ed)
-            bt.logging.trace(f"Success - User actions size: \033[1;32m {len(self.user_actions)} \033[0m")
-        except Exception as e:
-            bt.logging.error(f"Failed to get user actions with exception: {e}")
-        return
+    # @execute_periodically(timedelta(seconds=CONST.ACTION_SYNC_INTERVAL))
+    # async def action_sync(self):
+    #     """
+    #     Periodically fetch user actions 
+    #     """
+    #     sd, ed = UserAction.get_default_range(days_ago=7)
+    #     bt.logging.trace(f"Gathering user actions for range: {sd} to {ed}")
+    #     try:
+    #         self.user_actions = UserAction.get_actions_range(start_date=sd, end_date=ed)
+    #         bt.logging.trace(f"Success - User actions size: \033[1;32m {len(self.user_actions)} \033[0m")
+    #     except Exception as e:
+    #         bt.logging.error(f"Failed to get user actions with exception: {e}")
+    #     return
 
 
     def run(self):
@@ -409,9 +409,9 @@ class BaseValidatorNeuron(BaseNeuron):
                     else:
                         if not api_exclusive: #Regular validator loop  
                             bt.logging.info("Processing synthetic concurrent forward")
-                            #self.loop.run_until_complete(self.concurrent_forward())
+                            self.loop.run_until_complete(self.concurrent_forward())
                             #asyncio.create_task(self.concurrent_forward())
-                            asyncio.get_event_loop().run_until_complete(self.concurrent_forward())                            
+                            #asyncio.get_event_loop().run_until_complete(self.concurrent_forward())
 
                     if self.should_exit:
                         return
@@ -420,9 +420,9 @@ class BaseValidatorNeuron(BaseNeuron):
                         self.sync()                        
                         #self.loop.run_until_complete(self.miner_sync())                        
                         #self.loop.run_until_complete(self.action_sync())
-                        
-                        self.loop.create_task(self.miner_sync())
-                        self.loop.create_task(self.action_sync())
+                                                
+                        # self.loop.create_task(self.miner_sync())
+                        # self.loop.create_task(self.action_sync())
                         #asyncio.get_event_loop().run_until_complete(self.miner_sync())
                         #asyncio.get_event_loop().run_until_complete(self.action_sync())
                     except Exception as e:
@@ -434,14 +434,15 @@ class BaseValidatorNeuron(BaseNeuron):
                 except Exception as e:
                     bt.logging.error(f"Main validator RUN loop exception: {e}")
                     if synapse_with_event and synapse_with_event.event:
+                        bt.logging.error("API MISSED REQUEST - Marking synapse as processed due to exception")
                         synapse_with_event.event.set()
+                    bt.logging.error("Sleeping for 60 seconds ... ")
                     time.sleep(60)
                 finally:
                     if api_enabled and api_exclusive:
-                        bt.logging.info(f"forward finished, ready for next request")
-                        pass
+                        bt.logging.info(f"API MODE - forward finished, ready for next request")                        
                     else:
-                        bt.logging.info(f"forward finished, sleep for {10} seconds")
+                        bt.logging.info(f"LIMP MODE forward finished, sleep for {10} seconds")
                         time.sleep(10)
 
         # If someone intentionally stops the validator, it'll safely terminate operations.
