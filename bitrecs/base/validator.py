@@ -162,12 +162,12 @@ class BaseValidatorNeuron(BaseNeuron):
         if not os.environ.get("BITRECS_PROXY_URL"):
             raise Exception("Please set the BITRECS_PROXY_URL environment variable.")
         self.user_actions: List[UserAction] = []
-        ##self.loop.run_until_complete(self.action_sync())        
-        #self.action_sync()
+        ##self.loop.run_until_complete(self.action_sync())
+        asyncio.get_event_loop().run_until_complete(self.action_sync())
         if len(self.user_actions) == 0:
             bt.logging.error("No user actions found - check bitrecs api")            
         
-        if self.config.wandb.enabled == True: 
+        if self.config.wandb.enabled == True:
             wandb_project = f"bitrecs_{self.network}"
             wandb_entity = self.config.wandb.entity
             if len(wandb_project) == 0 or len(wandb_entity) == 0:
@@ -274,7 +274,7 @@ class BaseValidatorNeuron(BaseNeuron):
         bt.logging.info(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
 
 
-    @execute_periodically(timedelta(seconds=120))
+    @execute_periodically(timedelta(seconds=CONST.ACTION_SYNC_INTERVAL))
     async def action_sync(self):
         """
         Periodically fetch user actions 
