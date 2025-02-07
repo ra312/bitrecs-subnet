@@ -47,7 +47,6 @@ class Validator(BaseValidatorNeuron):
     def __init__(self, config=None):
         super(Validator, self).__init__(config=config)
 
-        bt.logging.info("load_state()")
         self.load_state()
         self.total_request_in_interval = 0
         if not os.environ.get("BITRECS_PROXY_URL"):
@@ -144,7 +143,6 @@ class Validator(BaseValidatorNeuron):
         
         self.active_miners = list(set(selected_miners))
         bt.logging.info(f"\033[1;32m Active miners: {self.active_miners}  \033[0m")
-
         
 
     @execute_periodically(timedelta(seconds=CONST.ACTION_SYNC_INTERVAL))
@@ -160,16 +158,13 @@ class Validator(BaseValidatorNeuron):
         except Exception as e:
             bt.logging.error(f"Failed to get user actions with exception: {e}")
         return
-
-
     
 
 async def main():
     bt.logging.info(f"\033[32m Starting Bitrecs Validator\033[0m ... {int(time.time())}")
     await GPUInfo.log_gpu_info()
     with Validator() as validator:
-        start_time = time.time()
-      
+        start_time = time.time()      
         while True:
             version_sync_task = asyncio.create_task(validator.version_sync())
             miner_sync_task = asyncio.create_task(validator.miner_sync())

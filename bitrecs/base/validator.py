@@ -249,8 +249,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         api_request = synapse_with_event.input_synapse
                         number_of_recs_desired = api_request.num_results
                         
-                        st = time.perf_counter()
-                        
+                        st = time.perf_counter()                        
                         responses = await self.dendrite.forward(
                             axons = chosen_axons, 
                             synapse = api_request,
@@ -258,14 +257,6 @@ class BaseValidatorNeuron(BaseNeuron):
                             deserialize=False, 
                             run_async=True
                         )
-                        
-                        # Send request to the miner population syncronous
-                        # responses = await self.dendrite.aquery(
-                        #     chosen_axons,
-                        #     api_request,
-                        #     deserialize=False,
-                        #     timeout = min(CONST.MAX_DENDRITE_TIMEOUT, 8)
-                        # )
                         et = time.perf_counter()
                         bt.logging.trace(f"Miners responded with {len(responses)} responses in \033[1;32m{et-st:0.4f}\033[0m seconds")
 
@@ -321,7 +312,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         return
 
                     try:
-                        if self.step > 1:
+                        if self.step >= 1:
                             self.sync()
                       
                     except Exception as e:
