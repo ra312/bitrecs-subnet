@@ -172,15 +172,13 @@ async def main():
         executor = ThreadPoolExecutor(max_workers=3)
         loop = asyncio.get_event_loop()
         while True:
-            await loop.run_in_executor(executor, validator.version_sync)
-            await loop.run_in_executor(executor, validator.miner_sync)
-            await loop.run_in_executor(executor, validator.action_sync)
-            # await validator.loop.run_until_complete(validator.version_sync())
-            # await validator.loop.run_until_complete(validator.miner_sync())
-            # await validator.loop.run_until_complete(validator.action_sync())
-            # await validator.version_sync()
-            # await validator.miner_sync()
-            # await validator.action_sync()
+            version_sync_task = asyncio.create_task(validator.version_sync())
+            miner_sync_task = asyncio.create_task(validator.miner_sync())
+            action_sync_task = asyncio.create_task(validator.action_sync())
+
+            await version_sync_task
+            await miner_sync_task
+            await action_sync_task
             
             bt.logging.info(f"Validator {validator.uid} running... {int(time.time())}")
             if time.time() - start_time > 300:
