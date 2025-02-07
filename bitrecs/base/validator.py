@@ -27,6 +27,7 @@ import time
 import traceback
 import anyio.to_thread
 import wandb
+import anyio
 
 from typing import List, Union, Optional
 from dataclasses import dataclass
@@ -204,21 +205,8 @@ class BaseValidatorNeuron(BaseNeuron):
         await asyncio.gather(*coroutines)
 
 
-    def run(self):
-        """
-        Initiates and manages the main loop for the validator on the Bitrecs subnet
-
-        This function performs the following primary tasks:
-        1. Check for registration on the Bittensor network.
-        2. Configures an API endpoint which receive organic requests from the API server.
-        3. Periodically resynchronizes with the chain; updating the metagraph with the latest network state and setting weights.
-        4. Runs a loop that generates synthetic requests and forwards them to the network (if API is disabled).
-        5. Handles organic API requests from bitrecs API to generate recommendations.
-
-        """
-        # Check that validator is registered on the network.
-        #self.sync()
-        
+    async def main_loop(self):
+        """Main loop for the validator."""
         bt.logging.info(
             f"\033[1;32m 🐸 Running validator on network: {self.config.subtensor.chain_endpoint} with netuid: {self.config.netuid}\033[0m")
         if hasattr(self, "axon"):
@@ -229,7 +217,6 @@ class BaseValidatorNeuron(BaseNeuron):
         try:
             while True:
                 try:
-
                     api_enabled = self.config.api.enabled
                     api_exclusive = self.config.api.exclusive
                     bt.logging.trace(f"api_enabled: {api_enabled} | api_exclusive {api_exclusive}")
@@ -340,25 +327,26 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.error("API MISSED REQUEST - Marking synapse as processed due to exception")
                         synapse_with_event.event.set()
                     bt.logging.error("Sleeping for 60 seconds ... ")
-                    #time.sleep(60)
+                    await asyncio.sleep(60)
                 finally:
                     if api_enabled and api_exclusive:
                         bt.logging.info(f"API MODE - forward finished, ready for next request")                        
                     else:
                         bt.logging.info(f"LIMP MODE forward finished, sleep for {10} seconds")
-                    time.sleep(10)
+                    await asyncio.sleep(10)
 
-        # If someone intentionally stops the validator, it'll safely terminate operations.
         except KeyboardInterrupt:
             self.axon.stop()
             bt.logging.success("Validator killed by keyboard interrupt.")
             exit()
 
-        # In case of unforeseen errors, the validator will log the error and continue operations.
         except Exception as err:
             bt.logging.error(f"Error during validation: {str(err)}")
             bt.logging.error(traceback.format_exc(err))
-                     
+
+    def run(self):
+        """Initiates and manages the main loop for the validator on the Bitrecs subnet."""
+        asyncio.run(self.main_loop())
 
     def run_in_background_thread(self):
         """
@@ -368,7 +356,7 @@ class BaseValidatorNeuron(BaseNeuron):
         if not self.is_running:
             bt.logging.debug("Starting validator in background thread.")
             self.should_exit = False
-            self.thread = threading.Thread(target=self.run, daemon=True)
+            self.thread = threading.Thread(target=lambda: anyio.run(self.run), daemon=True)
             self.thread.start()
             self.is_running = True
             bt.logging.debug("Started")
