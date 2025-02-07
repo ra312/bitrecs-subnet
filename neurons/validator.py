@@ -169,8 +169,7 @@ async def main():
     await GPUInfo.log_gpu_info()
     with Validator() as validator:
         start_time = time.time()
-        executor = ThreadPoolExecutor(max_workers=3)
-        loop = asyncio.get_event_loop()
+      
         while True:
             version_sync_task = asyncio.create_task(validator.version_sync())
             miner_sync_task = asyncio.create_task(validator.miner_sync())
