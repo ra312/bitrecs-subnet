@@ -251,7 +251,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         
                         st = time.perf_counter()
                         # Send request to the miner population syncronous
-                        responses = self.dendrite.query(
+                        responses = await self.dendrite.aquery(
                             chosen_axons,
                             api_request,
                             deserialize=False,
