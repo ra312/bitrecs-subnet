@@ -217,7 +217,7 @@ class BaseValidatorNeuron(BaseNeuron):
 
         """
         # Check that validator is registered on the network.
-        self.sync()        
+        #self.sync()
         
         bt.logging.info(
             f"\033[1;32m 🐸 Running validator on network: {self.config.subtensor.chain_endpoint} with netuid: {self.config.netuid}\033[0m")
@@ -236,11 +236,11 @@ class BaseValidatorNeuron(BaseNeuron):
 
                     synapse_with_event: Optional[SynapseWithEvent] = None
                     try:
-                        synapse_with_event = api_queue.get(timeout=3)
+                        synapse_with_event = api_queue.get()
                         bt.logging.info(f"NEW API REQUEST {synapse_with_event.input_synapse.name}")
                     except Empty:
                         # No synapse from API server.
-                        pass
+                        pass #continue prevents regular val loop
 
                     if synapse_with_event is not None and api_enabled: #API request
                         bt.logging.info("** Processing synapse from API server **")
@@ -325,13 +325,14 @@ class BaseValidatorNeuron(BaseNeuron):
                         return
 
                     try:
-                        self.sync()                        
+                        if self.step > 1:
+                            self.sync()
                       
                     except Exception as e:
                         bt.logging.error(traceback.format_exc())
                         bt.logging.error(f"Failed to sync with exception: {e}")
-
-                    self.step += 1
+                    finally:
+                        self.step += 1
 
                 except Exception as e:
                     bt.logging.error(f"Main validator RUN loop exception: {e}")
@@ -345,7 +346,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.info(f"API MODE - forward finished, ready for next request")                        
                     else:
                         bt.logging.info(f"LIMP MODE forward finished, sleep for {10} seconds")
-                        #time.sleep(10)
+                    time.sleep(10)
 
         # If someone intentionally stops the validator, it'll safely terminate operations.
         except KeyboardInterrupt:
