@@ -16,6 +16,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+from concurrent.futures import ThreadPoolExecutor
 import os
 import time
 import bittensor as bt
@@ -51,6 +52,7 @@ class Validator(BaseValidatorNeuron):
         self.total_request_in_interval = 0
         if not os.environ.get("BITRECS_PROXY_URL"):
             raise Exception("Please set the BITRECS_PROXY_URL environment variable.")
+        
 
 
     async def forward(self, pr : BitrecsRequest = None):
@@ -119,9 +121,6 @@ class Validator(BaseValidatorNeuron):
             # if self.metagraph.S[uid] == 0:
             #     bt.logging.trace(f"uid: {uid} stake 0T, skipping")
             #     continue
-                        
-            #b : bt.Balance = self.metagraph.S[uid]
-            #this_stake = b.tao
             this_stake = float(self.metagraph.S[uid])
             stake_limit = float(self.config.neuron.vpermit_tao_limit)
             if this_stake > stake_limit:
@@ -170,10 +169,19 @@ async def main():
     await GPUInfo.log_gpu_info()
     with Validator() as validator:
         start_time = time.time()
+        executor = ThreadPoolExecutor(max_workers=3)
+        loop = asyncio.get_event_loop()
         while True:
-            await validator.version_sync()
-            await validator.miner_sync()
-            await validator.action_sync()
+            await loop.run_in_executor(executor, validator.version_sync)
+            await loop.run_in_executor(executor, validator.miner_sync)
+            await loop.run_in_executor(executor, validator.action_sync)
+            # await validator.loop.run_until_complete(validator.version_sync())
+            # await validator.loop.run_until_complete(validator.miner_sync())
+            # await validator.loop.run_until_complete(validator.action_sync())
+            # await validator.version_sync()
+            # await validator.miner_sync()
+            # await validator.action_sync()
+            
             bt.logging.info(f"Validator {validator.uid} running... {int(time.time())}")
             if time.time() - start_time > 300:
                 bt.logging.info(

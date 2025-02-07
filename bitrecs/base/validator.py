@@ -125,7 +125,7 @@ class BaseValidatorNeuron(BaseNeuron):
             raise Exception("Axon off, not serving ip to chain.")
 
         # Create asyncio event loop to manage async tasks.
-        self.loop = asyncio.get_event_loop()
+        #self.loop = asyncio.get_event_loop()
         api_port = int(os.environ.get("VALIDATOR_API_PORT"))
         if api_port != 7779:
             raise Exception("API Port must be set to 7779")
