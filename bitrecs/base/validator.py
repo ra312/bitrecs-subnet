@@ -335,7 +335,7 @@ class BaseValidatorNeuron(BaseNeuron):
                     if synapse_with_event and synapse_with_event.event:
                         bt.logging.error("API MISSED REQUEST - Marking synapse as processed due to exception")
                         synapse_with_event.event.set()
-                    bt.logging.error("Sleeping for 60 seconds ... ")
+                    bt.logging.error("\033[31m Sleeping for 60 seconds ... \033[0m")
                     await asyncio.sleep(60)
                 finally:
                     if api_enabled and api_exclusive:
