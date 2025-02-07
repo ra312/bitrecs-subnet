@@ -339,13 +339,13 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.error("API MISSED REQUEST - Marking synapse as processed due to exception")
                         synapse_with_event.event.set()
                     bt.logging.error("Sleeping for 60 seconds ... ")
-                    time.sleep(60)
+                    #time.sleep(60)
                 finally:
                     if api_enabled and api_exclusive:
                         bt.logging.info(f"API MODE - forward finished, ready for next request")                        
                     else:
                         bt.logging.info(f"LIMP MODE forward finished, sleep for {10} seconds")
-                        time.sleep(10)
+                        #time.sleep(10)
 
         # If someone intentionally stops the validator, it'll safely terminate operations.
         except KeyboardInterrupt:
