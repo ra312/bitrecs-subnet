@@ -250,13 +250,22 @@ class BaseValidatorNeuron(BaseNeuron):
                         number_of_recs_desired = api_request.num_results
                         
                         st = time.perf_counter()
-                        # Send request to the miner population syncronous
-                        responses = await self.dendrite.aquery(
-                            chosen_axons,
-                            api_request,
-                            deserialize=False,
-                            timeout = min(CONST.MAX_DENDRITE_TIMEOUT, 8)
+                        
+                        responses = await self.dendrite.forward(
+                            axons = chosen_axons, 
+                            api_request=api_request,
+                            timeout=CONST.MAX_DENDRITE_TIMEOUT,
+                            deserialize=False, 
+                            run_async=True
                         )
+                        
+                        # Send request to the miner population syncronous
+                        # responses = await self.dendrite.aquery(
+                        #     chosen_axons,
+                        #     api_request,
+                        #     deserialize=False,
+                        #     timeout = min(CONST.MAX_DENDRITE_TIMEOUT, 8)
+                        # )
                         et = time.perf_counter()
                         bt.logging.trace(f"Miners responded with {len(responses)} responses in \033[1;32m{et-st:0.4f}\033[0m seconds")
 
