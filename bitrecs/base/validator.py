@@ -253,7 +253,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         
                         responses = await self.dendrite.forward(
                             axons = chosen_axons, 
-                            api_request=api_request,
+                            synapse = api_request,
                             timeout=CONST.MAX_DENDRITE_TIMEOUT,
                             deserialize=False, 
                             run_async=True
