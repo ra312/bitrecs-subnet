@@ -344,9 +344,9 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.error(f"Error during validation: {str(err)}")
             bt.logging.error(traceback.format_exc(err))
 
-    def run(self):
+    async def run(self):
         """Initiates and manages the main loop for the validator on the Bitrecs subnet."""
-        asyncio.run(self.main_loop())
+        await self.main_loop()
 
     def run_in_background_thread(self):
         """
