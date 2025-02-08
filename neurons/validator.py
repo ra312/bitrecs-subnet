@@ -166,13 +166,12 @@ async def main():
     with Validator() as validator:
         start_time = time.time()      
         while True:
-            version_sync_task = asyncio.create_task(validator.version_sync())
-            miner_sync_task = asyncio.create_task(validator.miner_sync())
-            action_sync_task = asyncio.create_task(validator.action_sync())
-
-            await version_sync_task
-            await miner_sync_task
-            await action_sync_task
+            tasks = [
+                asyncio.create_task(validator.version_sync()),
+                asyncio.create_task(validator.miner_sync()),
+                asyncio.create_task(validator.action_sync())
+            ]                    
+            await asyncio.gather(*tasks)
             
             bt.logging.info(f"Validator {validator.uid} running... {int(time.time())}")
             if time.time() - start_time > 300:
