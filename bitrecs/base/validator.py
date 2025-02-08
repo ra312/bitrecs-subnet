@@ -132,15 +132,16 @@ class BaseValidatorNeuron(BaseNeuron):
             raise Exception("API Port must be set to 7779")
         
         self.api_port = api_port
+        self.api_server = None
         if self.config.api.enabled:
             # external requests
-            api_server = ApiServer(
+            self.api_server = ApiServer(
                 api_port=self.api_port,
                 forward_fn=api_forward,
                 validator=self
             )
-            api_server.start()
-            bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: {api_server.fast_server.config.host} on port: {api_server.fast_server.config.port} \033[0m")
+            self.api_server.start()
+            bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: http://{self.api_server.config.host}:{self.api_server.config.port} \033[0m")
         else:            
             bt.logging.error(f"\033[1;31m No API Endpoint \033[0m")
 
@@ -336,13 +337,18 @@ class BaseValidatorNeuron(BaseNeuron):
                     await asyncio.sleep(10)
 
         except KeyboardInterrupt:
+            bt.logging.info("Caught keyboard interrupt. Cleaning up...")
+            if self.api_server:
+                self.api_server.stop()
             self.axon.stop()
             bt.logging.success("Validator killed by keyboard interrupt.")
             exit()
 
         except Exception as err:
             bt.logging.error(f"Error during validation: {str(err)}")
-            bt.logging.error(traceback.format_exc(err))
+            bt.logging.error(traceback.format_exc())
+            if self.api_server:
+                self.api_server.stop()
 
     async def run(self):
         """Initiates and manages the main loop for the validator on the Bitrecs subnet."""
@@ -368,6 +374,8 @@ class BaseValidatorNeuron(BaseNeuron):
         if self.is_running:
             bt.logging.debug("Stopping validator in background thread.")
             self.should_exit = True
+            if self.api_server:
+                self.api_server.stop()
             self.thread.join(5)
             self.is_running = False
             bt.logging.debug("Stopped")
@@ -379,19 +387,13 @@ class BaseValidatorNeuron(BaseNeuron):
     def __exit__(self, exc_type, exc_value, traceback):
         """
         Stops the validator's background operations upon exiting the context.
-        This method facilitates the use of the validator in a 'with' statement.
-
-        Args:
-            exc_type: The type of the exception that caused the context to be exited.
-                      None if the context was exited without an exception.
-            exc_value: The instance of the exception that caused the context to be exited.
-                       None if the context was exited without an exception.
-            traceback: A traceback object encoding the stack trace.
-                       None if the context was exited without an exception.
+        Also ensures API server is properly shutdown.
         """
         if self.is_running:
             bt.logging.debug("Stopping validator in background thread.")
             self.should_exit = True
+            if self.api_server:
+                self.api_server.stop()
             self.thread.join(5)
             self.is_running = False
             bt.logging.debug("Stopped")

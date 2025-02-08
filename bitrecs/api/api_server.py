@@ -5,9 +5,10 @@ import uvicorn
 import bittensor as bt
 import hmac
 import hashlib
+import threading
+
 from typing import Callable
 from functools import partial
-from bittensor.core.axon import FastAPIThreadedServer
 from fastapi import FastAPI, HTTPException, Request, APIRouter, Header
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
@@ -19,6 +20,8 @@ from bitrecs.api.api_core import filter_allowed_ips, limiter
 from bitrecs.api.utils import api_key_validator, get_proxy_public_key
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.exceptions import InvalidSignature
+from uvicorn.config import Config
+from uvicorn.server import Server
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -30,7 +33,6 @@ PROXY_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
 
 class ApiServer:
     app: FastAPI
-    fast_server: FastAPIThreadedServer
     router: APIRouter
     forward_fn: ForwardFn    
 
@@ -69,13 +71,14 @@ class ApiServer:
         self.proxy_public_key : bytes = None
         self.network = os.environ.get("NETWORK").strip().lower() #localnet / testnet / mainnet
 
-        self.fast_server = FastAPIThreadedServer(config=uvicorn.Config(
-            self.app,
+        self.config = Config(
+            app=self.app,
             host="0.0.0.0",
             port=api_port,
-            log_level="trace" if bt.logging.__trace_on__ else "critical",
-            loop="none"                    
-        ))
+            log_level="trace" if bt.logging.__trace_on__ else "critical"
+        )
+        self.server = Server(config=self.config)
+        self._server_thread = None
 
         self.router = APIRouter()
         self.router.add_api_route(
@@ -388,20 +391,45 @@ class ApiServer:
 
 
     def start(self):
-        self.fast_server.start()
-        bt.logging.info(f"API server started at {self.fast_server.config.host}:{self.fast_server.config.port}")
+        """Start the API server in a dedicated thread"""
+        if self._server_thread is not None:
+            bt.logging.warning("API server is already running")
+            return
 
+        def run_server():
+            self.server.run()
+
+        self._server_thread = threading.Thread(target=run_server, daemon=True)
+        self._server_thread.start()
+        bt.logging.info(f"API server started at {self.config.host}:{self.config.port}")
 
     def stop(self):
-        self.fast_server.stop()
+        """Stop the API server and cleanup"""
+        if self._server_thread is None:
+            bt.logging.warning("API server is not running")
+            return
+
+        self.server.should_exit = True
+        self._server_thread.join(timeout=5)
+        if self._server_thread.is_alive():
+            bt.logging.warning("API server thread did not stop gracefully")
+        self._server_thread = None
         bt.logging.info("API server stopped")
 
+    def __enter__(self):
+        """Context manager support"""
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager support"""
+        self.stop()
 
     async def log_counter(self, success: bool) -> None:
         try: 
             self.api_counter.update(is_success=success)
             self.api_counter.save()
         except Exception as e:
-            bt.logging.error(f"ERROR API could not update counter log:  {e}")              
-    
+            bt.logging.error(f"ERROR API could not update counter log:  {e}")
+
 
