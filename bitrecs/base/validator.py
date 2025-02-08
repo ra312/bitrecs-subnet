@@ -247,6 +247,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         bt.logging.trace(f"chosen_uids: {chosen_uids}")
 
                         chosen_axons = [self.metagraph.axons[uid] for uid in chosen_uids]
+                        np.random.shuffle(chosen_axons)
                         api_request = synapse_with_event.input_synapse
                         number_of_recs_desired = api_request.num_results
                         
@@ -255,8 +256,8 @@ class BaseValidatorNeuron(BaseNeuron):
                             axons = chosen_axons, 
                             synapse = api_request,
                             timeout=CONST.MAX_DENDRITE_TIMEOUT,
-                            deserialize=False, 
-                            run_async=True
+                            deserialize=False,
+                            run_async=False
                         )
                         et = time.perf_counter()
                         bt.logging.trace(f"Miners responded with {len(responses)} responses in \033[1;32m{et-st:0.4f}\033[0m seconds")
