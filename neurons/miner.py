@@ -404,12 +404,15 @@ class Miner(BaseMinerNeuron):
 
 
         
-async def main():
+async def main():    
     await GPUInfo.log_gpu_info()    
     with Miner() as miner:
         start_time = time.time()        
         while True:
-            await miner.version_sync()
+            #await miner.version_sync()
+            version_sync_task = asyncio.create_task(miner.version_sync())
+            await version_sync_task
+
             bt.logging.info(f"Miner {miner.uid} running, waiting for work ... {int(time.time())}")
             if time.time() - start_time > 300:
                 bt.logging.info(
