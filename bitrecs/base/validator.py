@@ -256,7 +256,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             synapse = api_request,
                             timeout = min(5, CONST.MAX_DENDRITE_TIMEOUT),
                             deserialize=False,
-                            run_async=False
+                            run_async=True
                         )
                         et = time.perf_counter()
                         bt.logging.trace(f"Miners responded with {len(responses)} responses in \033[1;32m{et-st:0.4f}\033[0m seconds")
