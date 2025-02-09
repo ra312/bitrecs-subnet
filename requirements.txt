@@ -1,4 +1,4 @@
-bittensor==9.0.0rc4
+bittensor==9.0.0rc5
 bittensor-cli==9.0.0rc2
 
 starlette==0.37.2
