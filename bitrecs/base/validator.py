@@ -332,7 +332,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 finally:
                     if api_enabled and api_exclusive:
                         bt.logging.info(f"API MODE - forward finished, ready for next request")
-                        await asyncio.sleep(0.1)
+                        await asyncio.sleep(1)
                     else:
                         bt.logging.info(f"LIMP MODE forward finished, sleep for {45} seconds")
                         await asyncio.sleep(45)
