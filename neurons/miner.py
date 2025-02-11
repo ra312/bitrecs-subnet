@@ -333,8 +333,8 @@ class Miner(BaseMinerNeuron):
         return priority    
     
 
-    async def verify(self, synapse: BitrecsRequest) -> bool:        
-        return validate_br_request(synapse)
+    # async def verify(self, synapse: BitrecsRequest) -> bool:        
+    #     return validate_br_request(synapse)
     
     
     def save_state(self):
