@@ -21,7 +21,6 @@ import sys
 import time
 import typing
 import bittensor as bt
-import bitrecs
 import asyncio
 import ast
 from typing import List
@@ -36,6 +35,8 @@ from bitrecs.utils.gpu import GPUInfo
 from bitrecs.utils.version import LocalMetadata
 from bitrecs.utils import constants as CONST
 from dotenv import load_dotenv
+
+from bitrecs.validator.rules import validate_br_request
 load_dotenv()
 
 
@@ -225,7 +226,7 @@ class Miner(BaseMinerNeuron):
         
 
     async def blacklist(
-        self, synapse: bitrecs.protocol.BitrecsRequest
+        self, synapse: BitrecsRequest
     ) -> typing.Tuple[bool, str]:
         """
         Determines whether an incoming request should be blacklisted and thus ignored. Your implementation should
@@ -293,7 +294,7 @@ class Miner(BaseMinerNeuron):
 
         return False, "Hotkey recognized!"
 
-    async def priority(self, synapse: bitrecs.protocol.BitrecsRequest) -> float:
+    async def priority(self, synapse: BitrecsRequest) -> float:
         """
         The priority function determines the order in which requests are handled. More valuable or higher-priority
         requests are processed before others. You should design your own priority mechanism with care.
@@ -329,9 +330,14 @@ class Miner(BaseMinerNeuron):
         bt.logging.debug(
             f"Prioritizing {synapse.dendrite.hotkey} with value: {priority}"
         )
-        return priority
+        return priority    
     
-    def save_state(self):        
+
+    async def verify(self, synapse: BitrecsRequest) -> bool:        
+        return validate_br_request(synapse)
+    
+    
+    def save_state(self):
         pass
 
 
