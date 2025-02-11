@@ -341,3 +341,30 @@ def test_rate_limit_hit_rec_ok():
     print(f"Rejected: {rejected}, Rate Limited: {rate_limited}")
     if rate_limited > 0:
         assert rate_limited > rate_limited_threshold
+
+
+
+# def test_non_json_get_rejected():
+#     url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/ping"
+#     headers = {
+#         "Authorization": f"Bearer {BITRECS_API_KEY}",
+#         "Content-Type": "multipart/form-data",
+#     }
+  
+#     response = requests.get(url, headers=headers)
+#     print(response.text)
+#     assert response.status_code == 415
+
+
+def test_non_json_post_rejected():
+    url = f"http://{TEST_VALIDATOR_IP}:{VALIDATOR_PORT}/rec"
+    headers = {
+        "Authorization": f"Bearer {BITRECS_API_KEY}",
+        "x-timestamp": str(int(time.time()))
+    }
+    files = {
+        'file': ('data.txt', 'This is not JSON data', 'text/plain')
+    }
+    response = requests.post(url, headers=headers, files=files)
+    print(response.text)
+    assert response.status_code == 415
