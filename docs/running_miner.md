@@ -1,6 +1,6 @@
 # Bitrecs Miner Setup Guide
 
-This guide ensures the Bitrecs miner works on **Ubuntu 24.04.01 LTS**. Follow the steps below.
+This guide ensures the Bitrecs miner works on **Ubuntu 24.10 LTS**. Follow the steps below.
 
 ## 1. Networking Setup
 
