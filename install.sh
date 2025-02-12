@@ -7,35 +7,19 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Store the terminal size
-TERM_LINES=$(tput lines)
-TERM_COLS=$(tput cols)
+# Temp files for output control
+LOGFILE=$(mktemp)
+OUTPUTFILE=$(mktemp)
 
-# Function to clear specific area of screen
-clear_area() {
-    local start_line=$1
-    local end_line=$2
-    for ((i=start_line; i<=end_line; i++)); do
-        tput cup $i 0
-        tput el
-    done
-}
+# Cleanup on exit
+trap 'rm -f $LOGFILE $OUTPUTFILE; tput cnorm; tput rmcup' EXIT
 
-# Function to position cursor
-position_cursor() {
-    tput cup $1 $2
-}
+# Save current screen and switch to alternate screen buffer
+tput smcup
+tput civis  # Hide cursor
 
-# Create temp file for logs
-TMPFILE=$(mktemp)
-# Clean up temp file on exit
-trap 'rm -f $TMPFILE' EXIT
-
-# Function to draw logo
-draw_logo() {
-    position_cursor 0 0
-    echo -ne "${BLUE}"
-    cat << "EOF"
+# The BITRECS logo
+LOGO="${BLUE}
  ▄▄▄▄    ██▓▄▄▄█████▓ ██▀███  ▓█████  ▄████▄    ██████ 
 ▓█████▄ ▓██▒▓  ██▒ ▓▒▓██ ▒ ██▒▓█   ▀ ▒██▀ ▀█  ▒██    ▒ 
 ▒██▒ ▄██▒██▒▒ ▓██░ ▒░▓██ ░▄█ ▒▒███   ▒▓█    ▄ ░ ▓██▄   
@@ -45,60 +29,53 @@ draw_logo() {
 ▒░▒   ░  ▒ ░    ░      ░▒ ░ ▒░ ░ ░  ░  ░  ▒   ░ ░▒  ░ ░
  ░    ░  ▒ ░  ░        ░░   ░    ░   ░        ░  ░  ░  
  ░       ░              ░        ░  ░ ░ ░            ░  
-      ░                                ░                 
-EOF
-    echo -ne "${NC}"
-}
+      ░                                ░                 ${NC}"
 
-# Function to draw progress bar
-draw_progress_bar() {
+# Function to update the screen
+update_screen() {
     local progress=$1
-    local bar_size=50
-    local filled=$(($progress * $bar_size / 100))
-    local empty=$((bar_size - filled))
+    local status=$2
     
-    position_cursor $((TERM_LINES-2)) 0
-    echo -ne "${YELLOW}Progress: ["
-    for ((i=0; i<filled; i++)); do echo -ne "▇"; done
-    for ((i=0; i<empty; i++)); do echo -ne " "; done
-    echo -ne "] ${progress}%${NC}"
+    # Clear screen and move to top
+    clear
+    
+    # Print logo
+    echo -e "$LOGO"
+    
+    # Print status line
+    echo -e "\n${YELLOW}Status: $status${NC}\n"
+    
+    # Print last 10 lines of log
+    echo -e "${YELLOW}Recent Output:${NC}"
+    tail -n 10 "$LOGFILE"
+    
+    # Print progress bar at bottom
+    local term_lines=$(tput lines)
+    tput cup $((term_lines-2)) 0
+    printf "${YELLOW}Progress: [%-50s] %d%%${NC}" $(printf "%${progress}s" | tr ' ' '▇') $progress
 }
 
-# Function to update display
-update_display() {
-    local message=$1
-    local progress=$2
+# Function to run command and capture output
+run_command() {
+    local cmd="$1"
+    local msg="$2"
+    local progress="$3"
     
-    # Save cursor position
-    tput sc
+    # Update status
+    update_screen "$progress" "$msg"
     
-    # Clear and redraw logo
-    clear_area 0 10
-    draw_logo
-    
-    # Draw progress bar
-    draw_progress_bar $progress
-    
-    # Update log area (between logo and progress bar)
-    position_cursor 12 0
-    echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] ${message}${NC}"
-    
-    # Show last few lines of log file
-    position_cursor 13 0
-    tail -n $((TERM_LINES-16)) $TMPFILE
-    
-    # Restore cursor position
-    tput rc
+    # Run command and capture output
+    {
+        eval "$cmd" 2>&1 | while IFS= read -r line; do
+            echo "$line" >> "$LOGFILE"
+            update_screen "$progress" "$msg"
+        done
+    } || {
+        echo "Error executing: $cmd" >> "$LOGFILE"
+        update_screen "$progress" "ERROR: $msg"
+        exit 1
+    }
 }
-
-# Initialize screen
-clear
-tput civis  # Hide cursor
-draw_logo
-draw_progress_bar 0
-
-# Main installation process
-echo "Starting installation..." > $TMPFILE
 
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then 
@@ -106,77 +83,37 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# 1. Networking Setup
-{
-    update_display "Setting up networking..." 5
-    apt install ufw -y 2>&1 | tee -a $TMPFILE
-    update_display "Updating system..." 10
-    apt-get update && apt-get upgrade -y 2>&1 | tee -a $TMPFILE
-    update_display "Configuring firewall..." 15
-    ufw allow 22 2>&1 | tee -a $TMPFILE
-    ufw allow proto tcp to 0.0.0.0/0 port 8091 2>&1 | tee -a $TMPFILE
-    yes | ufw enable 2>&1 | tee -a $TMPFILE
-    ufw reload 2>&1 | tee -a $TMPFILE
-    update_display "Network setup completed" 20
-} 
+# Installation steps
+run_command "apt install ufw -y" "Installing UFW..." 10
+run_command "apt-get update && apt-get upgrade -y" "Updating system packages..." 20
+run_command "ufw allow 22" "Configuring firewall (SSH)..." 30
+run_command "ufw allow proto tcp to 0.0.0.0/0 port 8091" "Configuring firewall (Port 8091)..." 35
+run_command "yes | ufw enable" "Enabling firewall..." 40
+run_command "ufw reload" "Reloading firewall..." 45
 
-# 2. Server Setup
-{
-    update_display "Configuring server..." 25
-    mount -o remount,size=8G /tmp 2>&1 | tee -a $TMPFILE
-    update_display "Updating packages..." 30
-    apt-get update && apt-get upgrade -y 2>&1 | tee -a $TMPFILE
-    update_display "Installing Python..." 35
-    apt install python3-pip -y 2>&1 | tee -a $TMPFILE
-    apt install python3.12-venv -y 2>&1 | tee -a $TMPFILE
-    update_display "Server setup completed" 40
-}
+run_command "mount -o remount,size=8G /tmp" "Configuring temporary storage..." 50
+run_command "apt install python3-pip python3.12-venv -y" "Installing Python requirements..." 60
 
-# 3. Create Working Directory
-{
-    update_display "Creating working directory..." 45
-    mkdir -p /bt 2>&1 | tee -a $TMPFILE
-    cd /bt
-    update_display "Working directory created" 50
-}
+run_command "mkdir -p /bt && cd /bt" "Creating working directory..." 65
 
-# 4. Python Environment Setup
-{
-    update_display "Setting up Python environment..." 55
-    python3.12 -m venv bt_venv 2>&1 | tee -a $TMPFILE
-    source bt_venv/bin/activate
-    update_display "Installing bittensor..." 60
-    pip3 install bittensor[torch] 2>&1 | tee -a $TMPFILE
-    echo "source /bt/bt_venv/bin/activate" >> ~/.bashrc
-    update_display "Python environment setup completed" 75
-}
+# Python environment setup
+run_command "python3.12 -m venv bt_venv" "Creating Python virtual environment..." 70
+run_command "source bt_venv/bin/activate && pip3 install bittensor[torch]" "Installing Bittensor..." 80
+run_command "echo 'source /bt/bt_venv/bin/activate' >> ~/.bashrc" "Configuring environment..." 85
 
-# 5. Miner Installation
-{
-    update_display "Installing miner..." 80
-    cd /bt
-    if [ -d "bitrecs-subnet" ]; then
-        rm -rf bitrecs-subnet
-    fi
-    update_display "Cloning repository..." 85
-    git clone https://github.com/janusdotai/bitrecs-subnet.git 2>&1 | tee -a $TMPFILE
-    cd bitrecs-subnet
-    update_display "Installing dependencies..." 90
-    pip3 install -r requirements.txt 2>&1 | tee -a $TMPFILE
-    python3 -m pip install -e . 2>&1 | tee -a $TMPFILE
-    update_display "Miner installation completed" 100
-}
+# Miner installation
+run_command "cd /bt && rm -rf bitrecs-subnet || true" "Cleaning old installation..." 90
+run_command "cd /bt && git clone https://github.com/janusdotai/bitrecs-subnet.git" "Cloning Bitrecs repository..." 95
+run_command "cd /bt/bitrecs-subnet && pip3 install -r requirements.txt && python3 -m pip install -e ." "Installing Bitrecs..." 100
 
-# Show completion message
-position_cursor $((TERM_LINES-5)) 0
+# Final update
+update_screen 100 "Installation Complete! 🚀"
+
+# Return to normal terminal
+tput rmcup
 echo -e "\n${GREEN}╔════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║       Installation Complete! 🚀         ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════╝${NC}\n"
-
-# Show cursor again and cleanup
-tput cnorm
-
-update_display "Your Bitrecs miner has been successfully installed!" 100
 echo -e "${BLUE}Next steps:${NC}"
 echo -e "1. Configure your wallet if you haven't already"
-echo -e "2. Start the miner with your preferred configuration\n"cho -e "2. Start the miner with your preferred configuration\n"cho -e "2. Start the miner with your preferred configuration\n"
+echo -e "2. Start the miner with your preferred configuration\n"
