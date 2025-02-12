@@ -11,20 +11,30 @@ NC='\033[0m' # No Color
 TERM_LINES=$(tput lines)
 TERM_COLS=$(tput cols)
 
-# Clear screen and hide cursor
-clear
-tput civis
+# Function to clear specific area of screen
+clear_area() {
+    local start_line=$1
+    local end_line=$2
+    for ((i=start_line; i<=end_line; i++)); do
+        tput cup $i 0
+        tput el
+    done
+}
 
 # Function to position cursor
 position_cursor() {
     tput cup $1 $2
 }
 
-# Function to draw logo at specific position
+# Create temp file for logs
+TMPFILE=$(mktemp)
+# Clean up temp file on exit
+trap 'rm -f $TMPFILE' EXIT
+
+# Function to draw logo
 draw_logo() {
-    local start_line=$1
-    position_cursor $start_line 0
-    echo -e "${BLUE}"
+    position_cursor 0 0
+    echo -ne "${BLUE}"
     cat << "EOF"
  ▄▄▄▄    ██▓▄▄▄█████▓ ██▀███  ▓█████  ▄████▄    ██████ 
 ▓█████▄ ▓██▒▓  ██▒ ▓▒▓██ ▒ ██▒▓█   ▀ ▒██▀ ▀█  ▒██    ▒ 
@@ -37,7 +47,7 @@ draw_logo() {
  ░       ░              ░        ░  ░ ░ ░            ░  
       ░                                ░                 
 EOF
-    echo -e "${NC}"
+    echo -ne "${NC}"
 }
 
 # Function to draw progress bar
@@ -54,28 +64,41 @@ draw_progress_bar() {
     echo -ne "] ${progress}%${NC}"
 }
 
-# Function to update log area
-update_log() {
+# Function to update display
+update_display() {
     local message=$1
-    local log_start=$((12))  # Start after logo
-    local log_end=$((TERM_LINES-3))  # End before progress bar
+    local progress=$2
     
-    # Store current cursor position
-    local current_line=$(tput lines)
-    local current_col=$(tput cols)
+    # Save cursor position
+    tput sc
     
-    # Move to log area and print message
-    position_cursor $log_start 0
+    # Clear and redraw logo
+    clear_area 0 10
+    draw_logo
+    
+    # Draw progress bar
+    draw_progress_bar $progress
+    
+    # Update log area (between logo and progress bar)
+    position_cursor 12 0
     echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] ${message}${NC}"
     
-    # Return cursor to original position
-    position_cursor $current_line $current_col
+    # Show last few lines of log file
+    position_cursor 13 0
+    tail -n $((TERM_LINES-16)) $TMPFILE
+    
+    # Restore cursor position
+    tput rc
 }
 
-# Error handling
-set -e
-trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
-trap 'if [ $? -ne 0 ]; then update_log "${RED}ERROR: Command \"${last_command}\" failed${NC}"; exit 1; fi' EXIT
+# Initialize screen
+clear
+tput civis  # Hide cursor
+draw_logo
+draw_progress_bar 0
+
+# Main installation process
+echo "Starting installation..." > $TMPFILE
 
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then 
@@ -83,59 +106,66 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Initial setup
-clear
-draw_logo 0
-draw_progress_bar 0
-
 # 1. Networking Setup
-update_log "Setting up networking..."
-apt install ufw -y &> >(while read line; do update_log "$line"; done)
-apt-get update && apt-get upgrade -y &> >(while read line; do update_log "$line"; done)
-ufw allow 22 &> >(while read line; do update_log "$line"; done)
-ufw allow proto tcp to 0.0.0.0/0 port 8091 &> >(while read line; do update_log "$line"; done)
-yes | ufw enable &> >(while read line; do update_log "$line"; done)
-ufw reload &> >(while read line; do update_log "$line"; done)
-draw_progress_bar 20
-update_log "Network setup completed"
+{
+    update_display "Setting up networking..." 5
+    apt install ufw -y 2>&1 | tee -a $TMPFILE
+    update_display "Updating system..." 10
+    apt-get update && apt-get upgrade -y 2>&1 | tee -a $TMPFILE
+    update_display "Configuring firewall..." 15
+    ufw allow 22 2>&1 | tee -a $TMPFILE
+    ufw allow proto tcp to 0.0.0.0/0 port 8091 2>&1 | tee -a $TMPFILE
+    yes | ufw enable 2>&1 | tee -a $TMPFILE
+    ufw reload 2>&1 | tee -a $TMPFILE
+    update_display "Network setup completed" 20
+} 
 
 # 2. Server Setup
-update_log "Configuring server..."
-mount -o remount,size=8G /tmp &> >(while read line; do update_log "$line"; done)
-apt-get update && apt-get upgrade -y &> >(while read line; do update_log "$line"; done)
-apt install python3-pip -y &> >(while read line; do update_log "$line"; done)
-apt install python3.12-venv -y &> >(while read line; do update_log "$line"; done)
-draw_progress_bar 40
-update_log "Server setup completed"
+{
+    update_display "Configuring server..." 25
+    mount -o remount,size=8G /tmp 2>&1 | tee -a $TMPFILE
+    update_display "Updating packages..." 30
+    apt-get update && apt-get upgrade -y 2>&1 | tee -a $TMPFILE
+    update_display "Installing Python..." 35
+    apt install python3-pip -y 2>&1 | tee -a $TMPFILE
+    apt install python3.12-venv -y 2>&1 | tee -a $TMPFILE
+    update_display "Server setup completed" 40
+}
 
 # 3. Create Working Directory
-update_log "Creating working directory..."
-mkdir -p /bt &> >(while read line; do update_log "$line"; done)
-cd /bt
-draw_progress_bar 50
-update_log "Working directory created"
+{
+    update_display "Creating working directory..." 45
+    mkdir -p /bt 2>&1 | tee -a $TMPFILE
+    cd /bt
+    update_display "Working directory created" 50
+}
 
 # 4. Python Environment Setup
-update_log "Setting up Python environment..."
-python3.12 -m venv bt_venv &> >(while read line; do update_log "$line"; done)
-source bt_venv/bin/activate
-pip3 install bittensor[torch] &> >(while read line; do update_log "$line"; done)
-echo "source /bt/bt_venv/bin/activate" >> ~/.bashrc
-draw_progress_bar 75
-update_log "Python environment setup completed"
+{
+    update_display "Setting up Python environment..." 55
+    python3.12 -m venv bt_venv 2>&1 | tee -a $TMPFILE
+    source bt_venv/bin/activate
+    update_display "Installing bittensor..." 60
+    pip3 install bittensor[torch] 2>&1 | tee -a $TMPFILE
+    echo "source /bt/bt_venv/bin/activate" >> ~/.bashrc
+    update_display "Python environment setup completed" 75
+}
 
 # 5. Miner Installation
-update_log "Installing miner..."
-cd /bt
-if [ -d "bitrecs-subnet" ]; then
-    rm -rf bitrecs-subnet
-fi
-git clone https://github.com/janusdotai/bitrecs-subnet.git &> >(while read line; do update_log "$line"; done)
-cd bitrecs-subnet
-pip3 install -r requirements.txt &> >(while read line; do update_log "$line"; done)
-python3 -m pip install -e . &> >(while read line; do update_log "$line"; done)
-draw_progress_bar 100
-update_log "Miner installation completed"
+{
+    update_display "Installing miner..." 80
+    cd /bt
+    if [ -d "bitrecs-subnet" ]; then
+        rm -rf bitrecs-subnet
+    fi
+    update_display "Cloning repository..." 85
+    git clone https://github.com/janusdotai/bitrecs-subnet.git 2>&1 | tee -a $TMPFILE
+    cd bitrecs-subnet
+    update_display "Installing dependencies..." 90
+    pip3 install -r requirements.txt 2>&1 | tee -a $TMPFILE
+    python3 -m pip install -e . 2>&1 | tee -a $TMPFILE
+    update_display "Miner installation completed" 100
+}
 
 # Show completion message
 position_cursor $((TERM_LINES-5)) 0
@@ -143,10 +173,10 @@ echo -e "\n${GREEN}╔═══════════════════�
 echo -e "${GREEN}║       Installation Complete! 🚀         ║${NC}"
 echo -e "${GREEN}╚════════════════════════════════════════╝${NC}\n"
 
-# Show cursor again
+# Show cursor again and cleanup
 tput cnorm
 
-update_log "Your Bitrecs miner has been successfully installed!"
+update_display "Your Bitrecs miner has been successfully installed!" 100
 echo -e "${BLUE}Next steps:${NC}"
 echo -e "1. Configure your wallet if you haven't already"
-echo -e "2. Start the miner with your preferred configuration\n"cho -e "2. Start the miner with your preferred configuration\n"
+echo -e "2. Start the miner with your preferred configuration\n"cho -e "2. Start the miner with your preferred configuration\n"cho -e "2. Start the miner with your preferred configuration\n"
