@@ -1,5 +1,5 @@
 bittensor==9.0.0rc6
-bittensor-cli==9.0.0rc3
+bittensor-cli==9.0.0rc4
 
 starlette==0.37.2
 pydantic==2.10.4
