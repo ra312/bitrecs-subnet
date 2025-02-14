@@ -35,8 +35,6 @@ from bitrecs.utils.gpu import GPUInfo
 from bitrecs.utils.version import LocalMetadata
 from bitrecs.utils import constants as CONST
 from dotenv import load_dotenv
-
-from bitrecs.validator.rules import validate_br_request
 load_dotenv()
 
 
@@ -330,11 +328,7 @@ class Miner(BaseMinerNeuron):
         bt.logging.debug(
             f"Prioritizing {synapse.dendrite.hotkey} with value: {priority}"
         )
-        return priority    
-    
-
-    # async def verify(self, synapse: BitrecsRequest) -> bool:        
-    #     return validate_br_request(synapse)
+        return priority
     
     
     def save_state(self):
