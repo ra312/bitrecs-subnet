@@ -1,12 +1,10 @@
 import os
 import json
 import time
-import uvicorn
 import bittensor as bt
 import hmac
 import hashlib
 import threading
-
 from typing import Callable
 from functools import partial
 from fastapi import FastAPI, HTTPException, Request, APIRouter, Header
@@ -17,7 +15,7 @@ from bitrecs.commerce.product import ProductFactory
 from bitrecs.protocol import BitrecsRequest
 from bitrecs.api.api_counter import APICounter
 from bitrecs.api.api_core import filter_allowed_ips, limiter
-from bitrecs.api.utils import api_key_validator, get_proxy_public_key
+from bitrecs.api.utils import api_key_validator, get_proxy_public_key, json_only_middleware
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.exceptions import InvalidSignature
 from uvicorn.config import Config
@@ -39,7 +37,7 @@ class ApiServer:
     def __init__(self, validator, api_port: int, forward_fn: ForwardFn):
         self.validator = validator
         self.forward_fn = forward_fn
-        self.allowed_ips = ["127.0.0.1", "10.0.0.1"]
+        self.allowed_ips = ["127.0.0.1"]
         self.bypass_whitelist = True
 
         self.app = FastAPI()
@@ -56,15 +54,15 @@ class ApiServer:
                 content={
                     "status_code": 500,
                     "message": "Internal server error - General",
+                    "detail" : "General",
                     "data": None
                 }
-            )        
+            )
         
+        self.app.middleware("http")(partial(json_only_middleware, self))
         self.app.middleware("http")(partial(filter_allowed_ips, self))
         self.app.middleware('http')(partial(api_key_validator, self))
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
-        #self.app.add_middleware(OnlyJSONMiddleware)    
-
         self.app.add_exception_handler(Exception, general_exception_handler)
       
         self.hot_key = validator.wallet.hotkey.ss58_address
@@ -96,13 +94,13 @@ class ApiServer:
             self.router.add_api_route(
                 "/rec",
                 self.generate_product_rec_localnet,
-                methods=["POST"]                
+                methods=["POST"]
             ) 
         elif self.network == "testnet":
              self.router.add_api_route(
                 "/rec",
                 self.generate_product_rec_testnet,
-                methods=["POST"]                
+                methods=["POST"]
             )
         else:
             raise not NotImplementedError("Mainnet API not implemented")

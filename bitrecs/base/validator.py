@@ -258,6 +258,17 @@ class BaseValidatorNeuron(BaseNeuron):
                             deserialize=False,
                             run_async=True
                         )
+                        #TODO: 503 error handling async bug?
+                        any_success = any([r for r in responses if r.is_success])
+                        if not any_success:
+                            bt.logging.error("\033[1;33mRETRY ATTEMPT\033[0m")
+                            responses = await self.dendrite.forward(
+                                axons = chosen_axons, 
+                                synapse = api_request,
+                                timeout = min(5, CONST.MAX_DENDRITE_TIMEOUT),
+                                deserialize=False,
+                                run_async=True
+                            )
                         et = time.perf_counter()
                         bt.logging.trace(f"Miners responded with {len(responses)} responses in \033[1;32m{et-st:0.4f}\033[0m seconds")
 
@@ -332,7 +343,7 @@ class BaseValidatorNeuron(BaseNeuron):
                 finally:
                     if api_enabled and api_exclusive:
                         bt.logging.info(f"API MODE - forward finished, ready for next request")
-                        await asyncio.sleep(0.1)
+                        #await asyncio.sleep(0.1)
                     else:
                         bt.logging.info(f"LIMP MODE forward finished, sleep for {45} seconds")
                         await asyncio.sleep(45)
