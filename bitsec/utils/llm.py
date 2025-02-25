@@ -248,7 +248,7 @@ def get_token_cost(response: openai.types.completion.Completion) -> tuple[float,
     if cached > 0:
         input_cached_fee = costs["input_cached"] * cached / 1_000_000
         fee += input_cached_fee
-        description += f" (cached: {show_first_non_zero_digit(input_cached_fee)}"
+        description += f" (cached: {show_first_non_zero_digit(input_cached_fee)})"
 
     output_fee = costs["output"] * response.usage.completion_tokens / 1_000_000
     fee += output_fee
