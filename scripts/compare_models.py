@@ -7,13 +7,14 @@ and costs to files with timestamps.
 """
 MODELS_TO_TEST_STRUCTURED_OUTPUT = [
     "gpt-4o-mini",
-    # "gpt-4o",
+    "gpt-4o",
     "o1-2024-12-17",
-    # "o3-mini-2025-1-31",
+    "o3-mini-2025-1-31",
 ]
 MODELS_TO_TEST_UNSTRUCTURED_OUTPUT = [
     "o1-mini",
 ]
+SCREEN_WIDTH = 120
 
 
 import os
@@ -38,9 +39,7 @@ sys.path.insert(0, ROOT_DIR)
 from bitsec.utils.data import get_random_secure_filename, get_random_vulnerability_filename, create_challenge_with_inputs
 from bitsec.utils.llm import get_total_spend_cents, show_first_non_zero_digit
 
-
-SCREEN_WIDTH = 120
-
+# Prettier output
 console = Console()
 
 def setup_output_dir() -> str:
@@ -55,21 +54,25 @@ def setup_output_dir() -> str:
     os.makedirs(output_dir, exist_ok=True)
     return output_dir
 
-def format_vulnerability_info(vulnerability_info: Dict) -> str:
+def format_vulnerability_info(vulnerability_info: Dict | None) -> str:
     """
     Format vulnerability information for display.
     
     Args:
-        vulnerability_info (Dict): Dictionary containing vulnerability information
+        vulnerability_info (Dict | None): Dictionary containing vulnerability information, or None for unstructured output
         
     Returns:
         str: Formatted string for display
     """
-    if not vulnerability_info.get("vulnerabilities"):
+    if vulnerability_info is None:
+        return "Model returned unstructured output, no vulnerability information available"
+        
+    vulnerabilities = vulnerability_info.get("vulnerabilities")
+    if not vulnerabilities:
         return "No vulnerabilities added!!!! :("
     
     output = []
-    for vuln in vulnerability_info["vulnerabilities"]:
+    for vuln in vulnerabilities:
         # Handle multiline descriptions by proper indentation
         description = dedent(vuln.get("description", "")).strip()
         description_lines = description.split("\n")
@@ -125,39 +128,45 @@ def run_model_comparison(
         
         try:
             # Generate challenge with current model
+            is_unstructured = model in MODELS_TO_TEST_UNSTRUCTURED_OUTPUT
             modified_code, vulnerability_info, cost, cost_description = create_challenge_with_inputs(
                 clean_code=clean_code,
                 vulnerability_description=vulnerability_description,
                 model=model,
-                respond_as_str=(model in MODELS_TO_TEST_UNSTRUCTURED_OUTPUT)
+                respond_as_str=is_unstructured
             )
             
             # Calculate metrics
             duration = time.time() - start_time
             cost_pretty = show_first_non_zero_digit(cost)
             
-            # Save generated code to file
-            code_filename = f"{model}_generated_code.sol" if model in MODELS_TO_TEST_STRUCTURED_OUTPUT else f"{model}_output.md"
-            with open(os.path.join(output_dir, code_filename), 'w') as f:
-                f.write(modified_code)
-
-            # Save results
-            results[model] = {
-                "success": True,
-                "cost_cents": cost_pretty,
-                "cost_description": cost_description,
-                "duration_seconds": duration,
-                "vulnerability_info": vulnerability_info.model_dump() if vulnerability_info else None,
-            }
-            
             # Print detailed success info with pretty formatting
             title = Text()
             title.append("✓ ", style="green")
             title.append(f"{model}, Cost: {cost_pretty}, {cost_description}, Time: {format_duration(duration)}")
             
-            content = format_vulnerability_info(vulnerability_info.model_dump() if vulnerability_info else None)
+            # Save generated code to file
+            code_filename = f"{model}_generated_code.sol" if not is_unstructured else f"{model}_output.md"
+            with open(os.path.join(output_dir, code_filename), 'w') as f:
+                f.write(modified_code)
+
+            # Save results
+            vulnerability_info_dict = None
+            if vulnerability_info is None:
+                content = f"Model returned unstructured output\n\n{modified_code}"
+            else:
+                vulnerability_info_dict = vulnerability_info.model_dump()
+                content = format_vulnerability_info(vulnerability_info_dict)
+
             console.print(Panel(content, title=title, expand=False, width=SCREEN_WIDTH))
-            
+
+            results[model] = {
+                "success": True,
+                "cost_cents": cost_pretty,
+                "cost_description": cost_description,
+                "duration_seconds": duration,
+                "vulnerability_info": vulnerability_info_dict,
+            }
         except Exception as e:
             duration = time.time() - start_time
             results[model] = {

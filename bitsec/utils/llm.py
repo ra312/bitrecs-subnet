@@ -134,11 +134,10 @@ def chat_completion(
         role = "developer"
     parameters["messages"] = [{"role": role, "content": prompt}]
 
-    # if model_settings_and_costs["max_tokens_key"]:
-    #     parameters[model_settings_and_costs["max_tokens_key"]] = max_tokens
-    # else:
-    #     parameters["max_tokens"] = max_tokens
-    if max_tokens:
+    if max_tokens == float("inf"):
+        max_tokens = model_settings_and_costs["max_tokens"] if "max_tokens" in model_settings_and_costs else None
+        print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Using max_completion_tokens from model settings: {max_tokens}")
+    elif max_tokens:
         parameters["max_completion_tokens"] = max_tokens
     elif model_settings_and_costs["max_tokens"] is not None:
         parameters["max_completion_tokens"] = model_settings_and_costs["max_tokens"]
@@ -269,7 +268,7 @@ def get_token_cost(response: openai.types.completion.Completion) -> tuple[float,
         rejected_prediction_fee = costs["output"] * rejected_prediction / 1_000_000
 
         fee += reasoning_fee + accepted_prediction_fee + rejected_prediction_fee
-        description += f". Reasoning: {show_first_non_zero_digit(reasoning_fee)}, Prediction: accepted ¢{show_first_non_zero_digit(accepted_prediction_fee)}, rejected ¢{show_first_non_zero_digit(rejected_prediction_fee)}"
+        description += f". Reasoning: {show_first_non_zero_digit(reasoning_fee)}, Prediction: accepted {show_first_non_zero_digit(accepted_prediction_fee)}, rejected {show_first_non_zero_digit(rejected_prediction_fee)}"
 
     global TOTAL_SPEND_CENTS
     TOTAL_SPEND_CENTS += fee
