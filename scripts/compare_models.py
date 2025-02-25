@@ -4,6 +4,30 @@ Script to compare different LLM models for challenge generation.
 
 This script generates challenges using different models and logs the results
 and costs to files with timestamps.
+
+To run:
+
+```
+$ python scripts/compare_models.py
+```
+It will run all the models in 
+- MODELS_TO_TEST_STRUCTURED_OUTPUT, and output each model's PredictionResponse to the console
+- MODELS_TO_TEST_UNSTRUCTURED_OUTPUT and output the raw response to the console
+
+It will also create a subdirectory `model_comparison_results` and then a directory below that with date timestamp. This will contain:
+
+- input_clean_code.sol -- Code it started with
+- input_vulnerability.md -- Description of vulnerability injected
+- results.json -- The results from all the models, particularly the cost and time taken for each model
+
+Plus files to contain each models result named by the model name, eg
+
+- gpt-4o-mini_generated_code.sol   
+- o1-2024-12-17_generated_code.sol 
+- o1-mini_output.md -- note it is .md because the model can't return structured output
+- etc
+
+Finally, it will print the total cost and time taken to the console.
 """
 MODELS_TO_TEST_STRUCTURED_OUTPUT = [
     "gpt-4o-mini",
