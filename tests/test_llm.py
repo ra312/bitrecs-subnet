@@ -18,7 +18,7 @@ TEST_RESPONSE = "Test response"
 def test_chat_completion_response_format():
     """Test response with specific format type."""
     if not SPEND_MONEY:
-        return
+        pytest.skip("Skipping test because SPEND_MONEY is False")
     
     # Make a simple object
     class TestResponse(BaseModel):
@@ -125,6 +125,27 @@ def test_get_token_cost_with_cached():
     assert "Input: ¢0.1" in description
     assert "(cached: ¢0.1)" in description
     assert "Output: ¢0.1" in description
+
+def test_get_token_cost_more_than_100_cents():
+    """Test token cost with more than 100 cents."""
+    response = MagicMock()
+    response.model = "testing"
+    response.usage = MagicMock(
+        prompt_tokens=1000000,
+        completion_tokens=1000000,
+        total_tokens=2000000,
+        prompt_tokens_details=MagicMock(cached_tokens=0),
+        completion_tokens_details=MagicMock(
+            reasoning_tokens=0,
+            accepted_prediction_tokens=0,
+            rejected_prediction_tokens=0
+        )
+    )
+
+    fee, description = get_token_cost(response)
+    assert "Input: $1.00" in description
+    assert "Output: $1.00" in description
+    assert fee == 200 # 200 cents
 
 def test_get_token_cost_invalid_model():
     """Test invalid model handling."""

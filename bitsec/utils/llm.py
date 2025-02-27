@@ -271,6 +271,7 @@ def get_token_cost(response: openai.types.completion.Completion) -> tuple[float,
 
     global TOTAL_SPEND_DESCRIPTION
     TOTAL_SPEND_DESCRIPTION.append(description)
+    print(f"TOTAL_SPEND_DESCRIPTION: {TOTAL_SPEND_DESCRIPTION}, TOTAL_SPEND_CENTS: {TOTAL_SPEND_CENTS}, input_fee: {input_fee}, output_fee: {output_fee}")
 
     return fee, description
 
@@ -282,11 +283,17 @@ def show_first_non_zero_digit(cost: float) -> str:
         cost (float): Cost in cents
         
     Returns:
-        str: Formatted cost string with ¢ symbol
+        str: Formatted cost string with ¢ or $ symbol
     """
     if cost == 0:
         return "¢0"
     
+    # If cost is >= $1 (100 cents), convert to dollars and show 2 decimal places
+    if cost >= 100:
+        dollars = cost / 100
+        return f"${dollars:.2f}"
+    
+    # Handle cents as before
     decimals = 1
     while decimals < 10:  # Limit to 10 decimal places
         formatted = f"¢{cost:.{decimals}f}"
