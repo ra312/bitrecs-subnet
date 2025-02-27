@@ -94,41 +94,46 @@ def test_create_challenge_different_outputs():
     assert response1.prediction == response2.prediction, f"Expected R1 and R2 responses to have the same vulnerability status: {response1} != {response2}"
 
 
-# def test_verify_solidity_compilation():
-#     """Test that verify_solidity_compilation correctly identifies compilable code."""
+def test_verify_solidity_quality_checks():
+    """Test that verify_solidity_compilation correctly identifies compilable code."""
 
-#     # These tests only check basic syntax and should work without Forge
-#     no_license = """
-#     pragma solidity ^0.8.0;
-#     contract Test {
-#         function test() public pure returns (uint256) { return 1; }
-#     }
-#     """
-#     assert not verify_solidity_compilation(no_license), f"Code without license should not pass validation: {no_license}"
+    # These tests only check basic syntax and should work without Forge
+    no_license = """
+    pragma solidity ^0.8.0;
+    contract Test {
+        function test() public pure returns (uint256) { return 1; }
+    }
+    """
+    assert not verify_solidity_compilation(no_license), f"Code without license should not pass validation: {no_license}"
 
-#     no_pragma = """
-#     // SPDX-License-Identifier: MIT
-#     contract Test {
-#         function test() public pure returns (uint256) { return 1; }
-#     }
-#     """
-#     assert not verify_solidity_compilation(no_pragma), f"Code without pragma should not pass validation: {no_pragma}"
+    no_pragma = """
+    // SPDX-License-Identifier: MIT
+    contract Test {
+        function test() public pure returns (uint256) { return 1; }
+    }
+    """
+    assert not verify_solidity_compilation(no_pragma), f"Code without pragma should not pass validation: {no_pragma}"
     
-#     valid_code = """
-#     // SPDX-License-Identifier: MIT
-#     pragma solidity ^0.8.0;
-#     contract Test {
-#         function test() public pure returns (uint256) { return 1; }
-#     }
-#     """
-#     invalid_code = """
-#     // SPDX-License-Identifier: MIT
-#     pragma solidity ^0.8.0;
-#     contract Test 
-#         function test public pure returns (uint256) { return 1; }
-#     """
+def test_verify_solidity_compilation_with_forge():
+    ############################################################################
+    # These tests require Forge, see miner_and_validator_setup.md to install it
+    ############################################################################
 
-#     # These tests require Forge, see miner_and_validator_setup.md to install it
-#     # assert verify_solidity_compilation(valid_code), f"Valid code should compile: {valid_code}"
-#     assert not verify_solidity_compilation(invalid_code), f"Invalid code should not compile: {invalid_code}"
+    valid_code = """
+    // SPDX-License-Identifier: MIT
+    pragma solidity ^0.8.0;
+    contract Test {
+        function test() public pure returns (uint256) { return 1; }
+    }
+    """
+    assert verify_solidity_compilation(valid_code), f"Valid code should compile: {valid_code}"
+    print(f"Valid code did compile")
     
+    invalid_code = """
+    // SPDX-License-Identifier: MIT
+    pragma solidity ^0.8.0;
+    contract Test 
+        function test public pure returns (uint256) { return 1; }
+    """
+    assert not verify_solidity_compilation(invalid_code), f"Invalid code should not compile: {invalid_code}"
+    print(f"Invalid code correctly rejected")

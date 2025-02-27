@@ -60,7 +60,7 @@ OUTPUT_DIR = os.path.join(ROOT_DIR, 'model_comparison_results')
 # Add project root to Python path
 sys.path.insert(0, ROOT_DIR)
 
-from bitsec.utils.data import get_random_secure_filename, get_random_vulnerability_filename, create_challenge_with_inputs
+from bitsec.utils.data import get_random_secure_filename, get_random_vulnerability_filename, create_challenge_with_inputs, verify_solidity_compilation
 from bitsec.utils.llm import get_total_spend_cents, show_first_non_zero_digit
 
 # Prettier output
@@ -164,23 +164,31 @@ def run_model_comparison(
             duration = time.time() - start_time
             cost_pretty = show_first_non_zero_digit(cost)
             
-            # Print detailed success info with pretty formatting
+            # Print detailed info with pretty formatting
             title = Text()
-            title.append("✓ ", style="green")
-            title.append(f"{model}, Cost: {cost_pretty}, {cost_description}, Time: {format_duration(duration)}")
-            
+            title.append(f"{model}, Cost: {cost_pretty}, {cost_description}, Time: {format_duration(duration)} ")
+
             # Save generated code to file
             code_filename = f"{model}_generated_code.sol" if not is_unstructured else f"{model}_output.md"
-            with open(os.path.join(output_dir, code_filename), 'w') as f:
+            code_path = os.path.join(output_dir, code_filename)
+            with open(code_path, 'w') as f:
                 f.write(modified_code)
 
             # Save results
             vulnerability_info_dict = None
             if vulnerability_info is None:
-                content = f"Model returned unstructured output\n\n{modified_code}"
+                content = f"Model returned unstructured output\nSaved to: {code_filename}"
+                title.append("? Unstructured output", style="yellow")
             else:
                 vulnerability_info_dict = vulnerability_info.model_dump()
                 content = format_vulnerability_info(vulnerability_info_dict)
+
+                # test compilation
+                if verify_solidity_compilation(modified_code):
+                    title.append("✓ Code compiled", style="green")
+                else:
+                    content += f"\n\nModel returned code that did not compile!"
+                    title.append("✗ did not compile!", style="red")
 
             console.print(Panel(content, title=title, expand=False, width=SCREEN_WIDTH))
 
