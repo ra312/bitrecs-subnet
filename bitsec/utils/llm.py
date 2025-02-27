@@ -136,14 +136,10 @@ def chat_completion(
 
     if max_tokens == float("inf"):
         max_tokens = model_settings_and_costs["max_tokens"] if "max_tokens" in model_settings_and_costs else None
-        print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Using max_completion_tokens from model settings: {max_tokens}")
     elif max_tokens:
         parameters["max_completion_tokens"] = max_tokens
     elif model_settings_and_costs["max_tokens"] is not None:
         parameters["max_completion_tokens"] = model_settings_and_costs["max_tokens"]
-        ########## TODO: remove
-        print(f"Using max_completion_tokens from model settings: {parameters['max_completion_tokens']}")
-        ########## TODO: remove
 
     if response_format is not None:
         if "no_structured_output" in model_settings_and_costs and model_settings_and_costs["no_structured_output"]:
