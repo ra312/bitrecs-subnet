@@ -15,7 +15,7 @@ if SPEND_MONEY:
 @flaky(max_runs=7)
 def test_create_challenge_non_vulnerable():
     if not SPEND_MONEY:
-        return
+        pytest.skip("Skipping test because SPEND_MONEY is False")
 
     """Test creating a non-vulnerable challenge."""
     code, expected_response = create_challenge(vulnerable=False)
@@ -36,7 +36,7 @@ def test_create_challenge_non_vulnerable():
 def test_create_challenge_vulnerable():
     """Test creating a vulnerable challenge."""
     if not SPEND_MONEY:
-        return
+        pytest.skip("Skipping test because SPEND_MONEY is False")
 
     code, expected_response = create_challenge(vulnerable=True)
     
@@ -56,7 +56,7 @@ def test_create_challenge_vulnerable():
 def test_create_challenge_return_type():
     """Test that create_challenge returns the correct type."""
     if not SPEND_MONEY:
-        return
+        pytest.skip("Skipping test because SPEND_MONEY is False")
     
     result = create_challenge(vulnerable=False)
     assert isinstance(result, tuple), f"Expected tuple, got {type(result)}"
@@ -68,7 +68,7 @@ def test_create_challenge_return_type():
 def test_create_challenge_different_outputs():
     """Test that create_challenge generates different challenges."""
     if not SPEND_MONEY:
-        return
+        pytest.skip("Skipping test because SPEND_MONEY is False")
     
     code1, response1 = create_challenge(vulnerable=False)
     assert not response1.prediction, f"Expected R1 response should not be vulnerable: {response1}"
