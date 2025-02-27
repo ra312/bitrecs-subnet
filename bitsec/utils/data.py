@@ -45,17 +45,25 @@ def verify_solidity_compilation(code: str) -> bool:
         with open(contract_path, 'w') as f:
             f.write(code)
             
+        # Initialize Foundry project
         try:
-            # Initialize Foundry project
             init_result = subprocess.run(["forge", "init", "--no-commit", "--force"], cwd=tmpdir, capture_output=True)
             init_result.check_returncode()  # This will raise CalledProcessError if forge init fails
-            
-            # Try to compile
+        except subprocess.CalledProcessError as e:
+            raise ValueError(f"Forge not installed: {e.stderr.decode()}")
+        except Exception as e:
+            bt.logging.error(f"Unknown error trying to verify solidity code compiles: {e}")
+            return False
+
+        # Try to compile
+        try:
             build_result = subprocess.run(["forge", "build"], cwd=tmpdir, capture_output=True)
             build_result.check_returncode()  # This will raise CalledProcessError if forge build fails
             return True
         except subprocess.CalledProcessError as e:
-            bt.logging.error(f"Compilation failed: {e.stderr.decode()}")
+            return False
+        except Exception as e:
+            bt.logging.error(f"Unknown error trying to verify solidity code compiles: {e}")
             return False
 
 def _get_all_filenames(directory: str, extension: str) -> List[str]:
