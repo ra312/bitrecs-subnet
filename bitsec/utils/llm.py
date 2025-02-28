@@ -32,6 +32,7 @@ DEFAULT_MAX_TOKENS = 1000
 TOTAL_SPEND_CENTS = 0.0
 TOTAL_SPEND_DESCRIPTION = []
 
+# https://openai.com/api/pricing/
 SETTINGS_AND_COST_USD_PER_MILLION_TOKENS = {
     "gpt-4o": {
         "input": 2.50,
@@ -50,6 +51,7 @@ SETTINGS_AND_COST_USD_PER_MILLION_TOKENS = {
         "input_cached": 7.50,
         "output": 60.00,
         "no_system_prompt": True,
+        "no_temperature": True,
         "max_tokens_key": "max_completion_tokens",
         "max_tokens": 100000
     },
@@ -59,6 +61,7 @@ SETTINGS_AND_COST_USD_PER_MILLION_TOKENS = {
         "output": 4.40,
         "no_system_prompt": True,
         "no_structured_output": True,
+        "no_temperature": True,
         "max_tokens_key": "max_completion_tokens",
         "max_tokens": 65536
     },
@@ -69,6 +72,12 @@ SETTINGS_AND_COST_USD_PER_MILLION_TOKENS = {
         "no_system_prompt": True,
         "max_tokens_key": "max_completion_tokens",
         "max_tokens": 100000
+    },
+    "gpt-4.5-preview": {
+        "input": 75,
+        "input_cached": 37.5,
+        "output": 150,
+        "max_tokens": 16384
     },
     "testing": {
         "input": 1,
@@ -101,22 +110,20 @@ def chat_completion(
 
     Args:
         prompt (str): The prompt to analyze.
-        response_format (Optional[Type[T]]): The expected response format.
+        response_format (Optional[Type[T]]): The expected response format. Optional. If not supported by model, response will be returned as string.
         model (str): The model to use for analysis. Optional.
-        temperature (float): Sampling temperature. Optional.
-        max_tokens (int): Maximum number of tokens to generate. Optional.
+        temperature (float): Sampling temperature. Optional. Temperature may not be supported by model, in which case it will be ignored.
+        max_tokens (int): Maximum number of tokens to generate. Optional. Passing max as float("inf") means use model's max from SETTINGS_AND_COST_USD_PER_MILLION_TOKENS
 
     Returns:
         Union[str, T]: The analysis result from the model, either as string or specified object.
     """
     # Set default values if None
     model = model or DEFAULT_MODEL
-    temperature = temperature or DEFAULT_TEMPERATURE
     max_tokens = max_tokens or DEFAULT_MAX_TOKENS
 
     parameters = {
-        "model": model,
-        "temperature": temperature,
+        "model": model
     }
 
     # If model has date parts, remove them
@@ -128,12 +135,17 @@ def chat_completion(
 
     model_settings_and_costs = SETTINGS_AND_COST_USD_PER_MILLION_TOKENS[model_core]
 
+    # Temperature may not be supported by model
+    if temperature is not None and ("no_temperature" not in model_settings_and_costs or not model_settings_and_costs["no_temperature"]):
+        parameters["temperature"] = temperature
+
     if "no_system_prompt" in model_settings_and_costs and model_settings_and_costs["no_system_prompt"]:
         role = "user"
     else:
         role = "developer"
     parameters["messages"] = [{"role": role, "content": prompt}]
 
+    # Passing max as float("inf") means use model's max from SETTINGS_AND_COST_USD_PER_MILLION_TOKENS
     if max_tokens == float("inf"):
         max_tokens = model_settings_and_costs["max_tokens"] if "max_tokens" in model_settings_and_costs else None
     elif max_tokens:
@@ -271,7 +283,6 @@ def get_token_cost(response: openai.types.completion.Completion) -> tuple[float,
 
     global TOTAL_SPEND_DESCRIPTION
     TOTAL_SPEND_DESCRIPTION.append(description)
-    print(f"TOTAL_SPEND_DESCRIPTION: {TOTAL_SPEND_DESCRIPTION}, TOTAL_SPEND_CENTS: {TOTAL_SPEND_CENTS}, input_fee: {input_fee}, output_fee: {output_fee}")
 
     return fee, description
 
