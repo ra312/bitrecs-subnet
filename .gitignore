@@ -178,4 +178,5 @@ testing/
 wandb/*
 
 # Logs comparing models
-model_comparison_results/*
+model_comparisons/*
+

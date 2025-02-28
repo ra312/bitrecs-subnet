@@ -8,13 +8,13 @@ and costs to files with timestamps.
 To run:
 
 ```
-$ python scripts/compare_models.py
+$ python scripts/compare_models/code_challenge.py
 ```
 It will run all the models in 
 - MODELS_TO_TEST_STRUCTURED_OUTPUT, and output each model's PredictionResponse to the console
 - MODELS_TO_TEST_UNSTRUCTURED_OUTPUT and output the raw response to the console
 
-It will also create a subdirectory `model_comparison_results` and then a directory below that with date timestamp. This will contain:
+It will also create a subdirectory `model_comparison_generation_results` and then a directory below that with date timestamp. This will contain:
 
 - input_clean_code.sol -- Code it started with
 - input_vulnerability.md -- Description of vulnerability injected
@@ -32,8 +32,8 @@ Finally, it will print the total cost and time taken to the console.
 MODELS_TO_TEST_STRUCTURED_OUTPUT = [
     "gpt-4o-mini",
     "gpt-4o",
-    "o1-2024-12-17",
-    "o3-mini-2025-1-31",
+    "o1",
+    "o3-mini",
 ]
 MODELS_TO_TEST_UNSTRUCTURED_OUTPUT = [
     "o1-mini",
@@ -53,79 +53,18 @@ from rich.panel import Panel
 from rich.text import Text
 
 # Configure paths
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = os.path.dirname(SCRIPT_DIR)
-OUTPUT_DIR = os.path.join(ROOT_DIR, 'model_comparison_results')
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(os.path.dirname(CURRENT_DIR))  # Go up two levels
 
 # Add project root to Python path
 sys.path.insert(0, ROOT_DIR)
 
-from bitsec.utils.data import get_random_secure_filename, get_random_vulnerability_filename, create_challenge_with_inputs, verify_solidity_compilation
+from bitsec.utils.data import create_challenge_with_inputs, verify_solidity_compilation
 from bitsec.utils.llm import get_total_spend_cents, show_first_non_zero_digit
+from utils import before_all_tests, after_all_tests, format_vulnerability_info, format_duration
 
 # Prettier output
 console = Console()
-
-def setup_output_dir() -> str:
-    """
-    Create output directory with timestamp.
-    
-    Returns:
-        str: Path to the created output directory
-    """
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    output_dir = os.path.join(OUTPUT_DIR, timestamp)
-    os.makedirs(output_dir, exist_ok=True)
-    return output_dir
-
-def format_vulnerability_info(vulnerability_info: Dict | None) -> str:
-    """
-    Format vulnerability information for display.
-    
-    Args:
-        vulnerability_info (Dict | None): Dictionary containing vulnerability information, or None for unstructured output
-        
-    Returns:
-        str: Formatted string for display
-    """
-    if vulnerability_info is None:
-        return "Model returned unstructured output, no vulnerability information available"
-        
-    vulnerabilities = vulnerability_info.get("vulnerabilities")
-    if not vulnerabilities:
-        return "No vulnerabilities added!!!! :("
-    
-    output = []
-    for vuln in vulnerabilities:
-        # Handle multiline descriptions by proper indentation
-        description = dedent(vuln.get("description", "")).strip()
-        description_lines = description.split("\n")
-        indented_description = "\n      ".join(description_lines)
-        
-        output.append(f"  • Type: {vuln.get('type', 'Unknown')}")
-        output.append(f"    Severity: {vuln.get('severity', 'Unknown')}")
-        output.append(f"    Description:\n      {indented_description}")
-        if vuln.get("line_numbers"):
-            output.append(f"    Line Numbers: {', '.join(map(str, vuln['line_numbers']))}")
-        output.append("")  # Add blank line between vulnerabilities
-    
-    return "\n".join(output)
-
-def format_duration(seconds: float) -> str:
-    """
-    Format duration in seconds to a human readable string.
-    
-    Args:
-        seconds (float): Duration in seconds
-        
-    Returns:
-        str: Formatted duration string
-    """
-    if seconds < 60:
-        return f"{seconds:.1f}s"
-    minutes = int(seconds // 60)
-    seconds = seconds % 60
-    return f"{minutes}m {seconds:.1f}s"
 
 def run_model_comparison(
     clean_code: str,
@@ -147,7 +86,6 @@ def run_model_comparison(
     
     for model in list(set(MODELS_TO_TEST_STRUCTURED_OUTPUT + MODELS_TO_TEST_UNSTRUCTURED_OUTPUT)):
         console.print(f"Calling {model} ...")
-        initial_spend = get_total_spend_cents()
         start_time = time.time()
         
         try:
@@ -212,50 +150,12 @@ def run_model_comparison(
 
 def main():
     """Main function to run model comparison."""
-    start_time = time.time()
-    
-    # Create output directory
-    output_dir = setup_output_dir()
-    console.print(f"Saving results to: {output_dir}")
-    
-    # Get random sample files
-    secure_filename = get_random_secure_filename()
-    vulnerability_filename = get_random_vulnerability_filename()
-    
-    # Read input files
-    clean_code = open(secure_filename, 'r').read()
-    vulnerability_description = open(vulnerability_filename, 'r').read()
-
-    # print first line of vulnerability description
-    vulnerability_description_first_line = vulnerability_description.split('\n')[0]
-    print(f"vulnerability_description: {vulnerability_description_first_line}")
-    
-    # Save input files for reference
-    with open(os.path.join(output_dir, 'input_clean_code.sol'), 'w') as f:
-        f.write(clean_code)
-    with open(os.path.join(output_dir, 'input_vulnerability.md'), 'w') as f:
-        f.write(vulnerability_description)
-    
+    output_dir, clean_code, vulnerability_description, start_time = before_all_tests('code_challenge')
+   
     # Run comparison
     results = run_model_comparison(clean_code, vulnerability_description, output_dir)
     
-    # Calculate total duration
-    total_duration = time.time() - start_time
-    total_cost = get_total_spend_cents()
-    
-    # Save results
-    results_file = os.path.join(output_dir, 'results.json')
-    final_results = {
-        "total_duration_seconds": total_duration,
-        "total_cost_cents": total_cost,
-        "models": results
-    }
-    with open(results_file, 'w') as f:
-        json.dump(final_results, f, indent=2)
-
-    console.print(f"\nTotal cost: {show_first_non_zero_digit(total_cost)}")
-    console.print(f"Total time: {format_duration(total_duration)}")
-    console.print(f"Results saved to: {output_dir}")
+    total_duration, total_cost = after_all_tests(output_dir, start_time, results)
 
 if __name__ == "__main__":
     main() 
