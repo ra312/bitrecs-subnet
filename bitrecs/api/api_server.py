@@ -300,8 +300,8 @@ class ApiServer:
 
             await self.verify_request2(request, x_signature, x_timestamp)
 
-            store_catalog = ProductFactory.try_parse_context(request.context)
-            #store_catalog = ProductFactory.try_parse_context_strict(request.context)
+            #store_catalog = ProductFactory.try_parse_context(request.context)
+            store_catalog = ProductFactory.try_parse_context_strict(request.context)
             catalog_size = len(store_catalog)
             bt.logging.trace(f"REQUEST CATALOG SIZE: {catalog_size}")
             if catalog_size < CONST.MIN_CATALOG_SIZE or catalog_size > CONST.MAX_CATALOG_SIZE:
