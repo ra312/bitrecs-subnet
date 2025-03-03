@@ -397,6 +397,21 @@ def test_schema_validation_broken_testnet_json_03_03_2025_2():
     products = ProductFactory.try_parse_context_strict(context)
     print(products)
     assert len(products) == 0
+    
+
+def test_schema_validation_broken_testnet_json_03_03_2025_4():
+    broken_json = ['{\'sku\': \'8761139331296\', \'name\': \'Impress 16" Oscillating Stand Fan (black) IM-725B\', \'price\': \'56.91\'}', 
+                   "{'sku': '8772909105376', 'name': 'Wireless Magnetic Charger And Power Bank For iPhone 12', 'price': '56.42'}", 
+                   "{'sku': '8761139921120', 'name': 'HD 1080P Camera 360° Panoramic PTZ Wireless Wifi Camera', 'price': '57.33'}", 
+                   "{'sku': '8772908712160', 'name': 'Watermelon iPhone Case', 'price': '24.17'}", 
+                   "{'sku': '8761139101920', 'name': 'beFree Sound 2.0 Computer Gaming Speakers with LED RGB Lights', 'price': '87.01'}", 
+                   "{'sku': '8772909269216', 'name': 'Knock Knock Video Doorbell WiFi Enabled', 'price': '40.29'}"]
+
+    context = json.dumps(broken_json)
+    products = ProductFactory.try_parse_context_strict(context)
+    print(products)
+    assert len(products) == 0
+    
 
 
 def test_strict_parser_rejects_malformed_json_quotes():
@@ -419,3 +434,6 @@ def test_strict_parser_rejects_malformed_json_quotes():
     for product in products:
         assert '"' not in product.sku  # No quotes in actual data
         assert "'" not in product.sku
+
+
+    
