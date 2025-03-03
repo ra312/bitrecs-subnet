@@ -2,6 +2,8 @@ import json
 import json_repair
 import jsonschema
 from bitrecs.commerce.product import CatalogProvider, Product, ProductFactory
+from bitrecs.validator.reward import validate_result_schema
+
 
 
 
@@ -368,3 +370,18 @@ def test_products_missing_sku_error():
     sku_check = ProductFactory.check_all_have_sku(products)
     print(f"sku check: {sku_check}")
     assert sku_check == False
+
+
+
+def test_schema_validation_broken_testnet_json_03_03_2025():
+    broken_json = ['{\'sku\': \'8772908155104\', \'name\': \'10" Table Top Selfie LED Lamp\', \'price\': \'46.74\'}', 
+    "{'sku': '8772909269216', 'name': 'Knock Knock Video Doorbell WiFi Enabled', 'price': '40.29'}", 
+    "{'sku': '8772908450016', 'name': 'Galaxy Starry Sky Projector Rotating', 'price': '90.34'}", 
+    "{'sku': '8761138839776', 'name': 'beFree Sound Color LED Dual Gaming Speakers', 'price': '84.42'}", 
+    "{'sku': '8772908384480', 'name': 'Universal Wireless Charging Stand for Iphone Apple Watch Airpods', 'price': '40.33'}", 
+    '{\'sku\': \'8761139331296\', \'name\': \'Impress 16" Oscillating Stand Fan (black) IM-725B\', \'price\': \'56.91\'}']
+
+    is_valid = validate_result_schema(6, broken_json)
+    assert is_valid == False
+ 
+    
