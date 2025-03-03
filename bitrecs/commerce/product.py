@@ -216,8 +216,9 @@ class ProductFactory:
         except Exception as e:
             bt.logging.error(f"try_parse_context3 Exception: {e}")
             pass
-            
-        return result
+        
+        sorted_result = sorted(result, key=lambda x: x.sku)
+        return sorted_result
 
 
    
