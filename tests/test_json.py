@@ -302,7 +302,7 @@ def test_product_factory_parse_all_dataclass():
 
     #strict schmea  json loads
     result : list[Product] = ProductFactory.try_parse_context_strict(context)
-    assert len(result) == 4 #sku not present in last record
+    assert len(result) == 0 #sku not present in last record, entire context is rejected
 
 
 def test_product_factory_parse_all_dataclass_from_dict():
@@ -384,4 +384,36 @@ def test_schema_validation_broken_testnet_json_03_03_2025():
     is_valid = validate_result_schema(6, broken_json)
     assert is_valid == False
  
+
+def test_schema_validation_broken_testnet_json_03_03_2025_2():
+    broken_json = ['{\'sku\': \'8772908155104\', \'name\': \'10" Table Top Selfie LED Lamp\', \'price\': \'46.74\'}', 
+    "{'sku': '8772909269216', 'name': 'Knock Knock Video Doorbell WiFi Enabled', 'price': '40.29'}", 
+    "{'sku': '8772908450016', 'name': 'Galaxy Starry Sky Projector Rotating', 'price': '90.34'}", 
+    "{'sku': '8761138839776', 'name': 'beFree Sound Color LED Dual Gaming Speakers', 'price': '84.42'}", 
+    "{'sku': '8772908384480', 'name': 'Universal Wireless Charging Stand for Iphone Apple Watch Airpods', 'price': '40.33'}", 
+    '{\'sku\': \'8761139331296\', \'name\': \'Impress 16" Oscillating Stand Fan (black) IM-725B\', \'price\': \'56.91\'}']
+
+    context = json.dumps(broken_json)
+    products = ProductFactory.try_parse_context_strict(context)
+    print(products)
+    assert len(products) == 0
+
+
+def test_strict_parser_rejects_malformed_json_quotes():
+    problematic_json = ['{\'sku\': \'8772908155104\', \'name\': \'10" Table Top Selfie LED Lamp\', \'price\': \'46.74\'}', 
+    "{'sku': '8772909269216', 'name': 'Knock Knock Video Doorbell WiFi Enabled', 'price': '40.29'}", 
+    "{'sku': '8772908450016', 'name': 'Galaxy Starry Sky Projector Rotating', 'price': '90.34'}", 
+    "{'sku': '8761138839776', 'name': 'beFree Sound Color LED Dual Gaming Speakers', 'price': '84.42'}", 
+    "{'sku': '8772908384480', 'name': 'Universal Wireless Charging Stand for Iphone Apple Watch Airpods', 'price': '40.33'}", 
+    '{\'sku\': \'8761139331296\', \'name\': \'Impress 16" Oscillating Stand Fan (black) IM-725B\', \'price\': \'56.91\'}']
     
+    context = json.dumps(problematic_json)
+    products = ProductFactory.try_parse_context_strict(context)
+    
+    # Verify specific rejections
+    assert len(products) < len(problematic_json)
+    
+    # Verify surviving products have proper formatting
+    for product in products:
+        assert '"' not in product.sku  # No quotes in actual data
+        assert "'" not in product.sku

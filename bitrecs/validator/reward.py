@@ -81,6 +81,7 @@ def validate_result_schema(num_recs: int, results: list) -> bool:
     for item in results:
         try:            
             thing = json.loads(item)
+            #thing = json_repair.loads(item)
             validated = jsonschema.validate(thing, schema)
             if validated is not None:
                 return False            
