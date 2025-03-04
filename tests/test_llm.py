@@ -437,8 +437,7 @@ def test_call_gemini_with_20k_random_logic():
     #print(prompt)
     print(f"prompt length: {len(prompt)}")    
 
-    model = "gemini-1.5-flash-8b"
-    #model = "gemini-2.0-flash-exp"
+    model = "gemini-1.5-flash-8b"   
     
 
     llm_response = LLMFactory.query_llm(server=LLM.GEMINI,
