@@ -9,6 +9,7 @@ sudo apt install ufw
 sudo apt-get update && sudo apt-get upgrade -y
 ufw allow 22
 ufw allow proto tcp to 0.0.0.0/0 port 8091
+ufw allow proto tcp to 0.0.0.0/0 port 7779
 ufw enable
 ufw reload
 ```
