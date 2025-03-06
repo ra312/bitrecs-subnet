@@ -86,7 +86,7 @@ Before running the validator, edit the environment file and fill in the necessar
 ## 8. Start Validator
 
 ```bash
-pm2 start ./neurons/validator.py --name v -- --netuid 296 --subtensor.chain_endpoint wss://test.finney.opentensor.ai:443 --wallet.name default --wallet.hotkey default --logging.debug 
+pm2 start ./neurons/validator.py --name v -- --netuid 296 --wallet.name default --wallet.hotkey default --neuron.vpermit_tao_limit 1_000_000 --subtensor.network wss://test.finney.opentensor.ai:433 --logging.trace
 ```
 
 ## 9. Final Steps
