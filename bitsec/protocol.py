@@ -22,6 +22,7 @@ import bittensor as bt
 import pydantic
 from typing import List, Optional, Tuple, Union
 from bitsec.base.vulnerability_category import VulnerabilityCategory
+from bitsec.base.vulnerability_severity import VulnerabilitySeverity
 
 def prepare_code_synapse(code: str):
     """
@@ -77,6 +78,12 @@ class LineRange(pydantic.BaseModel):
 
 class Vulnerability(pydantic.BaseModel):
     """Represents a security vulnerability found in code."""
+    title: str = pydantic.Field(
+        description="A short title for the vulnerability."
+    )
+    severity: VulnerabilitySeverity = pydantic.Field(
+        description="The severity of the vulnerability."
+    )
     line_ranges: Optional[List[LineRange]] = pydantic.Field(
         description="An array of lines of code ranges where the vulnerability is located. Optional, but strongly recommended. Consecutive lines should be a single range, eg lines 1-3 should NOT be [{start: 1, end: 1}, {start: 2, end: 2}, {start: 3, end: 3}] INSTEAD SHOULD BE [{start: 1, end: 3}].",
         default=None
@@ -85,7 +92,7 @@ class Vulnerability(pydantic.BaseModel):
         description="The category of vulnerability detected."
     )
     description: str = pydantic.Field(
-        description="Detailed description of the vulnerability, including why it could lead to financial loss."
+        description="Detailed description of the vulnerability, including financial impact and why this is a vulnerability."
     )
     vulnerable_code: str = pydantic.Field(
         description="Code snippet that contains the vulnerability"
@@ -99,6 +106,26 @@ class Vulnerability(pydantic.BaseModel):
     
     model_config = { "populate_by_name": True }
 
+    @classmethod
+    def sort_vulnerabilities(cls, vulnerabilities: List['Vulnerability']) -> List['Vulnerability']:
+        """Sorts the list of vulnerabilities by their severity, then intelligently after that."""
+        return sorted(
+            vulnerabilities,
+            key=lambda v: (
+                # Sort severity highest first eg 99_CRITICAL, 85_HIGH...
+                -1 * v.severity.numeric_value(),
+                
+                # Then sort by line range start, since that will decrease scrolling while verifying.
+                # And if no line range it'll be harder to verify and fix, so put at end.
+                v.line_ranges[0]["start"] if v.line_ranges and len(v.line_ranges) > 0 and v.line_ranges[0]["start"] is not None else float('inf'),
+
+                # Sorting by category and description is silly, but guarantees sort order.
+                v.category.lower(),
+                v.description.lower(),
+            )
+        )
+
+
     # get field attrs from model
     def __getattr__(self, name):
         try:
@@ -109,7 +136,64 @@ class Vulnerability(pydantic.BaseModel):
     def __dict__(self):
         """Make JSON serializable by default."""
         return self.model_dump()
-    
+
+class VulnerabilityByMiner(Vulnerability):
+    """
+    Represents a security vulnerability found in code by a specific miner.
+    Extends the base Vulnerability class with miner-specific information.
+    """
+    miner_id: str = pydantic.Field(
+        description="The unique identifier of the miner that discovered this vulnerability"
+    )
+
+    model_config = { "populate_by_name": True }
+
+    # get field attrs from model
+    def __getattr__(self, name):
+        try:
+            return self.model_dump()[name]
+        except KeyError:
+            raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{name}'")
+
+    @classmethod
+    def from_json(cls, json_data: Union[str, str, dict]) -> 'VulnerabilityByMiner':
+        """Create a VulnerabilityByMiner from JSON data.
+        
+        Args:
+            json_data: Either a JSON string or a dictionary containing the response data
+            
+        Returns:
+            VulnerabilityByMiner: A new instance of VulnerabilityByMiner
+        """
+        if isinstance(json_data, str):
+            json_data = json.loads(json_data)
+        return cls(**json_data)
+
+    @classmethod
+    def from_tuple(cls, data: Tuple[str, Vulnerability]) -> 'VulnerabilityByMiner':
+        """Create a VulnerabilityByMiner from a tuple of (miner_id, Vulnerability).
+        
+        Args:
+            data: Tuple containing (miner_id, Vulnerability instance)
+            
+        Returns:
+            VulnerabilityByMiner: A new instance with all Vulnerability fields plus miner_id
+        """
+        miner_id, vuln = data
+        # Create a dict with all Vulnerability fields plus miner_id
+        vuln_dict = vuln.model_dump()
+        vuln_dict['miner_id'] = miner_id
+        return cls.model_validate(vuln_dict)
+
+    def to_tuple(self) -> Tuple[str, Vulnerability]:
+        """Convert to tuple of (miner_id, Vulnerability).
+        
+        Returns:
+            Tuple[str, Vulnerability]: The miner_id and a Vulnerability instance
+        """
+        # Create base Vulnerability instance from all fields except miner_id
+        vuln_dict = self.model_dump(exclude={'miner_id'})
+        return (self.miner_id, Vulnerability.model_validate(vuln_dict))
 
 # PredictionResponse is the response from the Miner
 class PredictionResponse(pydantic.BaseModel):
@@ -125,6 +209,11 @@ class PredictionResponse(pydantic.BaseModel):
     )
 
     model_config = { "populate_by_name": True }
+
+    def sort_vulnerabilities(self):
+        """Sorts the list of vulnerabilities by their severity, then intelligently after that. Updates the vulnerabilities list in place.
+        """
+        self.vulnerabilities = Vulnerability.sort_vulnerabilities(self.vulnerabilities)
 
     # get field attrs from model
     def __getattr__(self, name):

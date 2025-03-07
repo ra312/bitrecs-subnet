@@ -164,10 +164,9 @@ Modified code:"""
         # Use the LLM to inject the vulnerability
         response = chat_completion(
             prompt,
-            max_tokens=float("inf"),
-            temperature=temperature,
-            model=model,
-            response_format=(None if respond_as_str else NewlyVulnerableCode)
+            max_tokens=16000,
+            temperature=0.9,
+            response_format=NewlyVulnerableCode
         )
         if respond_as_str:
             modified_code = response

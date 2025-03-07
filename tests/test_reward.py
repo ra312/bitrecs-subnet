@@ -1,4 +1,5 @@
 import os
+from bitsec.base.vulnerability_severity import VulnerabilitySeverity
 import pytest
 # from flaky import flaky
 import bittensor as bt
@@ -20,7 +21,9 @@ def mock_prediction_response():
         prediction=True,
         vulnerabilities=[
             Vulnerability(
+                title="Arithmetic Overflow",
                 category=VulnerabilityCategory.ARITHMETIC_OVERFLOW_AND_UNDERFLOW,
+                severity=VulnerabilitySeverity.CRITICAL,
                 line_ranges=[LineRange(start=1, end=9)],
                 description="Can lead to loss of funds",
                 vulnerable_code="",
@@ -31,12 +34,12 @@ def mock_prediction_response():
     )
 
 
-vuln1 = Vulnerability(category=VulnerabilityCategory.ARITHMETIC_OVERFLOW_AND_UNDERFLOW, line_ranges=[LineRange(start=1, end=9)], description="Can lead to loss of funds", vulnerable_code="", code_to_exploit="", rewritten_code_to_fix_vulnerability="")
-vuln2 = Vulnerability(category=VulnerabilityCategory.WEAK_ACCESS_CONTROL, line_ranges=[LineRange(start=10, end=20)], description="Allows unauthorized access to sensitive data", vulnerable_code="", code_to_exploit="", rewritten_code_to_fix_vulnerability="")
-vuln3 = Vulnerability(category=VulnerabilityCategory.REENTRANCY, line_ranges=[LineRange(start=21, end=30)], description="Can lead to loss of funds", vulnerable_code="", code_to_exploit="", rewritten_code_to_fix_vulnerability="")
-vuln4 = Vulnerability(category=VulnerabilityCategory.INCORRECT_CALCULATION, line_ranges=[LineRange(start=30, end=40)], description="Allows unauthorized access to terminate the contract", vulnerable_code="", code_to_exploit="", rewritten_code_to_fix_vulnerability="")
-vuln5 = Vulnerability(category=VulnerabilityCategory.BAD_RANDOMNESS, line_ranges=[LineRange(start=30, end=40)], description="Allows unauthorized access to terminate the contract", vulnerable_code="", code_to_exploit="", rewritten_code_to_fix_vulnerability="")
-vuln6 = Vulnerability(category=VulnerabilityCategory.FRONT_RUNNING, line_ranges=[LineRange(start=30, end=40)], description="Allows unauthorized access to terminate the contract", vulnerable_code="", code_to_exploit="", rewritten_code_to_fix_vulnerability="")
+vuln1 = Vulnerability(title=VulnerabilityCategory.ARITHMETIC_OVERFLOW_AND_UNDERFLOW,severity=VulnerabilitySeverity.CRITICAL,category=VulnerabilityCategory.ARITHMETIC_OVERFLOW_AND_UNDERFLOW, line_ranges=[LineRange(start=1, end=9)], description="Can lead to loss of funds", vulnerable_code="", code_to_exploit="", rewritten_code_to_fix_vulnerability="")
+vuln2 = Vulnerability(title=VulnerabilityCategory.WEAK_ACCESS_CONTROL,severity=VulnerabilitySeverity.CRITICAL,category=VulnerabilityCategory.WEAK_ACCESS_CONTROL, line_ranges=[LineRange(start=10, end=20)], description="Allows unauthorized access to sensitive data", vulnerable_code="", code_to_exploit="", rewritten_code_to_fix_vulnerability="")
+vuln3 = Vulnerability(title=VulnerabilityCategory.REENTRANCY,severity=VulnerabilitySeverity.CRITICAL,category=VulnerabilityCategory.REENTRANCY, line_ranges=[LineRange(start=21, end=30)], description="Can lead to loss of funds", vulnerable_code="", code_to_exploit="", rewritten_code_to_fix_vulnerability="")
+vuln4 = Vulnerability(title=VulnerabilityCategory.INCORRECT_CALCULATION,severity=VulnerabilitySeverity.CRITICAL,category=VulnerabilityCategory.INCORRECT_CALCULATION, line_ranges=[LineRange(start=30, end=40)], description="Allows unauthorized access to terminate the contract", vulnerable_code="", code_to_exploit="", rewritten_code_to_fix_vulnerability="")
+vuln5 = Vulnerability(title=VulnerabilityCategory.BAD_RANDOMNESS,severity=VulnerabilitySeverity.CRITICAL,category=VulnerabilityCategory.BAD_RANDOMNESS, line_ranges=[LineRange(start=30, end=40)], description="Allows unauthorized access to terminate the contract", vulnerable_code="", code_to_exploit="", rewritten_code_to_fix_vulnerability="")
+vuln6 = Vulnerability(title=VulnerabilityCategory.FRONT_RUNNING,severity=VulnerabilitySeverity.CRITICAL,category=VulnerabilityCategory.FRONT_RUNNING, line_ranges=[LineRange(start=30, end=40)], description="Allows unauthorized access to terminate the contract", vulnerable_code="", code_to_exploit="", rewritten_code_to_fix_vulnerability="")
 
 def test_mock_reward_perfect_score(mock_prediction_response):
     result = reward(mock_prediction_response, mock_prediction_response)
@@ -172,6 +175,8 @@ def test_jaccard_score_duplicate_vulnerabilities():
 
 def test_jaccard_score_different_descriptions_same_category():
     vuln1_different_desc = Vulnerability(
+        title=VulnerabilityCategory.ARITHMETIC_OVERFLOW_AND_UNDERFLOW,
+        severity=VulnerabilitySeverity.CRITICAL,
         category=VulnerabilityCategory.ARITHMETIC_OVERFLOW_AND_UNDERFLOW,
         line_ranges=[LineRange(start=1, end=9)],
         description="Different description",
@@ -186,6 +191,8 @@ def test_jaccard_score_different_descriptions_same_category():
 
 def test_jaccard_score_different_line_ranges_same_category():
     vuln1_different_lines = Vulnerability(
+        title=VulnerabilityCategory.ARITHMETIC_OVERFLOW_AND_UNDERFLOW,
+        severity=VulnerabilitySeverity.CRITICAL,
         category=VulnerabilityCategory.ARITHMETIC_OVERFLOW_AND_UNDERFLOW,
         line_ranges=[LineRange(start=100, end=200)],
         description="Can lead to loss of funds",

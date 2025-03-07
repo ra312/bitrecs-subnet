@@ -10,7 +10,7 @@ import random
 import numpy as np
 import socket
 
-from bitsec.protocol import prepare_code_synapse
+from bitsec.protocol import prepare_code_synapse, PredictionResponse, Vulnerability, VulnerabilityByMiner
 from bitsec.utils.uids import get_random_uids
 from bitsec.validator.proxy import ProxyCounter
 
@@ -163,21 +163,36 @@ class ValidatorProxy:
         bt.logging.info(f"[ORGANIC] {responses}")
 
         # return predictions from miners
-        valid_pred_idx = np.array([i for i, v in enumerate(responses) if v.prediction != -1.])
+        valid_pred_idx = np.array([i for i, v in enumerate(responses) if v.prediction])
         if len(valid_pred_idx) > 0:
             valid_preds = np.array(responses)[valid_pred_idx]
             valid_pred_uids = np.array(miner_uids)[valid_pred_idx]
             if len(valid_preds) > 0:
-                self.proxy_counter.update(is_success=True)
-                self.proxy_counter.save()
+                # Merge all vulnerabilities from all miners into a single list
+                vulnerabilities_by_miner = []
+                for uid, pred in zip(valid_pred_uids, valid_preds):
+                    for vuln in pred.vulnerabilities:
+                        vulnerabilities_by_miner.append(
+                            VulnerabilityByMiner(
+                                miner_id=str(uid),  # Convert to string as required by the model
+                                **vuln.model_dump()  # Include all fields from the base Vulnerability
+                            )
+                        )
+                
                 data = {
                     'uids': [int(uid) for uid in valid_pred_uids],
-                    'preds': [pred.to_tuple() for pred in valid_preds],
+                    'vulnerabilities': vulnerabilities_by_miner,
+                    'predictions_from_miners': valid_preds,
                     'ranks': [float(self.validator.metagraph.R[uid]) for uid in valid_pred_uids],
                     'incentives': [float(self.validator.metagraph.I[uid]) for uid in valid_pred_uids],
                     'emissions': [float(self.validator.metagraph.E[uid]) for uid in valid_pred_uids],
                     'fqdn': socket.getfqdn()
                 }
+
+                self.proxy_counter.update(is_success=True)
+                self.proxy_counter.save()
+
+                # write data to database
                 return data
 
         self.proxy_counter.update(is_success=False)
