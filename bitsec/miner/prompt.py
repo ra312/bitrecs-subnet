@@ -4,7 +4,7 @@
 import json
 import re
 import os
-from typing import List
+from typing import List, Union
 from bitsec.base.vulnerability_category import VulnerabilityCategory
 from bitsec.protocol import PredictionResponse
 from bitsec.utils.data import SAMPLE_DIR
@@ -33,8 +33,9 @@ def analyze_code(
     acceptable_vulnerability_categories: List[VulnerabilityCategory] = [],
     model: str | None = None,
     temperature: float | None = None,
-    max_tokens: int = 10000
-) -> PredictionResponse:
+    max_tokens: int = 10000,
+    respond_as_str: bool = False
+) -> Union[PredictionResponse, str]:
     """
     Calls OpenAI API to analyze provided code for vulnerabilities.
 
@@ -46,15 +47,19 @@ def analyze_code(
         max_tokens (int, optional): Maximum number of tokens to generate. Defaults to 4000.
 
     Returns:
-        PredictionResponse: The analysis result from the model.
+        Union[PredictionResponse, str]: The analysis result from the model.
     """
     categories = ", ".join([vulnerability_category.value for vulnerability_category in acceptable_vulnerability_categories])
     prompt = VULN_PROMPT_TEMPLATE.format(code=code, acceptable_vulnerability_categories=categories)
     kwargs = {
         'prompt': prompt,
-        'response_format': PredictionResponse,
         'max_tokens': max_tokens
     }
+
+    # If the model can return structured output, return the PredictionResponse object
+    if not respond_as_str:
+        kwargs['response_format'] = PredictionResponse
+
     if model is not None:
         kwargs['model'] = model
     if temperature is not None:
