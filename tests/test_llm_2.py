@@ -48,6 +48,9 @@ OLLAMA_MODEL = "mistral-nemo" #8/8 8 passed, 5 skipped, 4 warnings in 61.01s (0:
 #OLLAMA_MODEL = "phi4:14b-fp16" # 4 failed, 4 passed, 5 skipped, 3 warnings in 129.96s (0:02:09)
 #OLLAMA_MODEL = "phi4:14b-q8_0" #1 failed, 7 passed, 5 skipped, 3 warnings in 90.35s (0:01:30) 
 
+OLLAMA_MODEL = "gemma3" #3 failed, 5 passed, 5 skipped, 2 warnings in 34.93s =============
+
+
 MASTER_SKU = "B08XYRDKDV" #HP Envy 6455e Wireless Color All-in-One Printer with 6 Months Free Ink (223R1A) (Renewed Premium)
 
 print(f"MASTER_SKU: {MASTER_SKU}\n")

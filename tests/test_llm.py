@@ -24,6 +24,8 @@ OLLAMA_MODEL = "mistral-nemo" #7/7 7 passed, 3 skipped, 4 warnings in 48.95s | 7
 #OLLAMA_MODEL = "llama3.3" #3/5
 #OLLAMA_MODEL = "llama3.3:70b-instruct-q2_K" #4/5
 #OLLAMA_MODEL = "qwen2.5:32b-instruct" #0/5
+#OLLAMA_MODEL = "gemma3" #3 failed, 4 passed, 2 skipped, 2 warnings in 30.60
+#OLLAMA_MODEL = "gemma3:27b" #7 passed, 2 skipped, 2 warnings in 74.68s (0:01:14)
 
 
 MASTER_SKU = "B07BG1CZ8X"   #iJuqi Mom Gifts from Daughter Son - 3PCS Stainless Steel Expendable Motivational 
