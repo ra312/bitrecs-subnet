@@ -28,9 +28,9 @@ map = [
     {"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-lite-v1"},    
     #{"provider": LLM.OPEN_ROUTER, "model": "cohere/command-r7b-12-2024"},
     #{"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-micro-v1"},    
-    #{"provider": LLM.OPEN_ROUTER, "model": "google/google/gemini-flash-1.5-8b"},
-    {"provider": LLM.OPEN_ROUTER, "model": "google/gemini-2.0-flash-lite-001"},  
-    {"provider": LLM.OPEN_ROUTER, "model": "google/gemini-2.0-flash-001"},  
+    {"provider": LLM.OPEN_ROUTER, "model": "google/google/gemini-flash-1.5-8b"},
+    #{"provider": LLM.OPEN_ROUTER, "model": "google/gemini-2.0-flash-lite-001"},  
+    #{"provider": LLM.OPEN_ROUTER, "model": "google/gemini-2.0-flash-001"},  
     
     {"provider": LLM.GROK, "model": "grok-2-latest"},
     {"provider": LLM.GEMINI, "model": "gemini-1.5-flash-8b"},
