@@ -77,22 +77,7 @@ class PromptFactory:
 
     def update_context(self) -> str:
         raise NotImplementedError("update_context")
-        st = time.perf_counter()
-        if not self.context:
-            return ""
-        products = ProductFactory.try_parse_products(self.context)
-        if len(products) == 0:
-            return ""
-        for item in self.cart:
-            products = [p for p in products if p.sku != item.sku]
-        #products = [p for p in products if p.sku != self.sku] #TODO: llm assist 
-        et = time.perf_counter()
-        diff = et - st
-        bt.logging.info(f"Updated context in {diff} seconds")   
-        print(f"Updated context in {diff} seconds")     
-        products = sorted(products, key=lambda x: (x.name.lower(), x.price))
-        self.context = json.dumps([p.to_dict() for p in products])
-        return self.context
+    
 
 
     def generate_prompt(self) -> str:
@@ -125,7 +110,9 @@ class PromptFactory:
     # TASK
     Given a product SKU, select {self.num_recs} complementary products from the provided context.
     Use your persona qualities to THINK about which products to select, but return ONLY a JSON array.
-    Evaluate each products name and price fields when making your recommendations.
+    Evaluate each product name and price fields before making your recommendations. 
+    The name field is the most important attribute followed by price.
+    SKU is not important and should be ignored when making recommendations.
 
     # INPUT
     Query SKU: <query>{self.sku}</query>
@@ -137,19 +124,21 @@ class PromptFactory:
 
     # OUTPUT REQUIREMENTS
     - Return ONLY a JSON array.
-    - Each object must have: sku, name, price.
+    - Each object must have: sku, name, price and reason.
     - Important information is in the 'name' field. Use this information to help make your recommendations.
     - Must return exactly {self.num_recs} items.
     - Items must exist in context.
     - No duplicates.
     - Query SKU must not be included.
     - Order by relevance/profitability.
+    - Each object must have a reason explaining why the product is a good recommendation for the <query> SKU.
+    - The reason should be a single succinct sentence consisting of plain words without punctuation, or line breaks.
     - No explanations or text outside the JSON array.
 
     Example format:
     [
-        {{"sku": "ABC", "name": "Product Name", "price": "100"}},
-        {{"sku": "DEF", "name": "Another Product", "price": "200"}}
+        {{"sku": "ABC", "name": "Men's Lightweight Hooded Rain Jacket", "price": "149", "reason": "Since <query> indicates the user is looking at mens rainboots, given the season a mens raincoat should be a good fit"}},
+        {{"sku": "DEF", "name": "Davek Elite Umbrella", "price": "159", "reason": "An Umbrella would go nicely with a Lightweight Hooded Rain Jacket and is often paired with it"}}
     ]"""
 
         prompt_length = len(prompt)

@@ -17,6 +17,7 @@
 # DEALINGS IN THE SOFTWARE.
 
 import os
+import re
 import sys
 import time
 import typing
@@ -197,10 +198,12 @@ class Miner(BaseMinerNeuron):
             dictionary_item = ast.literal_eval(cleaned_item)
             if "name" not in dictionary_item:
                 bt.logging.error(f"Item does not contain 'name' key: {dictionary_item}")
-                continue        
-            dictionary_item["name"] = dictionary_item["name"].replace("'", "-")
+                continue            
+            dictionary_item["name"] = re.sub(r"[^A-Za-z0-9 ]", "", dictionary_item["name"])
+            if "reason" in dictionary_item:
+                dictionary_item["reason"] = re.sub(r"[^A-Za-z0-9 ]", "", dictionary_item["reason"])
             recommendation = str(dictionary_item)
-            final_results.append(recommendation)        
+            final_results.append(recommendation)
       
         output_synapse=BitrecsRequest(
             name=synapse.name, 
@@ -354,7 +357,7 @@ class Miner(BaseMinerNeuron):
                 model = "NousResearch/Meta-Llama-3-8B-Instruct"
                 #model = "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF"
             case LLM.GEMINI:                                
-                model = "gemini-2.0-flash"
+                model = "gemini-2.0-flash-lite-001"
             case LLM.GROK:
                 model = "grok-beta"
             case LLM.CLAUDE:
