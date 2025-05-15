@@ -49,7 +49,7 @@ class Miner(BaseMinerNeuron):
             run_name = f'bitsec/miner-{self.uid}-{__version__}'
             wandb_config = {
                 "uid": self.uid,
-                "validator_hotkey": self.wallet.hotkey.ss58_address,
+                "miner_hotkey": self.wallet.hotkey.ss58_address,
                 "version": __version__,
                 "type": 'miner',
                 "netuid": self.config.netuid,
