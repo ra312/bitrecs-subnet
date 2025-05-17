@@ -5,7 +5,7 @@ ENV="mainnet"
 NETUID=60
 NETWORK="finney"
 
-if [ "$1" == "--test" ] || [ "$1" == "--testnet" ]; then
+if [ "$1" == "--test" -o "$1" == "--testnet" ] || [ "$1" == "--testnet" ]; then
     ENV="testnet"
     NETUID=350
     NETWORK="test"
