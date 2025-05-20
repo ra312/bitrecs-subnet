@@ -10,7 +10,11 @@ then
 	exit 1
 fi
 
-
+# Check if the .env file exists
+if [ ! -f .env ]; then
+    echo "Error: .env file not found. Required for environment variables like OPENAI_API_KEY. Please create one in the root directory e.g.  cp env.sample .env"
+    exit 1
+fi
 
 # Get the absolute path of the current directory
 CURRENT_DIR=$(pwd)
@@ -27,7 +31,7 @@ create_service_file() {
         testnet_flag="--testnet"
     fi
 
-    local target_file=/etc/systemd/system/${service_name}-${network_choice}.service
+    local target_file=/etc/systemd/system/bitsec-${service_name}-${network_choice}.service
     local log_file=${CURRENT_DIR}/logs/${service_name}-${network_choice}.log
     local error_log_file=${CURRENT_DIR}/logs/${service_name}-${network_choice}-error.log
         
@@ -44,9 +48,18 @@ After=network.target
 Type=simple
 WorkingDirectory=${CURRENT_DIR}
 Environment=PYTHONPATH=${CURRENT_DIR}
-ExecStart=/bin/bash ${CURRENT_DIR}/start-${service_name}.sh ${testnet_flag}
+Environment=PATH=${CURRENT_DIR}/venv/bin:${PATH}
+EnvironmentFile=${CURRENT_DIR}/.env
+# Add debug environment variables
+Environment=PYTHONUNBUFFERED=1
+Environment=DEBUG=1
+# Use absolute paths and explicit bash
+ExecStart=/bin/bash -c 'source ${CURRENT_DIR}/venv/bin/activate && ${CURRENT_DIR}/start-${service_name}.sh ${testnet_flag}'
 StandardOutput=append:${log_file}
 StandardError=append:${error_log_file}
+# Add user and group
+User=${SUDO_USER:-$USER}
+Group=${SUDO_USER:-$USER}
 Restart=always
 RestartSec=10
 StartLimitInterval=0
@@ -75,19 +88,43 @@ EOF
     echo "  - ${error_log_file}"
     
     # Reload systemd
-    echo "Reloading systemd: `systemctl daemon-reload`"
+    echo "Reloading systemd... systemctl daemon-reload"
     systemctl daemon-reload
     
-    # Enable and start the service
-    echo "Enabling service: `systemctl enable ${service_name}-${network_choice}.service`"
-    systemctl enable ${service_name}-${network_choice}.service
-    echo "Starting service: `systemctl start ${service_name}-${network_choice}.service`"
-    systemctl start ${service_name}-${network_choice}.service
+    echo "Enabling service... systemctl enable bitsec-${service_name}-${network_choice}.service"
+    systemctl enable bitsec-${service_name}-${network_choice}.service
+    if [ $? -ne 0 ]; then  # If it returns an error, print the error text
+        systemctl status bitsec-${service_name}-${network_choice}.service
+        tail ${log_file} ${error_log_file}
+        echo "May be useful: 
+            systemctl status bitsec-${service_name}-${network_choice}.service
+            systemctl stop bitsec-${service_name}-${network_choice}.service
+            systemctl disable bitsec-${service_name}-${network_choice}.service
+            tail -f ${log_file} ${error_log_file}"
+        exit 1
+    fi
 
-    echo "Success! Installed and started ${service_name}-${network_choice} service"
-    echo "For details, check the logs at:"
-    echo "  - ${log_file}"
-    echo "  - ${error_log_file}"
+    echo "Starting service... systemctl start bitsec-${service_name}-${network_choice}.service"
+    systemctl start bitsec-${service_name}-${network_choice}.service
+    if [ $? -ne 0 ]; then  # If it returns an error, print the error text
+        systemctl status bitsec-${service_name}-${network_choice}.service
+        tail ${log_file} ${error_log_file}
+        echo "May be useful: 
+            systemctl status bitsec-${service_name}-${network_choice}.service
+            systemctl stop bitsec-${service_name}-${network_choice}.service
+            systemctl disable bitsec-${service_name}-${network_choice}.service
+            tail -f ${log_file} ${error_log_file}"
+        exit 1
+    fi
+
+    echo "Successfully started! Current status: systemctl status bitsec-${service_name}-${network_choice}.service"
+    systemctl status bitsec-${service_name}-${network_choice}.service
+
+    echo "Reminders: 
+    systemctl status bitsec-${service_name}-${network_choice}.service
+    systemctl stop bitsec-${service_name}-${network_choice}.service
+    systemctl disable bitsec-${service_name}-${network_choice}.service
+    tail -f ${log_file} ${error_log_file}"
 }
 
 # Ask which service to create
