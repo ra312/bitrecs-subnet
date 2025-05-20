@@ -4,6 +4,7 @@
 ENV="mainnet"
 NETUID=60
 NETWORK="finney"
+PORT=9090  # Default port
 
 if [ "$1" == "--test" -o "$1" == "--testnet" ] || [ "$1" == "--testnet" ]; then
     ENV="testnet"
@@ -14,9 +15,9 @@ fi
 # Activate virtual environment
 source venv/bin/activate
 
-echo "Starting miner in $ENV environment with netuid $NETUID"
+echo "Starting miner in $ENV environment with netuid $NETUID on port $PORT"
 venv/bin/python3 -m neurons.miner --netuid $NETUID \
     --subtensor.chain_endpoint $NETWORK --subtensor.network $NETWORK \
     --wallet.name miner --wallet.hotkey default \
-    --axon.port 8092 --axon.external_port 8092 \
+    --axon.port $PORT --axon.external_port $PORT \
     --logging.debug
