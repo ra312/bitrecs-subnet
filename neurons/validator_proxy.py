@@ -166,39 +166,63 @@ class ValidatorProxy:
             deserialize=True,
         )
         
-        bt.logging.info(f"[ORGANIC] {responses}")
+        bt.logging.info(f"[ORGANIC] raw responses: {responses}")
 
         # return predictions from miners
+        bt.logging.info(f"[ORGANIC] Checking predictions: {[(i, v.prediction, len(v.vulnerabilities) if v.vulnerabilities else 0) for i, v in enumerate(responses)]}")
+        
         valid_pred_idx = np.array([i for i, v in enumerate(responses) if v.prediction])
-        if len(valid_pred_idx) > 0:
-            valid_preds = np.array(responses)[valid_pred_idx]
+        bt.logging.info(f"[ORGANIC] valid_pred_idx (prediction=True): {valid_pred_idx}")
+        
+        # Also check for responses with vulnerabilities even if prediction is False
+        valid_vuln_idx = np.array([i for i, v in enumerate(responses) if v.vulnerabilities])
+        bt.logging.info(f"[ORGANIC] valid_vuln_idx (has vulnerabilities): {valid_vuln_idx}")
+        
+        # Use responses that either have prediction=True OR have vulnerabilities
+        combined_idx = np.unique(np.concatenate([valid_pred_idx, valid_vuln_idx])) if len(valid_pred_idx) > 0 or len(valid_vuln_idx) > 0 else np.array([])
+        bt.logging.info(f"[ORGANIC] combined_idx (prediction=True OR has vulnerabilities): {combined_idx}")
+        
+        if len(combined_idx) > 0:
+            valid_preds = np.array(responses)[combined_idx]
 
             if len(valid_preds) > 0:
-                valid_pred_uids = np.array(miner_uids)[valid_pred_idx]
+                valid_pred_uids = np.array(miner_uids)[combined_idx]
                 vulnerabilities_by_miner = []
                 predictions_by_miner = {}
 
                 # Merge all vulnerabilities from all miners into a single list
                 for uid, pred in zip(valid_pred_uids, valid_preds):
+                    vuln = None  # Initialize vuln here
                     try:
                         bt.logging.info(f"[ORGANIC] uid: {uid}, pred: {pred}")
+                        bt.logging.info(f"[ORGANIC] pred.vulnerabilities: {pred.vulnerabilities}") # Add this log
+                        if not pred.vulnerabilities:
+                            bt.logging.warning(f"[ORGANIC] Miner {uid} returned no vulnerabilities in prediction.")
+                            continue
+
                         for vuln in pred.vulnerabilities:
                             parts = None
-                        if isinstance(vuln, Vulnerability):
-                            parts = vuln.model_dump()
-                        elif isinstance(vuln, dict):
-                            # Convert dict to Vulnerability object first
-                            vuln_obj = Vulnerability.model_validate(vuln)
-                            parts = vuln_obj.model_dump()
-                        else:
-                            raise ValueError(f"Invalid vulnerability type: {type(vuln)}, {vuln}")
-                        bt.logging.info(f"[ORGANIC] vuln {vuln}, parts {parts}")
-                        vulnerabilities_by_miner.append(
-                            VulnerabilityByMiner(
-                                miner_id=str(uid),  # Convert to string as required by the model
-                                **parts
+                            if isinstance(vuln, Vulnerability):
+                                parts = vuln.model_dump()
+                            elif isinstance(vuln, dict):
+                                # Convert dict to Vulnerability object first
+                                vuln_obj = Vulnerability.model_validate(vuln)
+                                parts = vuln_obj.model_dump()
+                            else:
+                                bt.logging.error(f"[ORGANIC] Invalid vulnerability type: {type(vuln)}, value: {vuln} for UID: {uid}")
+                                continue # Skip to the next vulnerability if type is invalid
+
+                            if parts is None:
+                                bt.logging.error(f"[ORGANIC] Failed to process vulnerability: {vuln} from miner {uid}")
+                                continue
+
+                            bt.logging.info(f"[ORGANIC] vuln {vuln}, parts {parts}")
+                            vulnerabilities_by_miner.append(
+                                VulnerabilityByMiner(
+                                    miner_id=str(uid),  # Convert to string as required by the model
+                                    **parts
+                                )
                             )
-                        )
                         predictions_by_miner[uid] = pred
                     except Exception as e:
                         bt.logging.error(f"Error processing uid: {uid}, vulnerability: {vuln}, error: {e}")
@@ -216,6 +240,8 @@ class ValidatorProxy:
 
                 self.proxy_counter.update(is_success=True)
                 self.proxy_counter.save()
+
+                bt.logging.info(f"[ORGANIC] request complete, response: {data}")
 
                 # write data to database
                 return data
