@@ -1,9 +1,5 @@
 import os
-import time
-import traceback
 os.environ["NEST_ASYNCIO"] = "0"
-import pytest
-import sys
 import json
 import secrets
 import datetime
@@ -35,7 +31,7 @@ MODEL_BATTERY = [ "mistral-nemo", "phi4", "gemma3:27b", "qwen2.5:32b"]
 #                  "google/gemini-2.0-flash-001", "anthropic/claude-3.7-sonnet",
 #                  "openai/gpt-4o-mini-search-preview", "openai/gpt-4o-mini", "qwen/qwen-turbo"]
 
-CLOUD_BATTERY = ["amazon/nova-lite-v1", "google/gemini-2.0-flash-001", "openrouter/quasar-alpha"]
+CLOUD_BATTERY = ["amazon/nova-lite-v1", "google/gemini-2.0-flash-001", "deepseek/deepseek-chat-v3-0324:free"]
 
 
 _FIRST_GET_REC = False
@@ -113,8 +109,7 @@ def get_rec(products, sku, model=None, num_recs=5) -> List:
     context = json.dumps([asdict(products) for products in products])
     factory = PromptFactory(sku=user_prompt, 
                             context=context, 
-                            num_recs=num_recs, 
-                            load_catalog=False, 
+                            num_recs=num_recs,
                             debug=debug_prompts)
     
     prompt = factory.generate_prompt()
@@ -165,8 +160,7 @@ def mock_br_request(products: List[Product],
     context = json.dumps([asdict(products) for products in products])    
     factory = PromptFactory(sku=user_prompt, 
                             context=context, 
-                            num_recs=num_recs, 
-                            load_catalog=False, 
+                            num_recs=num_recs,
                             debug=debug_prompts)
     
     prompt = factory.generate_prompt()    
@@ -219,8 +213,7 @@ def mock_br_request_cloud(products: List[Product],
     context = json.dumps([asdict(products) for products in products])    
     factory = PromptFactory(sku=user_prompt, 
                             context=context, 
-                            num_recs=num_recs, 
-                            load_catalog=False, 
+                            num_recs=num_recs,
                             debug=debug_prompts)
     
     prompt = factory.generate_prompt()
@@ -285,8 +278,7 @@ def test_results_have_reasoning_tags_local():
     context = json.dumps([asdict(products) for products in products])
     factory = PromptFactory(sku=user_prompt, 
                             context=context, 
-                            num_recs=num_recs, 
-                            load_catalog=False, 
+                            num_recs=num_recs,
                             debug=debug_prompts)
     
     prompt = factory.generate_prompt()   
@@ -336,8 +328,7 @@ def test_results_have_reasoning_tags_cloud():
     context = json.dumps([asdict(products) for products in products])
     factory = PromptFactory(sku=user_prompt, 
                             context=context, 
-                            num_recs=num_recs, 
-                            load_catalog=False, 
+                            num_recs=num_recs,
                             debug=debug_prompts)
     prompt = factory.generate_prompt()
     print(prompt)

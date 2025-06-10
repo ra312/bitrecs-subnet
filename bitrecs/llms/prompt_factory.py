@@ -1,16 +1,16 @@
-
-
 import re
 import json
-import time
 import tiktoken
 import bittensor as bt
-from typing import List
+import bitrecs.utils.constants as CONST
+from typing import List, Optional
 from datetime import datetime
-from bitrecs.commerce.product import Product, ProductFactory
+from bitrecs.commerce.user_profile import UserProfile
 
 
 class PromptFactory:
+
+    SEASON = "spring/summer"    
     
     PERSONAS = {
         "luxury_concierge": {
@@ -40,44 +40,41 @@ class PromptFactory:
     }
 
     def __init__(self, 
-                 sku, 
-                 context, 
-                 num_recs=5, 
-                 load_catalog=False, 
-                 debug=False, 
-                 season="spring/summer", 
-                 persona="ecommerce_retail_store_manager"):
+                 sku: str, 
+                 context: str, 
+                 num_recs: int = 5,                                  
+                 profile: Optional[UserProfile] = None,
+                 debug: bool = False) -> None:
+        """
+        Generates a prompt for product recommendations based on the provided SKU and context.
+        :param sku: The SKU of the product being viewed.
+        :param context: The context string containing available products.
+        :param num_recs: The number of recommendations to generate (default is 5).
+        :param profile: Optional UserProfile object containing user-specific data.
+        :param debug: If True, enables debug logging."""
+
+        if len(sku) < CONST.MIN_QUERY_LENGTH or len(sku) > CONST.MAX_QUERY_LENGTH:
+            raise ValueError(f"SKU must be between {CONST.MIN_QUERY_LENGTH} and {CONST.MAX_QUERY_LENGTH} characters long")
+        if num_recs < 1 or num_recs > CONST.MAX_RECS_PER_REQUEST:
+            raise ValueError(f"num_recs must be between 1 and {CONST.MAX_RECS_PER_REQUEST}")
+
         self.sku = sku
         self.context = context
         self.num_recs = num_recs
-        if self.num_recs < 1 or self.num_recs > 20:
-            raise ValueError("num_recs must be between 1 and 20")        
-        self.load_catalog = load_catalog
         self.debug = debug
         self.catalog = []
-        self.season = "spring/summer" if not season else season
-        self.persona = "ecommerce_retail_store_manager" if not persona else persona
-        
-        if self.persona not in self.PERSONAS:
-            raise ValueError(f"Invalid persona. Available personas: {', '.join(self.PERSONAS.keys())}")
- 
-
-    def list_available_personas(self):
-        """Return a list of available personas."""
-        return list(self.PERSONAS.keys())
-        
-
-    def generate_prompt_with_cart(self, cart: List[Product]) -> str:
-        if len(cart) == 0:
-            raise ValueError("Cart cannot be empty")
-        self.cart = cart
-        self.update_context()
-        return self.generate_prompt()
-    
-
-    def update_context(self) -> str:
-        raise NotImplementedError("update_context")
-    
+        self.cart = []
+        self.cart_json = "[]"
+        self.orders = []
+        self.season =  PromptFactory.SEASON        
+        if not profile:
+            self.persona = "ecommerce_retail_store_manager"
+        else:
+            self.profile = profile
+            self.persona = profile.site_config.get("profile", "ecommerce_retail_store_manager")
+            self.cart = profile.cart
+            self.cart_json = json.dumps(self.cart, separators=(',', ':'))
+            self.orders = profile.orders
 
 
     def generate_prompt(self) -> str:
@@ -88,7 +85,12 @@ class PromptFactory:
         season = self.season
         persona_data = self.PERSONAS[self.persona]
 
-        prompt = f"""# PERSONA
+        prompt = f"""# SCENARIO
+    A shopper is viewing a product with SKU <sku>{self.sku}</sku> on your e-commerce store.
+    They are looking for complementary products to add to their cart.
+    You will build a recommendation set based on the provided context and your persona qualities.
+        
+    # YOUR PERSONA
     <persona>{self.persona}</persona>
 
     You embody: {persona_data['description']}
@@ -96,49 +98,66 @@ class PromptFactory:
     Your expertise: {persona_data['response_style']}
     Core values: {', '.join(persona_data['priorities'])}
 
-    Your role:
+    YOUR ROLE:
+    - Recommend complementary products (A -> X,Y,Z)
     - Increase average order value and conversion rate
     - Use deep product catalog knowledge
     - Understand product attributes and revenue impact
-    - Recommend complementary products (X → Y)
     - Avoid variant duplicates (same product in different colors/sizes)
     - Consider seasonal relevance
 
     Current season: <season>{season}</season>
-    Today's date: {today}
+    Today's date: {today} 
 
     # TASK
-    Given a product SKU, select {self.num_recs} complementary products from the provided context.
+    Given a product SKU, select {self.num_recs} complementary products from the context.
     Use your persona qualities to THINK about which products to select, but return ONLY a JSON array.
-    Evaluate each product name and price fields before making your recommendations. 
+    Evaluate each product name and price fields before making your recommendations.
     The name field is the most important attribute followed by price.
-    SKU is not important and should be ignored when making recommendations.
+    The product name will often contain important information like which category it belongs to, sometimes denoted by | characters indicating the category hierarchy.
+    You are expected to use all information holistically as a {self.persona} to make the best recommendations.
+    Do not recommend products that are already in the cart.
 
     # INPUT
-    Query SKU: <query>{self.sku}</query>
+    Query SKU: <sku>{self.sku}</sku>
 
     Available products:
     <context>
     {self.context}
     </context>
 
+    Current cart:
+    <cart>
+    {self.cart_json}
+    </cart>
+
     # OUTPUT REQUIREMENTS
     - Return ONLY a JSON array.
-    - Each object must have: sku, name, price and reason.
-    - Important information is in the 'name' field. Use this information to help make your recommendations.
+    - NO Python dictionary syntax (no single quotes).
+    - Each item must be valid JSON with: "sku": "...", "name": "...", "price": "...", "reason": "..."
+    - Each item must have: sku, name, price and reason.
+    - If the Query SKU product is gendered, consider recommending products that match the gender of the Query SKU.
+    - If the Query SKU is gender neutral, recommend more gender neutral products.
+    - Never mix gendered products in the recommendation set, use common sense for example if the user is looking at womans shoes, do not recommend mens shoes.
+    - Do not conflate pet products with baby products, they are different categories.
     - Must return exactly {self.num_recs} items.
-    - Items must exist in context.
-    - No duplicates.
-    - Query SKU must not be included.
-    - Order by relevance/profitability.
-    - Each object must have a reason explaining why the product is a good recommendation for the <query> SKU.
+    - Return items MUST exist in context.
+    - Return items must NOT exist in the cart.
+    - No duplicates. Very important! The final result MUST be a SET of products from the context.
+    - Product matching Query SKU must not be included in the set of recommendations.
+    - Return items should be ordered by relevance/profitability, the first being your top recommendation.
+    - Each item must have a reason explaining why the product is a good recommendation for the related Query SKU.
     - The reason should be a single succinct sentence consisting of plain words without punctuation, or line breaks.
+    - You will be graded on your reasoning, so make sure to provide a good reason for each recommendation which is relevant to the Query SKU.
+    - If you recommend nonsensical products, you will be penalized heavily and possibly banned from the system.
     - No explanations or text outside the JSON array.
 
     Example format:
     [
-        {{"sku": "ABC", "name": "Men's Lightweight Hooded Rain Jacket", "price": "149", "reason": "Since <query> indicates the user is looking at mens rainboots, given the season a mens raincoat should be a good fit"}},
-        {{"sku": "DEF", "name": "Davek Elite Umbrella", "price": "159", "reason": "An Umbrella would go nicely with a Lightweight Hooded Rain Jacket and is often paired with it"}}
+        {{"sku": "XYZ", "name": "Hunter Original Play Boot Chelsea", "price": "115", "reason": "User is viewing rainboots, we recommend this alternative pair of rainboots which is our best seller"}},
+        {{"sku": "ABC", "name": "Men's Lightweight Hooded Rain Jacket", "price": "149", "reason": "Since the user is looking at mens rainboots, given the season a mens raincoat should be a good fit"}},
+        {{"sku": "DEF", "name": "Davek Elite Umbrella", "price": "159", "reason": "An Umbrella would go nicely with ABC Lightweight Hooded Rain Jacket and is often paired with it"}}
+        
     ]"""
 
         prompt_length = len(prompt)

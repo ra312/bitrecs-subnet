@@ -45,8 +45,7 @@ from bitrecs.protocol import BitrecsRequest
 from bitrecs.utils.distance import display_rec_matrix, rec_list_to_set, select_most_similar_bitrecs_safe
 from bitrecs.validator.reward import get_rewards
 from bitrecs.validator.rules import validate_br_request
-from bitrecs.utils.logging import (
-    log_miner_responses, 
+from bitrecs.utils.logging import (    
     read_timestamp, 
     write_timestamp, 
     log_miner_responses_to_sql
@@ -238,8 +237,8 @@ class BaseValidatorNeuron(BaseNeuron):
                         valid_requests.append(br)
                         valid_recs.append(skus)
                         this_model = br.models_used[0] if br.models_used else "unknown"
-                        if dendrite_time < 0.7:
-                            this_model = f"{this_model} - ST"
+                        if dendrite_time < 1:
+                            this_model = f"{this_model} - X"
                         models_used.append(this_model)
                         
                 except Exception as e:
@@ -367,6 +366,7 @@ class BaseValidatorNeuron(BaseNeuron):
                     
                         elected : BitrecsRequest = responses[selected_rec]
                         elected.context = "" #save bandwidth
+                        elected.user = ""
 
                         bt.logging.info("SCORING DONE")
                         bt.logging.info(f"\033[1;32mWINNING MINER: {elected.miner_uid} \033[0m")
@@ -390,7 +390,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         self.update_scores(rewards, chosen_uids)
                         
                         if self.config.logging.trace or 1==1:
-                            log_miner_responses(self.step, responses)
+                            #log_miner_responses(self.step, responses)
                             log_miner_responses_to_sql(self.step, responses)
                     else:
                         if not api_exclusive: #Regular validator loop  
@@ -416,12 +416,12 @@ class BaseValidatorNeuron(BaseNeuron):
                     if synapse_with_event and synapse_with_event.event:
                         bt.logging.error("API MISSED REQUEST - Marking synapse as processed due to exception")
                         synapse_with_event.event.set()
+                    bt.logging.error(traceback.format_exc())
                     bt.logging.error("\033[31m Sleeping for 60 seconds ... \033[0m")
                     await asyncio.sleep(60)
                 finally:
                     if api_enabled and api_exclusive:
-                        bt.logging.info(f"API MODE - forward finished, ready for next request")
-                        #await asyncio.sleep(0.1)
+                        bt.logging.info(f"API MODE - forward finished, ready for next request")                        
                     else:
                         bt.logging.info(f"LIMP MODE forward finished, sleep for {45} seconds")
                         await asyncio.sleep(45)
