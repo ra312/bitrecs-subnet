@@ -42,7 +42,11 @@ from bitrecs.utils import constants as CONST
 from bitrecs.utils.config import add_validator_args
 from bitrecs.api.api_server import ApiServer
 from bitrecs.protocol import BitrecsRequest
-from bitrecs.utils.distance import display_rec_matrix, rec_list_to_set, select_most_similar_bitrecs_safe
+from bitrecs.utils.distance import (
+    display_rec_matrix_numpy,
+    rec_list_to_set, 
+    select_most_similar_bitrecs
+)
 from bitrecs.validator.reward import get_rewards
 from bitrecs.validator.rules import validate_br_request
 from bitrecs.utils.logging import (    
@@ -214,12 +218,14 @@ class BaseValidatorNeuron(BaseNeuron):
         
         async def get_dynamic_top_n(num_requests: int) -> int:        
             if num_requests < 4:
-                return 2  # Minimum pairs
+                return 2
             # Calculate 33% of requests, rounded down
             suggested = max(2, min(5, num_requests // 3)) #5 max
             return suggested
-
-        print(f"Starting analyze_similar_requests with step: {self.step} and num_recs: {num_recs}")    
+        
+        if self.config.logging.trace:
+            print(f"Starting analyze_similar_requests with step: {self.step} and num_recs: {num_recs}")
+        
         st = time.perf_counter()
         try:
             requests = [r for r in requests if r.is_success]
@@ -250,18 +256,21 @@ class BaseValidatorNeuron(BaseNeuron):
             
             top_n = await get_dynamic_top_n(len(valid_requests))
             bt.logging.info(f"\033[1;32m Top {top_n} of {len(valid_requests)}/{len(requests)} (valid/total) bitrecs \033[0m")
-            most_similar = select_most_similar_bitrecs_safe(valid_requests, top_n)
+            most_similar = select_most_similar_bitrecs(valid_requests, top_n)
             if not most_similar:
                 bt.logging.warning(f"\033[33m No similar recs found in this round step: {self.step} \033[0m")
                 return
             for sim in most_similar:
-                bt.logging.info(f"Similar requests:\033[32mMiner {sim.miner_uid} {sim.models_used}\033[0m  - batch: {sim.site_key}")
-            most_similar_indices = [valid_requests.index(req) for req in most_similar]
-            matrix = display_rec_matrix(valid_recs, models_used, highlight_indices=most_similar_indices)
-            bt.logging.info(matrix)
+                bt.logging.info(f"\033[32m Miner {sim.miner_uid} {sim.models_used}\033[0m - batch: {sim.site_key}")
+
+            if self.config.logging.trace:
+                most_similar_indices = [valid_requests.index(req) for req in most_similar]
+                matrix = display_rec_matrix_numpy(valid_recs, models_used, highlight_indices=most_similar_indices)            
+                bt.logging.trace(matrix)
+
             et = time.perf_counter()
             diff = et - st
-            bt.logging.info(f"Time taken to analyze similar bitrecs: {diff:.2f} seconds")
+            bt.logging.info(f"Time taken to analyze similar bitrecs: \033[33m{diff:.2f}\033[0m seconds")
             return most_similar
         
         except Exception as e:            
@@ -356,8 +365,8 @@ class BaseValidatorNeuron(BaseNeuron):
                             top_k = await self.analyze_similar_requests(number_of_recs_desired, good_responses)
                             if top_k and 1==1: #Top score now pulled from top_k
                                 winner = safe_random.sample(top_k, 1)[0]
-                                bt.logging.info(f"\033[1;32m top_k Select miner: {winner.miner_uid} with model {winner.models_used} - batch: {winner.site_key} \033[0m")
-                                bt.logging.info(f"{winner.results}")
+                                bt.logging.info(f"\033[1;32m Consensus miner: {winner.miner_uid} from {winner.models_used} - batch: {winner.site_key} \033[0m")
+                                #bt.logging.trace(f"{winner.results}")
                                 selected_rec = responses.index(winner)
                         else:
                             bt.logging.error("\033[1;33mZERO rewards - no valid candidates in responses \033[0m")
@@ -388,10 +397,8 @@ class BaseValidatorNeuron(BaseNeuron):
                     
                         bt.logging.info(f"Scored responses: {rewards}")
                         self.update_scores(rewards, chosen_uids)
+                        log_miner_responses_to_sql(self.step, responses)
                         
-                        if self.config.logging.trace or 1==1:
-                            #log_miner_responses(self.step, responses)
-                            log_miner_responses_to_sql(self.step, responses)
                     else:
                         if not api_exclusive: #Regular validator loop  
                             bt.logging.info("Processing synthetic concurrent forward")
