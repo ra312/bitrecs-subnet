@@ -1,4 +1,5 @@
 import re
+import bitrecs
 from pathlib import Path
 
 """
@@ -20,21 +21,23 @@ Constants:
     R2_SYNC_INTERVAL (int): Length of seconds between R2 syncs.
     RE_PRODUCT_NAME (Pattern): Regular expression to match valid product names.
     RE_REASON (Pattern): Regular expression to match valid reasons.
+    CONVERSION_SCORING_ENABLED (bool): Flag to enable conversion scoring.
 
 """
-ROOT_DIR = Path(__file__).parent.parent
+ROOT_DIR = Path(bitrecs.__file__).parent.parent
 MAX_DENDRITE_TIMEOUT = 5
 MIN_QUERY_LENGTH = 3
 MAX_QUERY_LENGTH = 30
 MAX_RECS_PER_REQUEST = 20
-MAX_CONTEXT_TEXT_LENGTH = 600_000
-MAX_CONTEXT_TOKEN_LENGTH = 1_000_000
+MAX_CONTEXT_TEXT_LENGTH = 1_000_000
+MAX_CONTEXT_TOKEN_COUNT = 600_000
 MIN_CATALOG_SIZE = 6
 MAX_CATALOG_SIZE = 100_000
 MINER_BATTERY_INTERVAL = 900
 ACTION_SYNC_INTERVAL = 1800
-VERSION_CHECK_INTERVAL = 600
+VERSION_CHECK_INTERVAL = 1200
 CATALOG_DUPE_THRESHOLD = 0.05
 R2_SYNC_INTERVAL = 3600
 RE_PRODUCT_NAME = re.compile(r"[^A-Za-z0-9 |-]")
 RE_REASON = re.compile(r"[^A-Za-z0-9 ]")
+CONVERSION_SCORING_ENABLED = False

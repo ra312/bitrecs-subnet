@@ -20,10 +20,10 @@
 import sys
 import time
 import typing
-import bittensor as bt
 import asyncio
 import json
 import json_repair
+import bittensor as bt
 import bitrecs.utils.constants as CONST
 from typing import List
 from datetime import datetime, timedelta, timezone
@@ -34,7 +34,6 @@ from bitrecs.llms.prompt_factory import PromptFactory
 from bitrecs.llms.factory import LLM, LLMFactory
 from bitrecs.utils.runtime import execute_periodically
 from bitrecs.utils.uids import best_uid
-from bitrecs.utils.gpu import GPUInfo
 from bitrecs.utils.version import LocalMetadata
 from dotenv import load_dotenv
 load_dotenv()
@@ -71,7 +70,7 @@ async def do_work(user_prompt: str,
     bt.logging.info(f"do_work Prompt: {user_prompt}")
     bt.logging.info(f"do_work LLM server: {server}")
     bt.logging.info(f"do_work LLM model: {model}")  
-    bt.logging.info(f"do_work profile: {profile}")
+    bt.logging.trace(f"do_work profile: {profile}")
 
     factory = PromptFactory(sku=user_prompt,
                             context=context, 
@@ -422,12 +421,10 @@ class Miner(BaseMinerNeuron):
 
 
         
-async def main():    
-    await GPUInfo.log_gpu_info()    
+async def main():
     with Miner() as miner:
         start_time = time.time()        
-        while True:
-            #await miner.version_sync()
+        while True:            
             version_sync_task = asyncio.create_task(miner.version_sync())
             await version_sync_task
 

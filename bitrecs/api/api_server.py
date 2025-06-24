@@ -1,10 +1,10 @@
 import os
 import json
 import time
-import bittensor as bt
 import hmac
 import hashlib
 import threading
+import bittensor as bt
 from dataclasses import asdict
 from typing import Callable
 from functools import partial
@@ -16,19 +16,20 @@ from bitrecs.utils import constants as CONST
 from bitrecs.commerce.product import ProductFactory
 from bitrecs.protocol import BitrecsRequest
 from bitrecs.api.api_core import filter_allowed_ips, limiter
-from bitrecs.api.utils import api_key_validator, get_proxy_public_key, json_only_middleware
+from bitrecs.api.utils import (
+    api_key_validator, get_proxy_public_key, 
+    json_only_middleware, parse_ip_whitelist
+)
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from cryptography.exceptions import InvalidSignature
 from uvicorn.config import Config
 from uvicorn.server import Server
 from dotenv import load_dotenv
-from json_repair import repair_json
 load_dotenv()
 
 ForwardFn = Callable[[BitrecsRequest], BitrecsRequest]
 
-SECRET_KEY = "change-me"
-PROXY_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
+SECRET_KEY_LOCALNET = "change-me"
 
 
 class ApiServer:
@@ -40,14 +41,26 @@ class ApiServer:
         self.validator = validator
         self.forward_fn = forward_fn
         self.allowed_ips = ["127.0.0.1"]
-        self.bypass_whitelist = True
-
+        self.bypass_whitelist: bool = True
         self.app = FastAPI()
         self.app.state.limiter = limiter
+        self.network = os.environ.get("NETWORK").strip().lower() #localnet / testnet / mainnet
+        self.hot_key = validator.wallet.hotkey.ss58_address
+
+        # if self.network != "mainnet":
+        #     bt.logging.warning(f"\033[1;33m WARNING - API Server is running in {self.network} mode \033[0m")
+        #     raise ValueError(f"API Server is not supported in {self.network} mode, please use mainnet")
+     
+        self.proxy_url = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
+        if not self.proxy_url:
+            bt.logging.error(f"\033[1;31m ERROR - MISSING BITRECS_PROXY_URL \033[0m")
+            raise Exception("Missing BITRECS_PROXY_URL")
+        
         self.bitrecs_api_key = os.environ.get("BITRECS_API_KEY")
         if not self.bitrecs_api_key:
             bt.logging.error(f"\033[1;31m ERROR - MISSING BITRECS_API_KEY \033[0m")
             raise Exception("Missing BITRECS_API_KEY")
+            
         
         async def general_exception_handler(request: Request, exc: Exception):
             bt.logging.error(f"Unhandled exception: {request.url} - {str(exc)}")
@@ -59,17 +72,15 @@ class ApiServer:
                     "detail" : "General",
                     "data": None
                 }
-            )
-        
-        self.app.middleware("http")(partial(json_only_middleware, self))
-        self.app.middleware("http")(partial(filter_allowed_ips, self))
-        self.app.middleware('http')(partial(api_key_validator, self))
-        self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
-        self.app.add_exception_handler(Exception, general_exception_handler)
-      
-        self.hot_key = validator.wallet.hotkey.ss58_address        
-        self.network = os.environ.get("NETWORK").strip().lower() #localnet / testnet / mainnet
+            )        
 
+        self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
+        self.app.middleware("http")(partial(json_only_middleware, self))
+        self.app.middleware('http')(partial(api_key_validator, self))
+        self.app.middleware("http")(partial(filter_allowed_ips, self))
+        
+        self.app.add_exception_handler(Exception, general_exception_handler)
+        
         self.config = Config(
             app=self.app,
             host="0.0.0.0",
@@ -88,13 +99,18 @@ class ApiServer:
             self.router.add_api_route("/rec", self.generate_product_rec_testnet, methods=["POST"])
         elif self.network == "mainnet":
             self.router.add_api_route("/rec", self.generate_product_rec_mainnet, methods=["POST"])
+            self.bypass_whitelist = False
+            self.allowed_ips = parse_ip_whitelist(os.environ.get("VALIDATOR_API_WHITELIST", ""))
+            if len(self.allowed_ips) == 0:
+                raise ValueError("No allowed IPs configured for mainnet API")
+            bt.logging.info(f"\033[1;32m API Server has {len(self.allowed_ips)} IP whitelist entries \033[0m")
         else:
             raise ValueError(f"Unsupported network: {self.network}")
         self.app.include_router(self.router)
      
         try:
-            bt.logging.trace(f"\033[1;33mAPI warmup, please standby ...\033[0m")            
-            self.proxy_key : bytes = get_proxy_public_key(PROXY_URL)
+            bt.logging.trace(f"\033[1;33mAPI warmup, please standby ...\033[0m")
+            self.proxy_key : bytes = get_proxy_public_key(self.proxy_url)
             self.public_key = Ed25519PublicKey.from_public_bytes(self.proxy_key)
         except Exception as e:
             bt.logging.error(f"\033[1;31mERROR API could not get proxy public key:  {e} \033[0m")
@@ -104,7 +120,12 @@ class ApiServer:
         bt.logging.info(f"\033[1;32m API Server initialized on {self.network} \033[0m")
 
     
-    async def verify_request(self, request: BitrecsRequest, x_signature: str, x_timestamp: str):     
+    async def verify_request_localnet(self, request: BitrecsRequest, x_signature: str, x_timestamp: str):
+        timestamp = int(x_timestamp)
+        current_time = int(time.time())
+        if current_time - timestamp > 300:
+            raise HTTPException(status_code=401, detail="Request expired")
+        
         d = {
             'created_at': request.created_at,
             'user': request.user,
@@ -117,29 +138,25 @@ class ApiServer:
             'miner_uid': request.miner_uid,
             'miner_hotkey': request.miner_hotkey
         }
+
         body_str = json.dumps(d, sort_keys=True)
         string_to_sign = f"{x_timestamp}.{body_str}"
         expected_signature = hmac.new(
-            SECRET_KEY.encode('utf-8'),
+            SECRET_KEY_LOCALNET.encode('utf-8'),
             string_to_sign.encode('utf-8'),
             hashlib.sha256
         ).hexdigest()
         
         if not hmac.compare_digest(x_signature, expected_signature):
             raise HTTPException(status_code=401, detail="Invalid signature")
-        
-        timestamp = int(x_timestamp)
-        current_time = int(time.time())
-        if current_time - timestamp > 300:  # 5 minutes
-            raise HTTPException(status_code=401, detail="Request expired")
-        
+                
         bt.logging.info(f"\033[1;32m New Request Signature Verified\033[0m")
 
 
-    async def verify_request2(self, request: BitrecsRequest, x_signature: str, x_timestamp: str): 
+    async def verify_request_signature(self, request: BitrecsRequest, x_signature: str, x_timestamp: str): 
         timestamp = int(x_timestamp)
         current_time = int(time.time())
-        if current_time - timestamp > 300:  # 5 minutes
+        if current_time - timestamp > 300:
             bt.logging.error(f"\033[1;31m Expired Request!\033[0m")
             raise HTTPException(status_code=401, detail="Request expired")
 
@@ -200,7 +217,7 @@ class ApiServer:
 
         try:
           
-            await self.verify_request(request, x_signature, x_timestamp)
+            await self.verify_request_localnet(request, x_signature, x_timestamp)
 
             store_catalog = ProductFactory.try_parse_context(request.context)
             catalog_size = len(store_catalog)
@@ -273,11 +290,11 @@ class ApiServer:
         try:
             st_a = int(time.time())
 
-            await self.verify_request2(request, x_signature, x_timestamp)
+            await self.verify_request_signature(request, x_signature, x_timestamp)
 
             if len(request.context) > 100_000:
                 tc = PromptFactory.get_token_count(request.context)
-                if tc > CONST.MAX_CONTEXT_TOKEN_LENGTH:
+                if tc > CONST.MAX_CONTEXT_TOKEN_COUNT:
                     bt.logging.error(f"API context too large: {tc} tokens")
                     return JSONResponse(status_code=400,
                                         content={"detail": "error - context too large", "status_code": 400})
@@ -358,7 +375,76 @@ class ApiServer:
             x_signature: str = Header(...),
             x_timestamp: str = Header(...)
     ):  
-        raise NotImplementedError("Mainnet API not implemented")
+        """
+            Main Bitrecs Handler - mainnet
+
+            Generate n recommendations for a given query and context.
+            Query is sent to random miners to generate a valid response in a reasonable time.            
+
+        """
+
+        try:
+            st_a = int(time.time())
+
+            await self.verify_request_signature(request, x_signature, x_timestamp)
+
+            if len(request.context) > 100_000:
+                tc = PromptFactory.get_token_count(request.context)
+                if tc > CONST.MAX_CONTEXT_TOKEN_COUNT:
+                    bt.logging.error(f"API context too large: {tc} tokens")
+                    return JSONResponse(status_code=400,
+                                        content={"detail": "error - context too large", "status_code": 400})
+
+            store_catalog = ProductFactory.try_parse_context_strict(request.context)
+            catalog_size = len(store_catalog)
+            bt.logging.trace(f"REQUEST CATALOG SIZE: {catalog_size}")
+            if catalog_size < CONST.MIN_CATALOG_SIZE or catalog_size > CONST.MAX_CATALOG_SIZE:
+                bt.logging.error(f"API invalid catalog size: {catalog_size} skus")
+                return JSONResponse(status_code=400,
+                                    content={"detail": "error - invalid catalog - size", "status_code": 400})
+            
+            request.context = json.dumps([asdict(store_catalog) for store_catalog in store_catalog], separators=(',', ':'))
+            sn_t = time.perf_counter()
+            response = await self.forward_fn(request)
+            subnet_time = time.perf_counter() - sn_t
+            response_text = "Bitrecs Subnet {} Took {:.2f} seconds to process this request".format(self.network, subnet_time)
+            bt.logging.trace(response_text)
+
+            if len(response.results) == 0:
+                bt.logging.error(f"API forward_fn response has no results")
+                return JSONResponse(status_code=500,
+                                    content={"detail": "error - forward", "status_code": 500})
+         
+            #final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]            
+            final_recs = [json.loads(idx) for idx in response.results]
+            response = {
+                "user": "", 
+                "original_query": response.query,
+                "status_code": "200", #front end widgets expects this do not change
+                "status_text": "OK", #front end widgets expects this do not change
+                "response_text": response_text,
+                "created_at": response.created_at,
+                "results": final_recs,
+                "models_used": response.models_used,
+                "catalog_size": str(catalog_size),
+                "miner_uid": response.miner_uid,
+                "miner_hotkey": response.miner_hotkey,
+                "reasoning": f"Bitrecs AI - {self.network}"
+            }
+            et_a = int(time.time())
+            total_duration = et_a - st_a
+            bt.logging.info("\033[1;32m Validator - Processed request in {:.2f} seconds \033[0m".format(total_duration))
+            return JSONResponse(status_code=200, content=response)
+        
+        except HTTPException as h:
+            bt.logging.error(f"\033[31m HTTP ERROR API generate_product_rec_mainnet:\033[0m {h}")            
+            return JSONResponse(status_code=h.status_code,
+                                content={"detail": "error", "status_code": h.status_code})
+
+        except Exception as e:
+            bt.logging.error(f"\033[31m ERROR API generate_product_rec_mainnet:\033[0m {e}")            
+            return JSONResponse(status_code=500,
+                                content={"detail": "error", "status_code": 500})
 
 
     def start(self):

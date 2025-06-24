@@ -30,7 +30,6 @@ from bitrecs.utils.uids import get_random_miner_uids2, ping_miner_uid
 from bitrecs.utils.version import LocalMetadata
 from bitrecs.validator import forward
 from bitrecs.protocol import BitrecsRequest
-from bitrecs.utils.gpu import GPUInfo
 from bitrecs.utils import constants as CONST
 from bitrecs.utils.r2 import put_r2_upload
 from dotenv import load_dotenv
@@ -151,8 +150,10 @@ class Validator(BaseValidatorNeuron):
     async def action_sync(self):
         """
         Periodically fetch user actions 
+        For mainnet, we retro 30 days as min end date
         """
-        sd, ed = UserAction.get_default_range(days_ago=1)
+        #sd, ed = UserAction.get_default_range(days_ago=1)
+        sd, ed = UserAction.get_retro_range()
         bt.logging.trace(f"Gathering user actions for range: {sd} to {ed}")
         try:
             self.user_actions = UserAction.get_actions_range(start_date=sd, end_date=ed)
@@ -206,8 +207,7 @@ class Validator(BaseValidatorNeuron):
     
 
 async def main():
-    bt.logging.info(f"\033[32m Starting Bitrecs Validator\033[0m ... {int(time.time())}")
-    await GPUInfo.log_gpu_info()
+    bt.logging.info(f"\033[32m Starting Bitrecs Validator\033[0m ... {int(time.time())}")    
     with Validator() as validator:
         start_time = time.time()      
         while True:
