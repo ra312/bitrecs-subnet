@@ -33,9 +33,9 @@ dependencies = [
 
 [project.urls]
 homepage = "https://bitrecs.ai"
-repository = "https://github.com/janusdotai/bitrecs-subnet"
-documentation = "https://github.com/janusdotai/bitrecs-subnet#readme"
-issues = "https://github.com/janusdotai/bitrecs-subnet/issues"
+repository = "https://github.com/bitrecs/bitrecs-subnet"
+documentation = "https://github.com/bitrecs/bitrecs-subnet#readme"
+issues = "https://github.com/bitrecs/bitrecs-subnet/issues"
 
 [project.optional-dependencies]
 dev = [
