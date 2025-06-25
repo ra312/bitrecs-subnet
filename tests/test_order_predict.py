@@ -634,7 +634,7 @@ def test_sample_profile_get_similar_orders():
     #model = "mistral-nemo"    
     #model = "qwen3:32b"
     #model = "llama3.3:70b"
-    #model = "google/gemini-2.5-flash-preview-05-20"
+    #model = "google/gemini-2.5-flash-lite-preview-06-17"
     #model = "google/gemini-2.0-flash-lite-001"
     #model = "google/gemini-2.0-flash-001"
     #model = "amazon/nova-lite-v1"

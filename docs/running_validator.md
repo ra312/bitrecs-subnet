@@ -7,7 +7,7 @@ Update your packages before running the install script.
 
 ```bash
 sudo apt-get update && sudo apt-get upgrade -y
-curl -sL https://raw.githubusercontent.com/janusdotai/bitrecs-subnet/docs/scripts/install_vali.sh | bash
+curl -sL https://raw.githubusercontent.com/bitrecs/bitrecs-subnet/docs/scripts/install_vali.sh | bash
 ```
 
 ## 2. Keys on machine and register

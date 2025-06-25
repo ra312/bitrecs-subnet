@@ -27,7 +27,7 @@ map = [
     #{"provider": LLM.OPEN_ROUTER, "model": "nousresearch/deephermes-3-llama-3-8b-preview:free"},
 
     {"provider": LLM.OPEN_ROUTER, "model": "amazon/nova-lite-v1"},    
-    {"provider": LLM.OPEN_ROUTER, "model": "google/gemini-2.5-flash-preview-05-20"},
+    {"provider": LLM.OPEN_ROUTER, "model": "google/gemini-2.5-flash-lite-preview-06-17"},
     {"provider": LLM.OPEN_ROUTER, "model": "meta-llama/llama-4-scout"},
     {"provider": LLM.OPEN_ROUTER, "model": "openai/gpt-4.1-nano"},
     

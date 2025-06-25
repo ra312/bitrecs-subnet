@@ -97,7 +97,7 @@ run_command "grep -qxF 'source \$HOME/bt/bt_venv/bin/activate' ~/.bashrc || echo
 
 # 8. Clone and install Bitrecs repo
 run_command "mkdir -p \$HOME/bt && cd \$HOME/bt && rm -rf bitrecs-subnet || true" "Preparing repo..." 90
-run_command "cd \$HOME/bt && git clone https://github.com/janusdotai/bitrecs-subnet.git" "Cloning Bitrecs..." 91
+run_command "cd \$HOME/bt && git clone https://github.com/bitrecs/bitrecs-subnet.git" "Cloning Bitrecs..." 91
 run_command "cd \$HOME/bt/bitrecs-subnet && source \$HOME/bt/bt_venv/bin/activate && TMPDIR=/root/pip_tmp pip install -e . --no-cache-dir" "Installing Bitrecs with pyproject.toml..." 100
 
 # Done
