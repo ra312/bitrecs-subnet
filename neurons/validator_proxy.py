@@ -26,6 +26,12 @@ class ValidatorProxy:
         self.dendrite = bt.dendrite(wallet=validator.wallet)
         self.app = FastAPI()
         self.app.add_api_route(
+            "/",
+            self.healthcheck,
+            methods=["GET"],
+            dependencies=[Depends(self.get_self)],
+        )
+        self.app.add_api_route(
             "/validator_proxy",
             self.forward,
             methods=["POST"],
