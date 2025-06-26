@@ -5,7 +5,7 @@ This guide provides detailed instructions for setting up and configuring the Bit
 For quick deployment, you can use the installation script, otherwise follow the manual guide below. Update your packages before running the install script. 
 ```bash
 sudo apt-get update && sudo apt-get upgrade -y
-curl -sL https://raw.githubusercontent.com/bitrecs/bitrecs-subnet/docs/scripts/install_miner.sh | bash
+curl -sL https://raw.githubusercontent.com/bitrecs/bitrecs-subnet/refs/heads/main/scripts/install_miner.sh | bash
 ```
 
 ## 1. System Prerequisites and Network Configuration
@@ -155,7 +155,7 @@ SAMPLE .env snippet:
 # Specify which provider on startup with --llm.provider [LLM_PROVIDER] 
 # If no provider is specified it will default to OPEN_ROUTER
 OLLAMA_LOCAL_URL=""
-OPENROUTER_API_KEY="your_api_key"
+OPENROUTER_API_KEY=""
 CHATGPT_API_KEY=""
 VLLM_API_KEY=""
 GEMINI_API_KEY=""
@@ -175,14 +175,19 @@ Launch your miner using PM2 with comprehensive logging and monitoring:
 
 ```bash
 pm2 start ./neurons/miner.py --name miner -- \
-        --netuid 122 \
+        --netuid 296 \
         --subtensor.network wss://entrypoint-finney.opentensor.ai:443 \
         --wallet.name default \
         --wallet.hotkey default \
         --logging.debug \
-        --llm.model openrouter/google/gemini-2.0-flash-001	
+        --llm.provider GEMINI \	
+        --llm.model openrouter/google/gemini-2.0-flash-001 \        
+        --blacklist.force_validator_permit
 
-pm2 save        
+pm2 save 
+pm2 startup
+
+Reboot to ensure everything starts correctly
 ```
 
 ### Process Management and Monitoring
