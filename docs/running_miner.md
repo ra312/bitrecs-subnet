@@ -155,7 +155,7 @@ SAMPLE .env snippet:
 # Specify which provider on startup with --llm.provider [LLM_PROVIDER] 
 # If no provider is specified it will default to OPEN_ROUTER
 OLLAMA_LOCAL_URL=""
-OPENROUTER_API_KEY="your_api_key"
+OPENROUTER_API_KEY=""
 CHATGPT_API_KEY=""
 VLLM_API_KEY=""
 GEMINI_API_KEY=""
@@ -175,14 +175,19 @@ Launch your miner using PM2 with comprehensive logging and monitoring:
 
 ```bash
 pm2 start ./neurons/miner.py --name miner -- \
-        --netuid 122 \
+        --netuid 296 \
         --subtensor.network wss://entrypoint-finney.opentensor.ai:443 \
         --wallet.name default \
         --wallet.hotkey default \
         --logging.debug \
-        --llm.model openrouter/google/gemini-2.0-flash-001	
+        --llm.provider GEMINI \	
+        --llm.model openrouter/google/gemini-2.0-flash-001 \        
+        --blacklist.force_validator_permit
 
-pm2 save        
+pm2 save 
+pm2 startup
+
+Reboot to ensure everything starts correctly
 ```
 
 ### Process Management and Monitoring

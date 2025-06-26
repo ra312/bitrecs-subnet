@@ -91,11 +91,10 @@ run_command "apt install -y python3-pip python3.12-venv" "Installing Python & ve
 run_command "mkdir -p /root/pip_tmp" "Preparing pip temp dir..." 61
 run_command "python3.12 -m venv \$HOME/bt/bt_venv" "Creating venv..." 70
 
-# 6. Install Bittensor carefully
-# 7. Setup environment auto-activation
+# 6. Setup environment auto-activation
 run_command "grep -qxF 'source \$HOME/bt/bt_venv/bin/activate' ~/.bashrc || echo 'source \$HOME/bt/bt_venv/bin/activate' >> ~/.bashrc" "Adding venv to bashrc..." 81
 
-# 8. Clone and install Bitrecs repo
+# 7. Clone and install Bitrecs repo
 run_command "mkdir -p \$HOME/bt && cd \$HOME/bt && rm -rf bitrecs-subnet || true" "Preparing repo..." 90
 run_command "cd \$HOME/bt && git clone https://github.com/bitrecs/bitrecs-subnet.git" "Cloning Bitrecs..." 91
 run_command "cd \$HOME/bt/bitrecs-subnet && source \$HOME/bt/bt_venv/bin/activate && TMPDIR=/root/pip_tmp pip install -e . --no-cache-dir" "Installing Bitrecs with pyproject.toml..." 100
@@ -109,3 +108,4 @@ echo -e "${GREEN}╚════════════════════
 echo -e "Repo at: ${YELLOW}~/bt/bitrecs-subnet${NC}"
 echo -e "${YELLOW}To use your environment, please open a new terminal (re-ssh) ${NC}"
 echo -e "Complete setup by configuring your wallet and filling out the .env"
+echo -e "Double check your firewall/UFW configuration port 8091 need to be open for miners"
