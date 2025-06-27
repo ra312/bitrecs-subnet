@@ -26,6 +26,12 @@ class ValidatorProxy:
         self.dendrite = bt.dendrite(wallet=validator.wallet)
         self.app = FastAPI()
         self.app.add_api_route(
+            "/",
+            self.healthcheck,
+            methods=["GET"],
+            dependencies=[Depends(self.get_self)],
+        )
+        self.app.add_api_route(
             "/validator_proxy",
             self.forward,
             methods=["POST"],
@@ -166,24 +172,31 @@ class ValidatorProxy:
             deserialize=True,
         )
         
-        bt.logging.info(f"[ORGANIC] {responses}")
+        bt.logging.info(f"[ORGANIC] raw responses: {responses}")
 
         # return predictions from miners
-        valid_pred_idx = np.array([i for i, v in enumerate(responses) if v.prediction])
-        if len(valid_pred_idx) > 0:
-            valid_preds = np.array(responses)[valid_pred_idx]
+        bt.logging.info(f"[ORGANIC] Checking predictions: {[(i, v.prediction, len(v.vulnerabilities) if v.vulnerabilities else 0) for i, v in enumerate(responses)]}")
+        
+        # Filter valid responses and keep track of their corresponding UIDs
+        valid_responses = []
+        for uid, response in zip(miner_uids, responses):
+            if response is not None and isinstance(response, PredictionResponse):
+                valid_responses.append((uid, response))
+        
+        bt.logging.info(f"[ORGANIC] Found {len(valid_responses)} valid responses")
+        
+        if valid_responses:
+            vulnerabilities_by_miner = []
 
-            if len(valid_preds) > 0:
-                valid_pred_uids = np.array(miner_uids)[valid_pred_idx]
-                vulnerabilities_by_miner = []
-                predictions_by_miner = {}
+            # Process each valid response
+            for uid, pred in valid_responses:
+                vuln = None  # Initialize vuln here
+                try:
+                    # bt.logging.info(f"[ORGANIC] uid: {uid}, pred: {pred}")
+                    # bt.logging.info(f"[ORGANIC] pred.vulnerabilities: {pred.vulnerabilities}") # Add this log
 
-                # Merge all vulnerabilities from all miners into a single list
-                for uid, pred in zip(valid_pred_uids, valid_preds):
-                    try:
-                        bt.logging.info(f"[ORGANIC] uid: {uid}, pred: {pred}")
-                        for vuln in pred.vulnerabilities:
-                            parts = None
+                    for vuln in pred.vulnerabilities:
+                        parts = None
                         if isinstance(vuln, Vulnerability):
                             parts = vuln.model_dump()
                         elif isinstance(vuln, dict):
@@ -191,7 +204,13 @@ class ValidatorProxy:
                             vuln_obj = Vulnerability.model_validate(vuln)
                             parts = vuln_obj.model_dump()
                         else:
-                            raise ValueError(f"Invalid vulnerability type: {type(vuln)}, {vuln}")
+                            bt.logging.error(f"[ORGANIC] Invalid vulnerability type: {type(vuln)}, value: {vuln} for UID: {uid}")
+                            continue # Skip to the next vulnerability if type is invalid
+
+                        if parts is None:
+                            bt.logging.error(f"[ORGANIC] Failed to process vulnerability: {vuln} from miner {uid}")
+                            continue
+
                         bt.logging.info(f"[ORGANIC] vuln {vuln}, parts {parts}")
                         vulnerabilities_by_miner.append(
                             VulnerabilityByMiner(
@@ -199,26 +218,34 @@ class ValidatorProxy:
                                 **parts
                             )
                         )
-                        predictions_by_miner[uid] = pred
-                    except Exception as e:
-                        bt.logging.error(f"Error processing uid: {uid}, vulnerability: {vuln}, error: {e}")
-                        bt.logging.error(traceback.print_exc())
-                
-                data = {
-                    'uids': [int(uid) for uid in valid_pred_uids],
-                    'vulnerabilities': [v.model_dump() for v in vulnerabilities_by_miner],
-                    'predictions_from_miners': {str(uid): p.model_dump() for uid, p in predictions_by_miner.items()},
-                    'ranks': [float(self.validator.metagraph.R[uid]) for uid in valid_pred_uids],
-                    'incentives': [float(self.validator.metagraph.I[uid]) for uid in valid_pred_uids],
-                    'emissions': [float(self.validator.metagraph.E[uid]) for uid in valid_pred_uids],
-                    'fqdn': socket.getfqdn()
-                }
+                except Exception as e:
+                    bt.logging.error(f"Error processing uid: {uid}, vulnerability: {vuln}, error: {e}")
+                    bt.logging.error(traceback.print_exc())
+            
+            data = {
+                'uids': [int(uid) for uid, _ in valid_responses],
+                'vulnerabilities': [v.model_dump() for v in vulnerabilities_by_miner],
+                'predictions_from_miners': {str(uid): pred.model_dump() for uid, pred in valid_responses},
+                'ranks': [float(self.validator.metagraph.R[uid]) for uid, _ in valid_responses],
+                'incentives': [float(self.validator.metagraph.I[uid]) for uid, _ in valid_responses],
+                'emissions': [float(self.validator.metagraph.E[uid]) for uid, _ in valid_responses],
+                'num_summary': {
+                    'miners_queried': len(miner_uids),
+                    'miners_responded': len(responses),
+                    'valid_responses': len(valid_responses),
+                    'responses_with_vulnerabilities': len([(uid, pred) for uid, pred in valid_responses if pred.vulnerabilities]),
+                    'vulnerabilities_found': len(vulnerabilities_by_miner)
+                },
+                'fqdn': socket.getfqdn()
+            }
 
-                self.proxy_counter.update(is_success=True)
-                self.proxy_counter.save()
+            self.proxy_counter.update(is_success=True)
+            self.proxy_counter.save()
 
-                # write data to database
-                return data
+            bt.logging.info(f"[ORGANIC] request complete, response: {data}")
+
+            # write data to database
+            return data
 
         self.proxy_counter.update(is_success=False)
         self.proxy_counter.save()
