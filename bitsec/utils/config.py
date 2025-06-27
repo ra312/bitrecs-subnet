@@ -167,6 +167,12 @@ def add_miner_args(cls, parser):
         help="Wandb entity to log to.",
     )
 
+    parser.add_argument(
+        "--proxy.port",
+        type=int,
+        help="The port to run the proxy on.",
+        default=10913
+    )
 
 def add_validator_args(cls, parser):
     """Add validator specific arguments to the parser."""
