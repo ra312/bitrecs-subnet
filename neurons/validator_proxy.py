@@ -192,8 +192,8 @@ class ValidatorProxy:
             for uid, pred in valid_responses:
                 vuln = None  # Initialize vuln here
                 try:
-                    bt.logging.info(f"[ORGANIC] uid: {uid}, pred: {pred}")
-                    bt.logging.info(f"[ORGANIC] pred.vulnerabilities: {pred.vulnerabilities}") # Add this log
+                    # bt.logging.info(f"[ORGANIC] uid: {uid}, pred: {pred}")
+                    # bt.logging.info(f"[ORGANIC] pred.vulnerabilities: {pred.vulnerabilities}") # Add this log
 
                     for vuln in pred.vulnerabilities:
                         parts = None
