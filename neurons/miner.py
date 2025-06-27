@@ -30,6 +30,7 @@ from bitsec import __version__
 from bitsec.base.miner import BaseMinerNeuron
 from bitsec.protocol import CodeSynapse
 from bitsec.miner.predict import predict
+from neurons.miner_proxy import MinerProxy
 
 
 class Miner(BaseMinerNeuron):
@@ -64,6 +65,8 @@ class Miner(BaseMinerNeuron):
                 notes=self.config.wandb.notes,
                 mode="offline" if self.config.wandb.offline else "online"
             )
+        
+        self.miner_proxy = MinerProxy(self)
 
     async def forward(
         self, synapse: CodeSynapse
