@@ -145,12 +145,12 @@ class PromptFactory:
     - Each item must have: sku, name, price and reason.
     - If the Query SKU product is gendered, consider recommending products that match the gender of the Query SKU.
     - If the Query SKU is gender neutral, recommend more gender neutral products.
-    - Never mix gendered products in the recommendation set, use common sense for example if the user is looking at womans shoes, do not recommend mens shoes.
+    - Never mix gendered products in the recommendation set for example if the user is looking at womans shoes, do not recommend mens shoes.
     - Do not conflate pet products with baby products, they are different categories.
     - Must return exactly {self.num_recs} items.
     - Return items MUST exist in context.
     - Return items must NOT exist in the cart.
-    - No duplicates. Very important! The final result MUST be a SET of products from the context.
+    - No duplicates. *Very important* The final result MUST be a SET of products from the context.
     - Product matching Query SKU must not be included in the set of recommendations.
     - Return items should be ordered by relevance/profitability, the first being your top recommendation.
     - Each item must have a reason explaining why the product is a good recommendation for the related Query SKU.
