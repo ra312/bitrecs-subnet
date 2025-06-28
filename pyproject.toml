@@ -17,6 +17,7 @@ dependencies = [
     "bittensor==9.7.0",
     "bittensor-cli==9.7.0", 
     "substrate-interface==1.7.11",
+    "cryptography==45.0.4",
     "starlette==0.37.2",
     "pydantic==2.10.4",
     "numpy==2.0.2",
