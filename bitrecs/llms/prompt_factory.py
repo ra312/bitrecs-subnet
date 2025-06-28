@@ -11,7 +11,9 @@ from bitrecs.commerce.product import ProductFactory
 
 class PromptFactory:
 
-    SEASON = "spring/summer"    
+    SEASON = "spring/summer"
+
+    ENGINE_MODE = "complimentary"  #similar, sequential
     
     PERSONAS = {
         "luxury_concierge": {
@@ -68,13 +70,14 @@ class PromptFactory:
         self.cart_json = "[]"
         self.orders = []
         self.order_json = "[]"
-        self.season =  PromptFactory.SEASON        
+        self.season =  PromptFactory.SEASON       
+        self.engine_mode = PromptFactory.ENGINE_MODE 
         if not profile:
             self.persona = "ecommerce_retail_store_manager"
         else:
             self.profile = profile
             self.persona = profile.site_config.get("profile", "ecommerce_retail_store_manager")
-            self.cart = profile.cart
+            self.cart = self._sort_cart_keys(profile.cart)
             self.cart_json = json.dumps(self.cart, separators=(',', ':'))
             self.orders = profile.orders
             # self.order_json = json.dumps(self.orders, separators=(',', ':'))
@@ -82,6 +85,18 @@ class PromptFactory:
         self.sku_info = ProductFactory.find_sku_name(self.sku, self.context)    
 
 
+    def _sort_cart_keys(self, cart: List[dict]) -> List[str]:
+        ordered_cart = []
+        for item in cart:
+            ordered_item = {
+                'sku': item.get('sku', ''),
+                'name': item.get('name', ''),
+                'price': item.get('price', '')
+            }
+            ordered_cart.append(ordered_item)
+        return ordered_cart
+    
+    
     def generate_prompt(self) -> str:
         """Generates a text prompt for product recommendations with persona details."""
         bt.logging.info("PROMPT generating prompt: {}".format(self.sku))
@@ -92,8 +107,8 @@ class PromptFactory:
 
         prompt = f"""# SCENARIO
     A shopper is viewing a product with SKU <sku>{self.sku}</sku> named <sku_info>{self.sku_info}</sku_info> on your e-commerce store.
-    They are looking for complementary products to add to their cart.
-    You will build a recommendation set based on the provided context and your persona qualities.
+    They are looking for {self.engine_mode} products to add to their cart.
+    You will build a recommendation set with no duplicates based on the provided context and your persona qualities.
         
     # YOUR PERSONA
     <persona>{self.persona}</persona>
@@ -105,8 +120,8 @@ class PromptFactory:
     Core values: {', '.join(persona_data['priorities'])}
     </core_attributes>
 
-    YOUR ROLE:
-    - Recommend complementary products (A -> X,Y,Z)
+    # YOUR ROLE:
+    - Recommend **{self.num_recs}** {self.engine_mode} products (A -> X,Y,Z)
     - Increase average order value and conversion rate
     - Use deep product catalog knowledge
     - Understand product attributes and revenue impact
@@ -117,48 +132,47 @@ class PromptFactory:
     Today's date: {today} 
 
     # TASK
-    Given a product SKU <sku>{self.sku}</sku> select {self.num_recs} complementary products from the context.
+    Given a product SKU <sku>{self.sku}</sku> select **{self.num_recs}** complementary unique products from the context.
     Use your persona qualities to THINK about which products to select, but return ONLY a JSON array.
     Evaluate each product name and price fields before making your recommendations.
     The name field is the most important attribute followed by price.
     The product name will often contain important information like which category it belongs to, sometimes denoted by | characters indicating the category hierarchy.    
-    Leverage the complete information ecosystem - product catalog, user context, seasonal trends, and your role expertise as a {self.persona} - to deliver strategically aligned recommendations.
+    Leverage the complete information ecosystem - product catalog, user context, seasonal trends, and your role expertise as a {self.persona} - to deliver {self.engine_mode} recommendations.
     Apply comprehensive analysis using all available inputs: product attributes from the context, user cart history, seasonal relevance, pricing considerations and your persona's core values to create a cohesive recommendation set.
     Utilize your core_attributes to make the best recommendations.
-    Do not recommend products that are already in the cart.
+    Do **not** recommend products that are already in the cart.
 
     # INPUT
     Query SKU: <sku>{self.sku}</sku><sku_info>{self.sku_info}</sku_info>
-
-    Available products:
-    <context>
-    {self.context}
-    </context>
 
     Current cart:
     <cart>
     {self.cart_json}
     </cart>
 
+    Available products:
+    <context>
+    {self.context}
+    </context>   
+
     # OUTPUT REQUIREMENTS
     - Return ONLY a JSON array.
     - NO Python dictionary syntax (no single quotes).
     - Each item must be valid JSON with: "sku": "...", "name": "...", "price": "...", "reason": "..."
     - Each item must have: sku, name, price and reason.
-    - If the Query SKU product is gendered, consider recommending products that match the gender of the Query SKU.
-    - If the Query SKU is gender neutral, recommend more gender neutral products.
+    - If the Query SKU product is gendered consider recommending products that match the gender of the Query SKU.
+    - If the Query SKU is gender neutral recommend more gender neutral products.
     - Never mix gendered products in the recommendation set for example if the user is looking at womans shoes, do not recommend mens shoes.
     - Do not conflate pet products with baby products, they are different categories.
     - Must return exactly {self.num_recs} items.
     - Return items MUST exist in context.
     - Return items must NOT exist in the cart.
-    - No duplicates. *Very important* The final result MUST be a SET of products from the context.
+    - No duplicates. *Very important* The final result MUST be a unique set of products from the context.
     - Product matching Query SKU must not be included in the set of recommendations.
     - Return items should be ordered by relevance/profitability, the first being your top recommendation.
     - Each item must have a reason explaining why the product is a good recommendation for the related Query SKU.
     - The reason should be a single succinct sentence consisting of plain words without punctuation, or line breaks.
-    - You will be graded on your reasoning, so make sure to provide a good reason for each recommendation which is relevant to the Query SKU.
-    - If you recommend nonsensical products, you will be penalized heavily and possibly banned from the system.
+    - You will be graded on your reason so make sure to provide a good reason for each recommendation which is relevant to the Query SKU.    
     - No explanations or text outside the JSON array.
 
     Example format:
