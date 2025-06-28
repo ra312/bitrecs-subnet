@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import bittensor as bt
 import pandas as pd
@@ -206,6 +207,21 @@ class ProductFactory:
         except Exception as e:
             bt.logging.error(f"Unexpected error in check_all_have_sku: {e}")
             return False
+
+
+    @staticmethod
+    def find_sku_name(target_sku: str, catalog_json: str) -> str:
+        """
+        Case-insensitive regex search for SKU name in JSON catalog.
+        Returns the name field for the matching SKU.
+        """
+        # Case-insensitive pattern with flexible spacing
+        pattern = rf'"sku"\s*:\s*"{re.escape(target_sku)}"[^}}]*"name"\s*:\s*"([^"]+)"'        
+        match = re.search(pattern, catalog_json, re.IGNORECASE)
+        if match:
+            return match.group(1)
+        return ""
+
 
         
     @staticmethod

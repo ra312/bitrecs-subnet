@@ -7,7 +7,7 @@ from functools import lru_cache
 from typing import List, Optional
 from datetime import datetime
 from bitrecs.commerce.user_profile import UserProfile
-
+from bitrecs.commerce.product import ProductFactory
 
 class PromptFactory:
 
@@ -78,6 +78,8 @@ class PromptFactory:
             self.cart_json = json.dumps(self.cart, separators=(',', ':'))
             self.orders = profile.orders
             # self.order_json = json.dumps(self.orders, separators=(',', ':'))
+        
+        self.sku_info = ProductFactory.find_sku_name(self.sku, self.context)    
 
 
     def generate_prompt(self) -> str:
@@ -89,7 +91,7 @@ class PromptFactory:
         persona_data = self.PERSONAS[self.persona]
 
         prompt = f"""# SCENARIO
-    A shopper is viewing a product with SKU <sku>{self.sku}</sku> on your e-commerce store.
+    A shopper is viewing a product with SKU <sku>{self.sku}</sku> named <sku_info>{self.sku_info}</sku_info> on your e-commerce store.
     They are looking for complementary products to add to their cart.
     You will build a recommendation set based on the provided context and your persona qualities.
         
@@ -126,7 +128,7 @@ class PromptFactory:
     Do not recommend products that are already in the cart.
 
     # INPUT
-    Query SKU: <sku>{self.sku}</sku>
+    Query SKU: <sku>{self.sku}</sku><sku_info>{self.sku_info}</sku_info>
 
     Available products:
     <context>
@@ -184,12 +186,14 @@ class PromptFactory:
     def get_token_count(prompt: str, encoding_name: str="o200k_base") -> int:
         encoding = PromptFactory._get_cached_encoding(encoding_name)
         tokens = encoding.encode(prompt)
-        return len(tokens)    
-
+        return len(tokens)
+    
+    
     @staticmethod
     @lru_cache(maxsize=4)
     def _get_cached_encoding(encoding_name: str):
         return tiktoken.get_encoding(encoding_name)
+    
     
     @staticmethod
     def get_word_count(prompt: str) -> int:
@@ -220,3 +224,4 @@ class PromptFactory:
         except Exception as e:
             bt.logging.error(str(e))
             return []
+    
