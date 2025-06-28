@@ -550,3 +550,15 @@ def test_catalog_validator():
     is_valid = catalog_validator.validate_sku(sku)
     assert is_valid == False
     
+
+def test_find_name_by_sku():
+    with open("./tests/data/amazon/office/amazon_office_sample_1000.json", "r") as f:
+        data = f.read()    
+    products = ProductFactory.convert(data, CatalogProvider.AMAZON)    
+    products = ProductFactory.dedupe(products)
+    prodcut_json = json.dumps([asdict(product) for product in products])
+
+    sku = "B01MTP6Q01"
+    match = ProductFactory.find_sku_name(sku, prodcut_json)
+    print(f"match: {match}")
+    assert match == "Giant Print Check Register Set of 2"

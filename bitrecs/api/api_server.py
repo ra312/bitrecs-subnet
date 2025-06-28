@@ -413,12 +413,11 @@ class ApiServer:
             if len(response.results) == 0:
                 bt.logging.error(f"API forward_fn response has no results")
                 return JSONResponse(status_code=500,
-                                    content={"detail": "error - forward", "status_code": 500})
-         
-            #final_recs = [json.loads(idx.replace("'", '"')) for idx in response.results]            
+                                    content={"detail": "error - forward", "status_code": 500})         
+             
             final_recs = [json.loads(idx) for idx in response.results]
             response = {
-                "user": "", 
+                "user": "",
                 "original_query": response.query,
                 "status_code": "200", #front end widgets expects this do not change
                 "status_text": "OK", #front end widgets expects this do not change

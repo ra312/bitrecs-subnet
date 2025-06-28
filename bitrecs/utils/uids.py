@@ -89,7 +89,7 @@ def get_random_miner_uids2(self,
     
         avail_uids.append(uid)
 
-    bt.logging.trace(f"\033[32m get_random_miner_uids2 - pre candidate_uids: {avail_uids} from k {k} \033[0m")
+    bt.logging.trace(f"\033[32m pre candidate_uids: {avail_uids} from k {k} \033[0m")
 
     # Check if candidate_uids contain enough for querying, if not grab all avaliable uids
     if 0 < len(avail_uids) < k:

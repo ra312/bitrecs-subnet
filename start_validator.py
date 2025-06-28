@@ -248,7 +248,8 @@ def main(pm2_name: str, args: List[str]) -> None:
                 validator = start_validator_process(pm2_name, args, current_version)
                 current_version = latest_version
 
-            sleep = random.choice([60, 90, 120, 150, 180, 240, 300])
+            #sleep = random.choice([60, 90, 120, 150, 180, 240, 300])            
+            sleep = random.randint(300, 600)
             log.info(f"Sleeping for {sleep} seconds before checking for updates again.")
             time.sleep(sleep)
 
