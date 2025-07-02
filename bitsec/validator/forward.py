@@ -17,6 +17,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
+import json
 import random
 import time
 
@@ -94,6 +95,11 @@ async def forward(self):
     response_time = time.time() - start_time
     #wandb.log({"response_time": response_time})
 
+    # Keep valid responses only
+    filter_mask = [r is not None for r in responses]
+    miner_uids = miner_uids[filter_mask]
+    responses = [r for r in responses if r is not None]
+
     # Log the results for monitoring purposes.
     bt.logging.info(f"Received {len(responses)} responses")
 
@@ -105,12 +111,23 @@ async def forward(self):
     # Update the scores based on the rewards. You may want to define your own update_scores function for custom behavior.
     self.update_scores(rewards, miner_uids)
 
-    wandb.log({
-        "miner_uids": miner_uids.tolist(),
-        "rewards": rewards.tolist(),
-        "response_time": response_time,
+    response_dicts = [response.model_dump() for response in responses]
+    log_msg = {
+        "miner_uids": json.dumps(miner_uids.tolist()),
+        "rewards": json.dumps(rewards.tolist()),
         "challenge": challenge,
         "expected_response": expected_response.model_dump_json(),
-        "response": [response.model_dump_json() for response in responses],
-        "vulnerable": vulnerable
+        "response": json.dumps(response_dicts),
+        "vulnerable": vulnerable,
+    }
+    columns = list(log_msg.keys())
+    values = list(log_msg.values())
+
+    log_table = wandb.Table(columns=columns)
+    log_table.add_data(*values)
+
+    wandb.log({
+        "response_time": response_time,
+        "num_responses": len(responses),
+        "run_details": log_table,
     })
