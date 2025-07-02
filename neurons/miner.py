@@ -94,9 +94,14 @@ class Miner(BaseMinerNeuron):
 
         bt.logging.info(f"PREDICTION: {synapse.response.prediction}")
         bt.logging.info(f"VULNERABILITIES: {synapse.response.vulnerabilities}")
+        vulns = [
+            v.model_dump_json()
+            for v
+            in synapse.response.vulnerabilities
+        ]
         wandb.log({
             "miner/prediction": synapse.response.prediction,
-            "miner/vulnerabilities": synapse.response.vulnerabilities
+            "miner/vulnerabilities": vulns,
         })
         return synapse
 
