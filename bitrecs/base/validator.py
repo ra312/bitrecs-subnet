@@ -130,17 +130,14 @@ class BaseValidatorNeuron(BaseNeuron):
         else:
             bt.logging.warning("axon off, not serving ip to chain.")
             raise Exception("Axon off, not serving ip to chain.")
-
-        # Create asyncio event loop to manage async tasks.
-        #self.loop = asyncio.get_event_loop()
+        
         api_port = int(os.environ.get("VALIDATOR_API_PORT"))
         if api_port != 7779:
             raise Exception("API Port must be set to 7779")
         
         self.api_port = api_port
         self.api_server = None
-        if self.config.api.enabled:
-            # external requests
+        if self.config.api.enabled:            
             self.api_server = ApiServer(
                 api_port=self.api_port,
                 forward_fn=api_forward,
@@ -150,8 +147,7 @@ class BaseValidatorNeuron(BaseNeuron):
             bt.logging.info(f"\033[1;32m 🐸 API Endpoint Started: http://{self.api_server.config.host}:{self.api_server.config.port} \033[0m")
         else:            
             bt.logging.error(f"\033[1;31m No API Endpoint \033[0m")
-
-        # Instantiate runners
+        
         self.should_exit: bool = False
         self.is_running: bool = False
         self.thread: Union[threading.Thread, None] = None
@@ -228,9 +224,8 @@ class BaseValidatorNeuron(BaseNeuron):
         
         async def get_dynamic_top_n(num_requests: int) -> int:        
             if num_requests < 4:
-                return 2
-            # Calculate 33% of requests, rounded down
-            suggested = max(2, min(5, num_requests // 3)) #5 max
+                return 2                     
+            suggested = max(2, min(5, num_requests // 3))
             return suggested
         
         if self.config.logging.trace:
@@ -375,8 +370,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             top_k = await self.analyze_similar_requests(number_of_recs_desired, good_responses)
                             if top_k and 1==1: #Top score now pulled from top_k
                                 winner = safe_random.sample(top_k, 1)[0]
-                                bt.logging.info(f"\033[1;32m Consensus miner: {winner.miner_uid} from {winner.models_used} - batch: {winner.site_key} \033[0m")
-                                #bt.logging.trace(f"{winner.results}")
+                                bt.logging.info(f"\033[1;32m Consensus miner: {winner.miner_uid} from {winner.models_used} - batch: {winner.site_key} \033[0m")                                
                                 selected_rec = responses.index(winner)
                         else:
                             bt.logging.error("\033[1;33mZERO rewards - no valid candidates in responses \033[0m")
@@ -384,7 +378,7 @@ class BaseValidatorNeuron(BaseNeuron):
                             continue
                     
                         elected : BitrecsRequest = responses[selected_rec]
-                        elected.context = "" #save bandwidth
+                        elected.context = ""
                         elected.user = ""
 
                         bt.logging.info("SCORING DONE")
@@ -419,7 +413,7 @@ class BaseValidatorNeuron(BaseNeuron):
                         return
 
                     try:
-                        if self.step >= 1:
+                        if self.step >= 1 and self.step % 5 == 0:
                             self.sync()
                       
                     except Exception as e:

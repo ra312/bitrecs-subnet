@@ -28,7 +28,7 @@ Interested in running a validator? See our [validator setup instructions](docs/r
 
 ## Subnet
 - Testnet: 296
-- Mainnet: TBD
+- Mainnet: 122
 
 ## Protocol
 
@@ -113,27 +113,21 @@ Bitrecs does not use, collect or farm any customer data, PII or anything related
 ## Roadmap
 
 ### Q1 2025
-
-
 - [x] launch testnet supporting Shopify/Woocommerce
 - [x] update scoring to use distance to try to measure LLM agreement across sets
 - [x] complete woo/shopify extensions
 
-
 ### Q2 2025
-
 - [x] extension marketplace listings
 - [x] expand miner diversity
-- [ ] launch mainnet
+- [x] plugin features (cart history, persona switching)
 
 ### Q3 2025
-
+- [x] launch mainnet
 - [ ] onboard merchants (large catalogs)
 - [ ] integrate additional platforms (magento, bigcommerce, wix)
-- [ ] plugin features (cart history, persona switching)
 
 ### Q4 2025
-
 - [ ] overall UX, reskin and make the experience more delightful for merchants
 
 
