@@ -88,6 +88,8 @@ class BaseValidatorNeuron(BaseNeuron):
         # Initialize set to track first-time miner connections
         self.seen_miners = set()
 
+        self.wait_for_weight_inclusion:bool = True
+
     def serve_axon(self):
         """Serve axon to enable external connections."""
 
@@ -287,11 +289,12 @@ class BaseValidatorNeuron(BaseNeuron):
             uids=uint_uids,
             weights=uint_weights,
             wait_for_finalization=False,
-            wait_for_inclusion=False,
+            wait_for_inclusion=self.wait_for_weight_inclusion,
             version_key=self.spec_version,
         )
         if result is True:
-            bt.logging.info("set_weights on chain successfully!")
+            bt.logging.info(f"set_weights success: {msg}")
+            self.wait_for_weight_inclusion = False
         else:
             bt.logging.error("set_weights failed", msg)
 
