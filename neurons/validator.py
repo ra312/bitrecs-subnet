@@ -114,7 +114,9 @@ class Validator(BaseValidatorNeuron):
         selected_miners = []
         for uid in chosen_uids:            
             bt.logging.trace(f"Checking uid: {uid} with stake {self.metagraph.S[uid]} and trust {self.metagraph.T[uid]}")
-            if uid == self.uid:                
+            if uid == 0:
+                continue
+            if uid == self.uid:
                 continue
             if not self.metagraph.axons[uid].is_serving:
                 continue
@@ -128,11 +130,12 @@ class Validator(BaseValidatorNeuron):
                 continue
 
             try:                
-                if ping_miner_uid(self, uid, 8091, 3):
-                    bt.logging.trace(f"\033[1;32m ping: {uid}:OK \033[0m")
+                port = int(self.metagraph.axons[uid].port)
+                if ping_miner_uid(self, uid, port, 3):
+                    bt.logging.trace(f"\033[1;32m ping:{uid}:OK \033[0m")
                     selected_miners.append(uid)
                 else:
-                    bt.logging.trace(f"\033[1;33m ping: {uid}:FALSE \033[0m")
+                    bt.logging.trace(f"\033[1;33m ping:{uid}:FALSE \033[0m")
             except Exception as e:
                 bt.logging.trace(f"\033[1;33 {e} \033[0m")
                 continue
