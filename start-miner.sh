@@ -2,11 +2,15 @@
 
 # Default to production environment
 ENV="mainnet"
-NETUID=60
+NETUID=122
 NETWORK="finney"
-PORT=9090  # Default port
+#PORT=9090  # Default port
+PORT=31874
 PROXY_PORT=10913 # Used on DigitalOcean
+
 COMMAND_WITH_PATH="python3"
+WALLET_HOTKEY_NAME="hkli01"
+WALLET_COLDKEY_NAME="ckli01"
 
 if [ "$1" == "--test" -o "$1" == "--testnet" ] || [ "$1" == "--testnet" ]; then
     ENV="testnet"
@@ -29,6 +33,6 @@ fi
 echo "Starting miner in $ENV environment with netuid $NETUID on port $PORT"
 $COMMAND_WITH_PATH -m neurons.miner --netuid $NETUID \
     --subtensor.chain_endpoint $NETWORK --subtensor.network $NETWORK \
-    --wallet.name miner --wallet.hotkey default \
+    --wallet.name $WALLET_COLDKEY_NAME --wallet.hotkey $WALLET_HOTKEY_NAME \
     --axon.port $PORT --axon.external_port $PORT \
     --logging.debug --proxy.port $PROXY_PORT
