@@ -3,7 +3,7 @@
 # Default to production environment
 ENV="mainnet"
 # NETUID=60
-# NETWORK="finney"
+NETWORK="finney"
 # PORT=8090  # Default port
 
 NETUID="$1"
