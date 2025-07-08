@@ -2,17 +2,19 @@
 
 # Default to production environment
 ENV="mainnet"
-NETUID=60
-NETWORK="finney"
-PORT=8090  # Default port
+# NETUID=60
+# NETWORK="finney"
+# PORT=8090  # Default port
+
+NETUID="$1"
+PORT="$2"
+WALLET_HOTKEY_NAME="$3"
+WALLET_COLDKEY_NAME="$4"
+
+
 PROXY_PORT=10913 # Used on DigitalOcean
 COMMAND_WITH_PATH="python3"
 
-if [[ "$@" == *"--test"* || "$@" == *"--testnet"* ]]; then
-    ENV="testnet"
-    NETUID=350
-    NETWORK="test"
-fi
 
 #if proxy.port in args anywhere, use it
 if [[ "$@" == *"--proxy.port"* ]]; then
@@ -32,3 +34,13 @@ $COMMAND_WITH_PATH -m neurons.validator --netuid $NETUID \
     --wallet.name validator --wallet.hotkey default \
     --axon.port $PORT --axon.external_port $PORT \
     --logging.debug --proxy.port $PROXY_PORT
+
+# Build command to run via PM2
+VALIDATOR_COMMAND="$COMMAND_WITH_PATH -m neurons.miner --netuid $NETUID \
+    --subtensor.chain_endpoint $NETWORK --subtensor.network $NETWORK \
+    --wallet.name $WALLET_COLDKEY_NAME --wallet.hotkey $WALLET_HOTKEY_NAME \
+    --axon.port $PORT --axon.external_port $PORT \
+    --logging.debug --proxy.port $PROXY_PORT"
+
+pm2_name="validator-$NETUID"
+pm2 delete $pm2_name  && pm2 start "$VALIDATOR_COMMAND"  --name $pm2_name   && pm2 logs $pm2_name
