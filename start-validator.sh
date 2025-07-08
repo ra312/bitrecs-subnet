@@ -36,7 +36,7 @@ $COMMAND_WITH_PATH -m neurons.validator --netuid $NETUID \
     --logging.debug --proxy.port $PROXY_PORT
 
 # Build command to run via PM2
-VALIDATOR_COMMAND="$COMMAND_WITH_PATH -m neurons.miner --netuid $NETUID \
+VALIDATOR_COMMAND="$COMMAND_WITH_PATH -m neurons.validator --netuid $NETUID \
     --subtensor.chain_endpoint $NETWORK --subtensor.network $NETWORK \
     --wallet.name $WALLET_COLDKEY_NAME --wallet.hotkey $WALLET_HOTKEY_NAME \
     --axon.port $PORT --axon.external_port $PORT \
