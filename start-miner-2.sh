@@ -39,6 +39,5 @@ MINER_COMMAND="$COMMAND_WITH_PATH -m neurons.miner --netuid $NETUID \
     --logging.debug --proxy.port $PROXY_PORT"
 
 pm2_name="miner-$NETUID"
-pm2 delete $pm2_name  && \
-pm2 start --name $pm2_name  "$MINER_COMMAND" && \
-pm2 logs $pm2_name
+# pm2 delete $pm2_name  && \
+pm2 start "$MINER_COMMAND"  --name $pm2_name   && pm2 logs $pm2_name
