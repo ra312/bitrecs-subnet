@@ -59,9 +59,12 @@ load_dotenv()
 
 log = logging.getLogger(__name__)
 
-BITRECS_PROXY_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
-if not BITRECS_PROXY_URL:
-    raise ValueError("BITRECS_PROXY_URL environment variable is not set.")
+BITRECS_PROXY_URL = os.environ.get("BITRECS_PROXY_URL")
+if BITRECS_PROXY_URL:
+    BITRECS_PROXY_URL = BITRECS_PROXY_URL.removesuffix("/")
+    bt.logging.info("BITRECS_PROXY_URL is set. Proxy functionality is enabled.")
+else:
+    bt.logging.warning("BITRECS_PROXY_URL environment variable is not set. Proxy functionality will be disabled.")
 NETWORK = os.environ.get("NETWORK", "").strip().lower()
 
 
@@ -138,6 +141,10 @@ def post_node_report(payload: Dict[str, Any]) -> bool:
     }
     log.info(f"Sending node report with payload: {post_data}")
 
+    if not BITRECS_PROXY_URL:
+        bt.logging.warning("BITRECS_PROXY_URL is not set. Skipping node report.")
+        return False
+        
     node_report_endpoint = f"{BITRECS_PROXY_URL}/node/report"
     try:
         headers = {

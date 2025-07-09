@@ -10,7 +10,7 @@ from datetime import datetime
 from dataclasses import asdict, dataclass, field
 from substrateinterface import Keypair
 from bitrecs.utils import constants as CONST
-SERVICE_URL = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
+SERVICE_URL = os.environ.get("BITRECS_PROXY_URL", "").removesuffix("/") if os.environ.get("BITRECS_PROXY_URL") else ""
 
 
 @dataclass
@@ -49,6 +49,10 @@ def create_secure_message(timestamp: int, report: ValidatorUploadRequest, nonce:
 
 
 def get_r2_upload_url(report: ValidatorUploadRequest, keypair: Keypair) -> str:    
+    if not SERVICE_URL:
+        bt.logging.warning("BITRECS_PROXY_URL is not set. Skipping R2 upload URL generation.")
+        return ""
+        
     request_url = f"{SERVICE_URL}/validator/upload"    
     timestamp = int(time.time())
     message, nonce = create_secure_message(timestamp, report)
@@ -65,8 +69,9 @@ def get_r2_upload_url(report: ValidatorUploadRequest, keypair: Keypair) -> str:
     try:
         response = requests.post(
             request_url, 
-            json=report_dict,  # requests will handle JSON serialization
-            headers=headers
+            json=report_dict,
+            headers=headers,
+            timeout=10  # Add timeout to prevent hanging
         )        
         
         if response.status_code == 200:
@@ -83,8 +88,7 @@ def get_r2_upload_url(report: ValidatorUploadRequest, keypair: Keypair) -> str:
             return ""
 
     except requests.exceptions.RequestException as e:
-        #print(f"An error occurred: {e}")
-        bt.logging.error(f"An error occurred: {e}")
+        bt.logging.error(f"Error connecting to R2 proxy: {e}")
         return ""
 
 

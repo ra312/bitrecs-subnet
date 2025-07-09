@@ -51,8 +51,9 @@ class Validator(BaseValidatorNeuron):
         self.load_state()
         self.total_request_in_interval = 0
         if not os.environ.get("BITRECS_PROXY_URL"):
-            raise Exception("Please set the BITRECS_PROXY_URL environment variable.")
-        
+            bt.logging.warning("BITRECS_PROXY_URL environment variable is not set. Proxy functionality will be disabled.")
+        else:
+            bt.logging.info("BITRECS_PROXY_URL is set. Proxy functionality is enabled.")
 
 
     async def forward(self, pr : BitrecsRequest = None):
