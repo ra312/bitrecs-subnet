@@ -51,15 +51,20 @@ class ApiServer:
         #     bt.logging.warning(f"\033[1;33m WARNING - API Server is running in {self.network} mode \033[0m")
         #     raise ValueError(f"API Server is not supported in {self.network} mode, please use mainnet")
      
-        self.proxy_url = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
-        if not self.proxy_url:
-            bt.logging.error(f"\033[1;31m ERROR - MISSING BITRECS_PROXY_URL \033[0m")
-            raise Exception("Missing BITRECS_PROXY_URL")
+        self.proxy_url = os.environ.get("BITRECS_PROXY_URL")
+        if self.proxy_url:
+            self.proxy_url = self.proxy_url.removesuffix("/")
+            bt.logging.info("BITRECS_PROXY_URL is set. Proxy functionality is enabled.")
+        else:
+            bt.logging.warning("BITRECS_PROXY_URL environment variable is not set. Proxy functionality will be disabled.")
         
+        # Make API key optional if proxy is not used
         self.bitrecs_api_key = os.environ.get("BITRECS_API_KEY")
-        if not self.bitrecs_api_key:
-            bt.logging.error(f"\033[1;31m ERROR - MISSING BITRECS_API_KEY \033[0m")
-            raise Exception("Missing BITRECS_API_KEY")
+        if not self.bitrecs_api_key and self.proxy_url:
+            bt.logging.error(f"\033[1;31m ERROR - BITRECS_API_KEY is required when BITRECS_PROXY_URL is set \033[0m")
+            raise Exception("BITRECS_API_KEY is required when BITRECS_PROXY_URL is set")
+        elif not self.bitrecs_api_key:
+            bt.logging.warning("BITRECS_API_KEY environment variable is not set. Some functionality may be limited.")
             
         
         async def general_exception_handler(request: Request, exc: Exception):
@@ -76,7 +81,7 @@ class ApiServer:
 
         self.app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
         self.app.middleware("http")(partial(json_only_middleware, self))
-        self.app.middleware('http')(partial(api_key_validator, self))
+        # self.app.middleware('http')(partial(api_key_validator, self))
         self.app.middleware("http")(partial(filter_allowed_ips, self))
         
         self.app.add_exception_handler(Exception, general_exception_handler)

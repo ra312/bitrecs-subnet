@@ -29,12 +29,20 @@ class UserAction:
         Load all the actions attributed to this miner
         """
         actions = []
-        try:             
-            proxy_url = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
-            r = requests.get(f"{proxy_url}/miner/{hot_key}")
+        try:
+            proxy_url = os.environ.get("BITRECS_PROXY_URL")
+            if not proxy_url:
+                bt.logging.warning("BITRECS_PROXY_URL is not set. Cannot load user actions.")
+                return actions
+                
+            proxy_url = proxy_url.removesuffix("/")
+            r = requests.get(f"{proxy_url}/miner/{hot_key}", timeout=10)
+            r.raise_for_status()
             actions = r.json()
+        except requests.exceptions.RequestException as e:
+            bt.logging.error(f"Error loading user actions: {e}")
         except Exception as e:
-            bt.logging.error(f"load_user_actions Exception: {e}")
+            bt.logging.error(f"Unexpected error in get_actions: {e}")
         return actions
     
     
@@ -49,11 +57,25 @@ class UserAction:
             dt_to = int(end_date.timestamp())
             if dt_from >= dt_to:                
                 raise ValueError("Start date must be less than end date")
-            proxy_url = os.environ.get("BITRECS_PROXY_URL").removesuffix("/")
-            r = requests.get(f"{proxy_url}/miner/stats/from/{dt_from}/to/{dt_to}")
+                
+            proxy_url = os.environ.get("BITRECS_PROXY_URL")
+            if not proxy_url:
+                bt.logging.warning("BITRECS_PROXY_URL is not set. Cannot load actions range.")
+                return actions
+                
+            proxy_url = proxy_url.removesuffix("/")
+            r = requests.get(
+                f"{proxy_url}/miner/stats/from/{dt_from}/to/{dt_to}",
+                timeout=10
+            )
+            r.raise_for_status()
             actions = r.json()
+        except requests.exceptions.RequestException as e:
+            bt.logging.error(f"Error loading actions range: {e}")
+        except ValueError as e:
+            bt.logging.error(f"Invalid date range: {e}")
         except Exception as e:
-            bt.logging.error(f"load_user_actions Exception: {e}")
+            bt.logging.error(f"Unexpected error in get_actions_range: {e}")
         return actions
     
 
